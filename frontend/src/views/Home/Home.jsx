@@ -1,49 +1,103 @@
 import './Home.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { obtenerSiguienteIndice, obtenerAnteriorIndice } from './carrusel';
+
 
 import img1 from '../../assets/home/carrusel1.jpg';
 import img2 from '../../assets/home/carrusel2.jpg';
 import img3 from '../../assets/home/carrusel3.jpg';
 
-// Funcion para manejar el carrusel de imágenes, si quieren copiarlo y pegarlo para las otras vistas en caso de que sirva
-const images = [img1, img2, img3];
+const imagenes = [img1, img2, img3];
+
 export default function Home() {
-  const [current, setCurrent] = useState(0);
-  const prevSlide = () => setCurrent((current - 1 + images.length) % images.length);
-  const nextSlide = () => setCurrent((current + 1) % images.length);
+  const [actual, setActual] = useState(0);
+  const [prev, setPrev] = useState(0);
+  const [direccion, setDireccion] = useState('');
+  const [animado, setAnimado] = useState(false);
+
+  useEffect(() => {
+    const temporizador = setInterval(() => {
+      mover('derecha');
+    }, 3000); // en caso de querer cambiar en un futuro el intervalo de las fotos del carrusel cambiar esto, ahora está en 3s
+    return () => clearInterval(temporizador);
+  }, [actual]);
+
+  // de preferencia no cambiar nada de acá para que no se rompa la animación del carrusel
+  const mover = (dir) => {
+    if (animado) return;
+    setDireccion(dir);
+    setPrev(actual);
+    setAnimado(true);
+    setTimeout(() => {
+      setActual(dir === 'derecha'
+        ? obtenerSiguienteIndice(actual, imagenes.length)
+        : obtenerAnteriorIndice(actual, imagenes.length)
+      );
+      setAnimado(false);
+    }, 600);
+  };
+
+  const anterior = () => mover('izquierda');
+  const siguiente = () => mover('derecha');
+
+  const idxIzquierda = obtenerAnteriorIndice(actual, imagenes.length);
+  const idxDerecha = obtenerSiguienteIndice(actual, imagenes.length);
 
   return (
     <div className="home-container">
-      <div className="home-carousel">
-        {images.length > 0 ? (
+      <div className="home-carrusel">
+        {!animado && (
           <>
             <img
-              src={images[current]}
-              alt={`slide-${current}`}
-              className="home-carousel-img"
+              src={imagenes[idxIzquierda]}
+              alt="Imagen anterior en el carrusel"
+              className="home-carrusel-img side izquierda"
             />
-            <button
-              onClick={prevSlide}
-              className="home-carousel-btn left"
-            >
-              ‹
-            </button>
-            <button
-              onClick={nextSlide}
-              className="home-carousel-btn right"
-            >
-              ›
-            </button>
+            <img
+              src={imagenes[actual]}
+              alt="Imagen actual del carrusel"
+              className="home-carrusel-img principal"
+            />
+            <img
+              src={imagenes[idxDerecha]}
+              alt="Imagen siguiente en el carrusel"
+              className="home-carrusel-img side derecha"
+            />
           </>
-        ) : (
-          <div style={{ color: 'red', textAlign: 'center', padding: '2rem' }}>
-            No se encontraron imágenes para el carrusel.<br />
-            Verifica las rutas y nombres de los archivos en <code>src/assets/home/</code>.
-          </div>
         )}
+        
+        {animado && (
+          <>
+            <img
+              src={imagenes[prev]}
+              alt="Imagen previa animada"
+              className={`home-carrusel-img principal ${direccion === 'izquierda' ? 'to-derecha' : 'to-izquierda'}`}
+            />
+            <img
+              src={imagenes[direccion === 'izquierda' ? idxIzquierda : idxDerecha]}
+              alt="Nueva imagen animada"
+              className={`home-carrusel-img principal ${direccion === 'izquierda' ? 'from-izquierda' : 'from-derecha'}`}
+            />
+          </>
+        )}
+        
+        <button
+          onClick={anterior}
+          className="home-carrusel-btn izquierda"
+          aria-label="Anterior"
+        >
+          ‹
+        </button>
+        <button
+          onClick={siguiente}
+          className="home-carrusel-btn derecha"
+          aria-label="Siguiente"
+        >
+          ›
+        </button>
       </div>
       <h1>¡Bienvenido a Sabores de Hogar!</h1>
-      <p>Repostería casera con amor 💖</p>
+      <p>Repostería casera con amor</p>
     </div>
   );
 }
