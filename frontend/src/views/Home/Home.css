@@ -38,33 +38,6 @@
     border-radius: 1rem;
 }
 
-/* imágenes laterales */
-.home-carrusel-img.side.izquierda {
-    left: -28%;
-    top: 50%;
-    width: 60%;
-    height: 80%;
-    transform: translateY(-50%) scale(0.6);
-    z-index: 1;
-    opacity: 0.6;
-    filter: blur(1px);
-    pointer-events: none;
-    border-radius: 1rem;
-}
-
-.home-carrusel-img.side.derecha {
-    right: -28%;
-    top: 50%;
-    width: 60%;
-    height: 80%;
-    transform: translateY(-50%) scale(0.6);
-    z-index: 1;
-    opacity: 0.6;
-    filter: blur(1px);
-    pointer-events: none;
-    border-radius: 1rem;
-}
-
 /* animaciones del carrusel */
 .home-carrusel-img.principal.from-izquierda {
     animation: slideFromLeft 0.6s forwards;
@@ -130,7 +103,7 @@
     }
 }
 
-/* botones de navegación del carrusel */
+/* botones del carrusel */
 .home-carrusel-btn {
     position: absolute;
     top: 50%;

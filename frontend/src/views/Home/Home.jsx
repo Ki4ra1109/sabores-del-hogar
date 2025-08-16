@@ -70,12 +70,12 @@ export default function Home() {
           <>
             <img
               src={imagenes[prev]}
-              alt="Imagen previa animada"
+              alt="imagen previa animada"
               className={`home-carrusel-img principal ${direccion === 'izquierda' ? 'to-derecha' : 'to-izquierda'}`}
             />
             <img
               src={imagenes[direccion === 'izquierda' ? idxIzquierda : idxDerecha]}
-              alt="Nueva imagen animada"
+              alt="nueva imagen animada"
               className={`home-carrusel-img principal ${direccion === 'izquierda' ? 'from-izquierda' : 'from-derecha'}`}
             />
           </>
@@ -84,14 +84,14 @@ export default function Home() {
         <button
           onClick={anterior}
           className="home-carrusel-btn izquierda"
-          aria-label="Anterior"
+          aria-label="anterior"
         >
           ‹
         </button>
         <button
           onClick={siguiente}
           className="home-carrusel-btn derecha"
-          aria-label="Siguiente"
+          aria-label="siguiente"
         >
           ›
         </button>
