@@ -2,3 +2,37 @@
     background-color: #FFF1E6;
     min-height: 100vh;
 }
+
+.FondoHeader {
+  background-color:  #8B5E3C;
+  border: 1px solid #d1d5db; /* equivalente a border-gray-300 */
+  padding: 1rem;             /* p-4 */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-container {
+  position: relative;
+  width: 16rem; /* w-64 */
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.5rem 2.5rem 0.5rem 1rem; /* px-4 py-2 + espacio a la derecha para el ícono */
+  border-radius: 9999px; /* rounded-full */
+  outline: none;
+  border: none;
+}
+
+.search-input:focus {
+  box-shadow: 0 0 0 2px #000; /* focus:ring-Black-1000 */
+}
+
+.search-icon {
+  position: absolute;
+  right: 0.75rem; /* right-3 */
+  top: 50%; 
+  transform: translateY(-50%);
+  color: #6b7280; /* text-gray-500 */
+}
