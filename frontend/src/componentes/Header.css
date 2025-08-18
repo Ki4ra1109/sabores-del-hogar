@@ -16,20 +16,16 @@ header {
     font-weight: bold;
     font-size: 15px;
     color: #8B5E3C;
-
-    /* animación */
     animation: correr 10s linear infinite;
 }
 
 @keyframes correr {
     0% {
         transform: translateX(100%);
-        /* inicia fuera a la derecha */
     }
 
     100% {
         transform: translateX(-100%);
-        /* termina fuera a la izquierda */
     }
 }
 
@@ -48,39 +44,27 @@ header {
 
 .Header-icon:hover {
     transform: scale(1.1) rotate(3deg);
-    /* agranda + rota un poquito */
     filter: drop-shadow(0 0 8px rgba(255, 182, 193, 0.7));
-    /* brillo rosa pastel */
 }
 
 .NombreEmpresa {
     font-family:'Times New Roman', Times, serif;
-    /* o alguna tipografía de Google Fonts */
     font-size: 50px;
-    font-weight: 700;
-    background: #F8D7DA ;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: #F8D7DA ;
     text-transform: uppercase;
-    letter-spacing: 2px;
-    display: inline-block;
-    /* importante para que funcione la transformación */
-    transition: transform 0.3s ease;
-    /* suaviza la animación */
-    cursor: pointer;
     flex: 1;
     text-align: center;
+    margin-left: 110px;
 }
 
-.NombreEmpresa:hover {
-  transform: translateX(50px); /* mueve 20px a la derecha */
+.NombreEmpresa:hover{
+    color: #FFD166 ;
 }
 
 .header-actions {
     display: flex;
     align-items: center;
     gap: 100px;
-    /* Espacio entre buscador, carrito y login */
 }
 
 .buscar-container {
@@ -98,13 +82,13 @@ header {
 }
 
 .buscar-input:focus {
-    border-color: #f06292;
+    border-color: #000000;
     box-shadow: 0 0 4px #f8bbd0;
 }
 
 .buscar-icon {
     position: absolute;
-    right: 10px;
+    right: 20px;
     top: 50%;
     transform: translateY(-50%);
     color: gray;
@@ -112,31 +96,27 @@ header {
 }
 
 .Header-carrito-icon {
-    height: 40px;
-    transition: transform 0.3s ease, filter 0.3s ease;
-    margin: 10px;
-    cursor: pointer;
+  font-size: 28px;
+  color: #fff1e6;  
+  margin-left: 10px; 
+  transition: transform 0.2s ease;
 }
 
 .Header-carrito-icon:hover {
-    transform: scale(1.1) rotate(3deg);
-    /* agranda + rota un poquito */
-    filter: drop-shadow(0 0 8px rgba(255, 182, 193, 0.7));
-    /* brillo rosa pastel */
+  transform: scale(1.1);
+  color: #ffd6a5;
 }
 
 .Header-login-icon {
     height: 40px;
-    margin: 10px;
+    margin: 20px;
     transition: transform 0.3s ease, filter 0.3s ease;
     cursor: pointer;
 }
 
 .Header-login-icon:hover {
     transform: scale(1.1) rotate(3deg);
-    /* agranda + rota un poquito */
     filter: drop-shadow(0 0 8px rgba(255, 182, 193, 0.7));
-    /* brillo rosa pastel */
 }
 
 .navbar {
@@ -147,16 +127,12 @@ header {
     list-style: none;
     display: flex;
     justify-content: space-between;
-    /* distribuye a lo largo */
     align-items: center;
-    /* centra verticalmente */
 }
 
 .navbar-list li {
     flex: 1;
-    /* cada item ocupa el mismo espacio */
     text-align: center;
-    /* centra el texto de cada item */
 }
 
 .navbar-list a {
@@ -167,5 +143,5 @@ header {
 }
 
 .navbar-list a:hover {
-    color: #E63946;
+    color: #FFD166 ;
 }

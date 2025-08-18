@@ -28,7 +28,7 @@ estructura
 
 Node.js + Express.js → Servidor back-end y APIs REST para comunicar la web con la base de datos.
 
-Sequelize o TypeORM → ORM para manejar MySQL desde Node.js fácilmente.
+Sequelize o TypeORM → ORM para manejar progrestSQL desde Node.js fácilmente.
 
 bcrypt → Para manejar contraseñas seguras si hay registro de usuarios.
 
@@ -36,11 +36,11 @@ jsonwebtoken (JWT) → Para autenticación y sesiones seguras.
 
 3️⃣ Base de datos
 
-MySQL → Para guardar productos, usuarios, pedidos, categorías, etc.
+progrestSQL → Para guardar productos, usuarios, pedidos, categorías, etc.
 
 Sequelize / TypeORM / Eloquent ORM → Para manejar la base de datos desde el back-end de forma más sencilla.
 
-MySQL Workbench → Para modelar y administrar tu base de datos visualmente.
+progrestSQL Workbench → Para modelar y administrar tu base de datos visualmente.
 
 4️⃣ Extras útiles
 
@@ -58,7 +58,7 @@ Front-end: React + React Router + Tailwind CSS + Axios
 
 Back-end: Node.js + Express + Sequelize
 
-Base de datos: MySQL
+Base de datos: progrestSQL
 
 Extras: JWT para login, Cloudinary para imágenes, React-Query para datos
 
