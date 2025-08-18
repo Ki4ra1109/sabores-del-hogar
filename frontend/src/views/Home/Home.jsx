@@ -47,6 +47,7 @@ export default function Home() {
 
   return (
     <div className="home-container">
+      <Header/>
       <div className="home-carrusel">
         {!animado && (
           <>
@@ -100,6 +101,7 @@ export default function Home() {
       </div>
       <h1>¡Bienvenido a Sabores de Hogar!</h1>
       <p>Repostería casera con amor</p>
+      <Footer/>
     </div>
   );
 }
