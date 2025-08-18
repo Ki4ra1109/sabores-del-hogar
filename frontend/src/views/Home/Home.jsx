@@ -49,6 +49,7 @@ export default function Home() {
 
   return (
     <div className="home-container">
+      <Header/>
       <div className="home-carrusel">
         {!animado && (
           <>
@@ -102,8 +103,6 @@ export default function Home() {
           <FaChevronRight size={28} />
         </button>
       </div>
-
-      
       <div className="bienvenida">
         <h1>¡Bienvenido a Sabores del Hogar!</h1>
         <p>Repostería casera con amor de la Tía Sandra</p>
@@ -127,18 +126,19 @@ export default function Home() {
         </svg>
       </div>
       <div className="sobre-nosotros">
-      <div className="sobre-nosotros-card">
-        <div className="sobre-nosotros-card-img">
-          <img src={img1} alt="Foto sobre nosotros" />
-        </div>
-        <div className="sobre-nosotros-card-info">
-          <h2>Sobre Nosotros</h2>
-          <p>
-            En <b>Sabores de Hogar</b> nos dedicamos a crear postres caseros llenos de amor 🍰💖.
-          </p>
+        <div className="sobre-nosotros-card">
+          <div className="sobre-nosotros-card-img">
+            <img src={img1} alt="Foto sobre nosotros" />
+          </div>
+          <div className="sobre-nosotros-card-info">
+            <h2>Sobre Nosotros</h2>
+            <p>
+              En <b>Sabores de Hogar</b> nos dedicamos a crear postres caseros llenos de amor.
+            </p>
+          </div>
         </div>
       </div>
-      </div>
+      <Footer/>
     </div>
   );
 }
