@@ -106,7 +106,7 @@ export default function Home() {
         <h1>¡Bienvenido a Sabores del Hogar!</h1>
         <p>Repostería casera con amor de la Tía Sandra</p>
       </div>
-      {/* separador debajo del carrusel, efecto visual de "crema"*/}
+      {/* separador debajo del carrusel, efecto visual de "crema" para reutilizarlo*/}
       <div className="separador">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" style={{ display: 'block', transform: 'scaleY(-1)' }}>
           <path 
@@ -125,10 +125,17 @@ export default function Home() {
         </svg>
       </div>
       <div className="sobre-nosotros">
-        <h2>Sobre Nosotros</h2>
-        <p>
-          En <b>Sabores de Hogar</b> nos dedicamos a crear postres caseros llenos de amor 🍰💖.
-        </p>
+      <div className="sobre-nosotros-card">
+        <div className="sobre-nosotros-card-img">
+          <img src={img1} alt="Foto sobre nosotros" />
+        </div>
+        <div className="sobre-nosotros-card-info">
+          <h2>Sobre Nosotros</h2>
+          <p>
+            En <b>Sabores de Hogar</b> nos dedicamos a crear postres caseros llenos de amor 🍰💖.
+          </p>
+        </div>
+      </div>
       </div>
     </div>
   );

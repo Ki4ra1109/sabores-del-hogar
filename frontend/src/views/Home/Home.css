@@ -1,3 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap');
+
+.home-container,
+.home-carrusel,
+.home-carrusel-btn,
+.home-carrusel-img,
+.bienvenida,
+.sobre-nosotros {
+  font-family: 'Quicksand', Arial, sans-serif;
+}
+
 .home-container {
     background-color: #FFF1E6;
     min-height: 100vh;
@@ -26,7 +37,7 @@
 .home-carrusel-img {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Cambia a cover para que ocupe todo el espacio */
+    object-fit: cover;
     transition: transform 0.6s cubic-bezier(.4,0,.2,1), 
                 opacity 0.6s cubic-bezier(.4,0,.2,1);
     position: absolute;
@@ -162,22 +173,12 @@
 .sobre-nosotros {
   width: 100%;
   max-width: 900px;
-  margin: 2rem auto 0 auto;
+  margin: 0.1rem auto 0 auto;
   background: #FFF1E6;
   border-radius: 1rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   padding: 2rem;
   text-align: center;
-}
-
-/* sobre nosotros */
-.sobre-nosotros h2 {
-  color: #E63946;
-  margin-bottom: 1rem;
-}
-.sobre-nosotros p {
-  color: #333;
-  font-size: 1.2rem;
 }
 
 /* texto debajo del carrusel */
@@ -205,4 +206,53 @@
   font-size: 1.3rem;
   font-weight: 500;
   margin: 0;
+}
+
+.sobre-nosotros-card {
+  width: 100%;
+  max-width: 700px;
+  margin: 1.5rem auto 0 auto;
+  background: #FFF1E6;
+  border-radius: 1rem;
+  box-shadow: 0 2px 12px rgba(230,57,70,0.08);
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem;
+  text-align: left;
+}
+
+.sobre-nosotros-card-img {
+  flex: 0 0 160px;
+  width: 160px;
+  height: 160px;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sobre-nosotros-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 1rem;
+}
+
+.sobre-nosotros-card-info {
+  flex: 1;
+}
+
+.sobre-nosotros-card-info h2 {
+  color: #E63946;
+  margin-bottom: 1rem;
+  font-size: 2rem;
+}
+
+.sobre-nosotros-card-info p {
+  color: #333;
+  font-size: 1.2rem;
 }
