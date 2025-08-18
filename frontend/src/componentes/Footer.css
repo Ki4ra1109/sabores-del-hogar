@@ -1,0 +1,145 @@
+footer {
+  position: relative;
+  background-color: #8B5E3C;
+  padding: 1rem 2rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.Footer-icon {
+  height: 60px;
+  transition: transform 0.3s ease, filter 0.3s ease;
+  cursor: pointer;
+}
+
+.Footer-icon:hover {
+  transform: scale(1.1) rotate(3deg);
+  filter: drop-shadow(0 0 8px rgba(255, 182, 193, 0.7));
+}
+
+.Sobre-Nosotros {
+  font-size: 15px;
+  color: #FFF1E6;
+  flex-direction: column;
+  background: #cf946794;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.Sobre-Nosotros h1 {
+  text-align: center;
+}
+
+
+.redes-lista {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}
+
+.red a {
+  display: flex;
+  gap: 0.5rem;
+  color: #fff;
+  transition: transform 0.2s ease;
+}
+
+.red a:hover {
+  transform: translateY(-3px);
+}
+
+.red img {
+  width: 24px;
+  height: 24px;
+}
+
+.footer-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.comentarios-box {
+  background: #cf946794;
+  padding: 1rem;
+  border-radius: 8px;
+  width: 280px;
+  gap: 0.5rem;
+}
+
+.from-comentarios {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.texto-indicacion {
+  color: #FFFFFF;
+  font-size: 14px;
+}
+
+.input-area {
+  display: flex;
+  flex-direction: row;
+  /* 🔥 asegura que estén en fila */
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.textarea {
+  flex: 1;
+  min-height: 60px;
+  border-radius: 6px;
+  border: none;
+  padding: 0.5rem;
+  resize: none;
+}
+
+.comentarios-box button {
+  background: #ff7f50;
+  padding: 0.5rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  color: white;
+  font-weight: bold;
+  transition: background 0.3s ease;
+}
+
+.comentarios-box button:hover {
+  background: #e86a3c;
+}
+
+/* Enlaces de políticas */
+.footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.footer-links a {
+  color: #FFF1E6;
+  font-size: 10px;
+}
+
+.footer-links a:hover {
+  text-decoration: underline;
+}
+
+.veri-sitio {
+  position: absolute;
+  bottom: 5px;
+  right: 10px;
+  color: #FFF1E6;
+  font-size: 10px;
+}
+
+@media (max-width: 600px) {
+  .comentarios-box form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
