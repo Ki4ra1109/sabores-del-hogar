@@ -26,10 +26,11 @@
 .home-carrusel-img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: cover; /* Cambia a cover para que ocupe todo el espacio */
     transition: transform 0.6s cubic-bezier(.4,0,.2,1), 
                 opacity 0.6s cubic-bezier(.4,0,.2,1);
     position: absolute;
+    border-radius: 1rem;
 }
 
 .home-carrusel-img.principal {
@@ -148,4 +149,60 @@
 .home-container p {
     color: #666;
     font-size: 1.2rem;
+}
+
+/* separador */
+.separador {
+  width: 100%;
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+  padding: 0;
+  line-height: 0;
+}
+.sobre-nosotros {
+  width: 100%;
+  max-width: 900px;
+  margin: 2rem auto 0 auto;
+  background: #FFF1E6;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 2rem;
+  text-align: center;
+}
+
+/* sobre nosotros */
+.sobre-nosotros h2 {
+  color: #E63946;
+  margin-bottom: 1rem;
+}
+.sobre-nosotros p {
+  color: #333;
+  font-size: 1.2rem;
+}
+
+/* texto debajo del carrusel */
+.bienvenida {
+  width: 100%;
+  max-width: 700px;
+  margin: 2rem auto 0 auto;
+  background: #8B5E3C;
+  border-radius: 1rem;
+  box-shadow: 0 2px 12px rgba(230,57,70,0.08);
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.bienvenida h1 {
+  color: #FFFFFF;
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  letter-spacing: 1px;
+}
+
+.bienvenida p {
+  color: #F8D7DA ;
+  font-size: 1.3rem;
+  font-weight: 500;
+  margin: 0;
 }

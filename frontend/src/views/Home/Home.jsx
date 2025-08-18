@@ -4,9 +4,9 @@ import { obtenerSiguienteIndice, obtenerAnteriorIndice } from './carrusel';
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 // en caso de querer agregar más imagenes al carrusel tienen que importarlas acá primero y luego agregarlas en el const imagenes
-import img1 from '../../assets/home/carrusel1.jpg';
-import img2 from '../../assets/home/carrusel2.jpg';
-import img3 from '../../assets/home/carrusel3.jpg';
+import img1 from '../../assets/home/carrusel4.jpg';
+import img2 from '../../assets/home/carrusel5.jpg';
+import img3 from '../../assets/home/carrusel6.jpg';
 
 
 const imagenes = [img1, img2, img3];
@@ -100,8 +100,36 @@ export default function Home() {
           <FaChevronRight size={28} />
         </button>
       </div>
-      <h1>¡Bienvenido a Sabores de Hogar!</h1>
-      <p>Repostería casera con amor</p>
+
+      
+      <div className="bienvenida">
+        <h1>¡Bienvenido a Sabores del Hogar!</h1>
+        <p>Repostería casera con amor de la Tía Sandra</p>
+      </div>
+      {/* separador debajo del carrusel, efecto visual de "crema"*/}
+      <div className="separador">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" style={{ display: 'block', transform: 'scaleY(-1)' }}>
+          <path 
+            fill="#8B5E3C" 
+            fillOpacity="1" 
+            d="M0,192 C60,240 120,160 180,200 
+              C240,240 300,120 360,180 
+              C420,240 480,80 540,160 
+              C600,240 660,100 720,180 
+              C780,260 840,140 900,200 
+              C960,260 1020,100 1080,160 
+              C1140,220 1200,140 1260,200 
+              C1320,260 1380,120 1440,180 
+              L1440,320 L0,320 Z">
+          </path>
+        </svg>
+      </div>
+      <div className="sobre-nosotros">
+        <h2>Sobre Nosotros</h2>
+        <p>
+          En <b>Sabores de Hogar</b> nos dedicamos a crear postres caseros llenos de amor 🍰💖.
+        </p>
+      </div>
     </div>
   );
 }
