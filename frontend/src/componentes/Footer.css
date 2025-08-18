@@ -64,10 +64,3 @@ footer {
   color: #FFF1E6;
   font-size: 10px;
 }
-
-@media (max-width: 600px) {
-  .comentarios-box form {
-    flex-direction: column;
-    align-items: stretch;
-  }
-}
