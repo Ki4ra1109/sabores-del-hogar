@@ -1,7 +1,7 @@
 import './Home.css';
 import { useState, useEffect } from 'react';
 import { obtenerSiguienteIndice, obtenerAnteriorIndice } from './carrusel';
-
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 import img1 from '../../assets/home/carrusel1.jpg';
 import img2 from '../../assets/home/carrusel2.jpg';
@@ -18,11 +18,10 @@ export default function Home() {
   useEffect(() => {
     const temporizador = setInterval(() => {
       mover('derecha');
-    }, 3000); // en caso de querer cambiar en un futuro el intervalo de las fotos del carrusel cambiar esto, ahora está en 3s
+    }, 3000);
     return () => clearInterval(temporizador);
   }, [actual]);
 
-  // de preferencia no cambiar nada de acá para que no se rompa la animación del carrusel
   const mover = (dir) => {
     if (animado) return;
     setDireccion(dir);
@@ -86,14 +85,14 @@ export default function Home() {
           className="home-carrusel-btn izquierda"
           aria-label="anterior"
         >
-          ‹
+          <FaChevronLeft size={28} />
         </button>
         <button
           onClick={siguiente}
           className="home-carrusel-btn derecha"
           aria-label="siguiente"
         >
-          ›
+          <FaChevronRight size={28} />
         </button>
       </div>
       <h1>¡Bienvenido a Sabores de Hogar!</h1>

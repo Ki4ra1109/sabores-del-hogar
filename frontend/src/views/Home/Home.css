@@ -105,40 +105,39 @@
 
 /* botones del carrusel */
 .home-carrusel-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(230, 57, 70, 0.95);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 56px;
-    height: 56px;
-    cursor: pointer;
-    font-size: 2.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-    opacity: 0.95;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    transition: transform 0.2s ease;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(230, 57, 70, 1);
+  color: white;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  cursor: pointer;
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  opacity: 1;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: transform 0.2s ease;
 }
 
 .home-carrusel-btn:hover {
-    transform: translateY(-50%) scale(1.05);
+  transform: translateY(-50%) scale(1.05);
 }
 
 .home-carrusel-btn:active {
-    transform: translateY(-50%) scale(0.95);
+  transform: translateY(-50%) scale(0.95);
 }
 
 .home-carrusel-btn.izquierda {
-    left: 24px;
+  left: 24px;
 }
 
 .home-carrusel-btn.derecha {
-    right: 24px;
+  right: 24px;
 }
 
 .home-container h1 {
