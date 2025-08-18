@@ -1,3 +1,5 @@
+import { Footer } from '../../componentes/Footer';
+import { Header } from '../../componentes/Header';
 import './Home.css';
 import { useState, useEffect } from 'react';
 import { obtenerSiguienteIndice, obtenerAnteriorIndice } from './carrusel';
