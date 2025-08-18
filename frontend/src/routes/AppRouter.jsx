@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "../views/Home/Home";
-import Catalogo from "../views/Catalogo/Catalogo"; // Descomenta y asegúrate que existe
+import Catalogo from "../views/Catalogo/Catalogo";
 
 export default function AppRouter() {
   return (
