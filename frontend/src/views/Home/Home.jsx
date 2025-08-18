@@ -3,9 +3,11 @@ import { useState, useEffect } from 'react';
 import { obtenerSiguienteIndice, obtenerAnteriorIndice } from './carrusel';
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
+// en caso de querer agregar más imagenes al carrusel tienen que importarlas acá primero y luego agregarlas en el const imagenes
 import img1 from '../../assets/home/carrusel1.jpg';
 import img2 from '../../assets/home/carrusel2.jpg';
 import img3 from '../../assets/home/carrusel3.jpg';
+
 
 const imagenes = [img1, img2, img3];
 
@@ -18,10 +20,11 @@ export default function Home() {
   useEffect(() => {
     const temporizador = setInterval(() => {
       mover('derecha');
-    }, 3000);
+    }, 3000); // en caso de querer cambiar en un futuro el intervalo de las fotos del carrusel cambiar esto, ahora está en 3s
     return () => clearInterval(temporizador);
   }, [actual]);
 
+  // de preferencia no cambiar nada de acá para que no se rompa la animación del carrusel
   const mover = (dir) => {
     if (animado) return;
     setDireccion(dir);
@@ -80,6 +83,8 @@ export default function Home() {
           </>
         )}
         
+        {/* estos son los botones del carrusel, los hice importando unos iconos del node.js asi que si los quieren reutilizar solo copienlo
+        y lo pegan en sus codigos, tambien el css hay que copiarlo*/}
         <button
           onClick={anterior}
           className="home-carrusel-btn izquierda"
