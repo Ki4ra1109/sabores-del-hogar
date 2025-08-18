@@ -4,12 +4,10 @@ import "./Footer.css";
 export const Footer = () => {
 
     const redes = [
-        { nombre: 'Instagram', url: 'https://www.instagram.com/agustin.l.s/#', img: '../../public/instagram.png' },
-        { nombre: 'Facebook', url: 'https://www.facebook.com/saboresdelhogar', img: '../../public/facebook.png' },
-        { nombre: 'Twitter', url: 'https://twitter.com/saboresdelhogar', img: '../../public/twitter.png' },
-        { nombre: 'Otra red', url: '/', img: '../../public/vite.svg' },
-        { nombre: 'Otra red', url: '/', img: '../../public/vite.svg' },
-        { nombre: 'Otra red', url: '/', img: '../../public/vite.svg' },
+        { nombre: 'Instagram', url: 'https://www.instagram.com/sabores_del_hogar_2025', img: '../../public/instagram.png' },
+        { nombre: 'Facebook', url: 'https://web.facebook.com/profile.php?id=61579258721818', img: '../../public/facebook.png' },
+        { nombre: 'Twitter', url: 'https://x.com/SDHogar2025', img: '../../public/twitter.png' },
+        { nombre: 'TiktoK', url: 'https://www.tiktok.com/@saboresdelhogar2', img: '../../public/tiktok-icono.png' },
     ];
 
     return (
