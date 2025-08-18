@@ -5,6 +5,7 @@ export default function Catalogo() {
     <div className="catalogo-container">
       <h1>Catálogo</h1>
       <p>Próximamente...</p>
+      
     </div>
   );
 }
