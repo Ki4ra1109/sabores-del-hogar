@@ -1,5 +1,8 @@
 import React from 'react'
 import "./Header.css";
+import { FaSearch } from "react-icons/fa";
+import { FaShoppingCart } from "react-icons/fa";
+import { FaUser } from "react-icons/fa";
 
 export const Header = () => {
     return (
@@ -24,29 +27,22 @@ export const Header = () => {
                         placeholder="Buscar..."
                         className="buscar-input"
                     />
-                    <span className="buscar-icon">🔍</span>
+                    <span className="buscar-icon">
+                        <FaSearch />
+                    </span>
                 </div>
 
-                {/*aqui luego ira la direccion de la view del carrito de compras*/}
-                <a href="/">
-                    <img
-                        src="../../public/Carrito-icon.png"
-                        className="Header-carrito-icon"
-                        alt="icono carrito de compras"
-                    />
+                <a href="/" className="Header-carrito-icon">
+                    <FaShoppingCart size={30} color="#fff" />
                 </a>
 
-                {/* aqui luego ira la direccion de la view login*/}
-                <a href="/">
-                    <img
-                        src="../../public/Login-icon.png"
-                        className="Header-login-icon"
-                        alt="icono login/registro de session"
-                    />
+                <a href="/login">
+                    <FaUser className="Header-login-icon" size={26} color="#fff" />
                 </a>
 
             </nav>
 
+            {/* no borrar xq es de suma de importancia el hr de abajo */}
             <hr></hr>
 
             <navbar className='navbar'>

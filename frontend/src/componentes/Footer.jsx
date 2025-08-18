@@ -1,6 +1,5 @@
 import React from 'react'
 import "./Footer.css";
-import { useState } from 'react';
 
 export const Footer = () => {
 
@@ -12,19 +11,6 @@ export const Footer = () => {
         { nombre: 'Otra red', url: '/', img: '../../public/vite.svg' },
         { nombre: 'Otra red', url: '/', img: '../../public/vite.svg' },
     ];
-
-    const [comentario, setComentario] = useState('');
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (comentario.trim() === '') {
-            alert('Por favor escribe un comentario antes de enviar.');
-            return;
-        }
-        alert(`Comentario enviado: ${comentario}`);
-        setComentario(''); // limpia el campo
-    };
-
 
     return (
         <footer>
@@ -47,26 +33,8 @@ export const Footer = () => {
                 ))}
             </ul>
 
-            <div className='Sobre-Nosotros'>
-                <h1>Sobre nosotros</h1>
-                <p>
-                    Somos un grupo apasaionado por la resposteria haciendo postres caseros siguiendo las recetas <br/> de 
-                    la creadora Tia Sandra la cual ha preparado estas mismas durante un largo tiempo.
-                </p>
-            </div>
-
-            <div className="comentarios-box">
-                <h3 className='texto-indicacion'>Déjanos tus comentarios</h3>
-                <form onSubmit={handleSubmit} className='from-comentarios'>
-                    <textarea
-                        value={comentario}
-                        onChange={(e) => setComentario(e.target.value)}
-                        placeholder="Escribe aquí tu opinión..."
-                    />
-                    <button type="submit">Enviar</button>
-                </form>
-            </div>
-
+            <hr></hr>
+            
             <div className="footer-links">
                 <a href="#">Política de Privacidad</a>
                 <a href="#">Términos y Condiciones</a>
