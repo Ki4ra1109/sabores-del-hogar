@@ -40,7 +40,7 @@ export const Header = () => {
                     <FaShoppingCart size={30} color="#fff" />
                 </a>
 
-                <a href="/login">
+                <a href="/Login">
                     <FaUser className="Header-login-icon" size={26} color="#fff" />
                 </a>
             </nav>

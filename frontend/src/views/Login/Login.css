@@ -1,0 +1,278 @@
+
+/* Layout base */
+.al-landing {
+    min-height: 100vh;
+    background: #8B5E3C;
+    color: #fff;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+.al-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    align-items: center;
+    gap: 2rem;
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+@media (max-width: 900px) {
+    .al-grid {
+        grid-template-columns: 1fr;
+        padding: 24px 16px;
+    }
+
+    .al-left {
+        display: none;
+    }
+
+    /* opcional en mobile */
+}
+
+/* Col izquierda (logo grande) */
+.al-left {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.al-x-mark {
+    font-size: clamp(140px, 24vw, 320px);
+    font-weight: 800;
+    letter-spacing: -6px;
+    color: #ffffff;
+    /* gris claro (placeholder) */
+    opacity: 0.85;
+}
+
+.x-mark-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    /* mantiene proporción */
+}
+
+/* Col derecha (titulares y CTA) */
+.al-right {
+    max-width: 520px;
+}
+
+.al-title {
+    font-size: clamp(36px, 6vw, 68px);
+    line-height: 0.95;
+    font-weight: 800;
+    margin: 0 0 28px;
+}
+
+.al-subtitle {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 18px;
+    color: #e5e7eb;
+}
+
+/* Botones */
+.al-btn {
+    width: 100%;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 12px 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .06s ease, background .2s ease, border-color .2s ease, color .2s ease;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.al-btn:active {
+    transform: translateY(1px);
+}
+
+.al-btn-pill {
+    border-radius: 999px;
+}
+
+.al-btn-light {
+    background: #fff;
+    color: #111827;
+}
+
+.al-btn-light:hover {
+    background: #f3f4f6;
+}
+
+.al-btn-primary {
+    background: #e7e9ea;
+    color: #0f1419;
+}
+
+.al-btn-primary:hover {
+    background: #d6d9db;
+}
+
+.al-btn-outline {
+    width: auto;
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 1px solid #ffffff;
+    background: #ffffff;
+    color: #000000;
+}
+
+.al-btn-outline:hover {
+    background: #9e9c9c;
+}
+
+.al-icon {
+    font-size: 20px;
+}
+
+/* Divider “o” */
+.al-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 6px 0 14px;
+}
+
+.al-divider::before,
+.al-divider::after {
+    content: "";
+    height: 1px;
+    flex: 1;
+    background: #2f3336;
+}
+
+.al-divider span {
+    color: #9ca3af;
+}
+
+/* Pie “¿ya tienes cuenta?” */
+.al-have-account {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+/* Modal */
+.al-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .72);
+    display: grid;
+    place-items: center;
+    z-index: 1000;
+    animation: al-fade .15s ease both;
+}
+
+.al-modal {
+    width: min(92vw, 420px);
+    background: #8B5E3C;
+    border: 1px solid #2f3336;
+    border-radius: 16px;
+    padding: 20px 20px 24px;
+    color: #e7e9ea;
+    position: relative;
+    animation: al-pop .18s ease both;
+}
+
+.al-modal-title {
+    margin: 0 0 12px;
+    font-size: 22px;
+    font-weight: 800;
+}
+
+.al-modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #ffffff;
+    border: 1px solid #ffffff;
+    color: #000000;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+}
+
+.al-modal-close:hover {
+    background: #948d8d;
+}
+
+.al-modal-body {
+    margin-top: 8px;
+}
+
+/* Forms */
+.al-form {
+    display: grid;
+    gap: 12px;
+    margin-top: 6px;
+}
+
+.al-form input:not([type="checkbox"]),
+.al-form select,
+.al-form textarea {
+    background: #8B5E3C;
+    color: #e7e9ea;
+    border: 1px solid #2f3336;
+    padding: 12px 14px;
+    border-radius: 8px;
+    outline: none;
+    width: 100%;
+    margin-bottom: 12px;
+    font-size: 15px;
+}
+
+.al-form input:focus {
+    border-color: #8ecdf7;
+}
+
+.al-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #ffffff;
+}
+
+.al-switch {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #ffffff;
+}
+
+.al-link {
+    color: #8ecdf7;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+/* Animaciones */
+@keyframes al-fade {
+    from {
+        opacity: 0
+    }
+
+    to {
+        opacity: 1
+    }
+}
+
+@keyframes al-pop {
+    from {
+        transform: scale(.98);
+        opacity: 0
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1
+    }
+}
