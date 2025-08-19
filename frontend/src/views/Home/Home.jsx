@@ -4,6 +4,7 @@ import './Home.css';
 import { useState, useEffect } from 'react';
 import { obtenerSiguienteIndice, obtenerAnteriorIndice } from './carrusel';
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 // en caso de querer agregar más imagenes al carrusel tienen que importarlas acá primero y luego agregarlas en el const imagenes
 import img1 from '../../assets/home/carrusel4.jpg';
@@ -18,6 +19,7 @@ export default function Home() {
   const [prev, setPrev] = useState(0);
   const [direccion, setDireccion] = useState('');
   const [animado, setAnimado] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const temporizador = setInterval(() => {
@@ -125,7 +127,7 @@ export default function Home() {
           </path>
         </svg>
       </div>
-      <div className="sobre-nosotros">
+      <div className="home-cards-row">
         <div className="sobre-nosotros-card">
           <div className="sobre-nosotros-card-img">
             <img src={img1} alt="Foto sobre nosotros" />
@@ -133,7 +135,24 @@ export default function Home() {
           <div className="sobre-nosotros-card-info">
             <h2>Sobre Nosotros</h2>
             <p>
-              En <b>Sabores de Hogar</b> nos dedicamos a crear postres caseros llenos de amor.
+              ¿Sabías que detrás de cada postre hay una historia de esfuerzo y pasión? Sandra, nuestra fundadora, decidió transformar su emprendimiento de repostería casera en una experiencia digital para estar más cerca de sus clientes y hacer crecer su sueño. Descubre cómo la tecnología y el amor por los postres se unieron para crear Sabores de Hogar.
+            </p>
+            <button
+              className="sobre-nosotros-btn"
+              onClick={() => navigate("/nosotros")}
+            >
+              Saber más
+            </button>
+          </div>
+        </div>
+        <div className="trayectoria-card">
+          <div className="trayectoria-card-img">
+            <img src={img2} alt="Foto trayectoria" />
+          </div>
+          <div className="trayectoria-card-info">
+            <h2>Nuestra Trayectoria</h2>
+            <p>
+              Desde un curso de repostería y los primeros encargos familiares, Sandra ha recorrido un camino de cinco años llenos de aprendizaje y crecimiento. Cada pedido, cada cliente y cada celebración han sido parte de una historia que hoy evoluciona con este sistema web, pensado para mejorar la experiencia y atención de todos los que confían en Sabores de Hogar.
             </p>
           </div>
         </div>
