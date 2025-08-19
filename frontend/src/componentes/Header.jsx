@@ -3,17 +3,21 @@ import "./Header.css";
 import { FaSearch } from "react-icons/fa";
 import { FaShoppingCart } from "react-icons/fa";
 import { FaUser } from "react-icons/fa";
+import { Link } from 'react-router-dom';
 
 export const Header = () => {
     return (
         <header>
-            <div class="mensaje-banner">
+            
+            <div className="mensaje-banner">
                 <p>🎉 Bienvenido a mi página — Ofertas especiales todo el mes 🎉 - aqui debemos mas adelante implementar mensaje escrito por el admin</p>
             </div>
+            
+          
             <nav className="Header-nav">
                 <a href="/">
                     <img
-                        src="../../public/logoFondoBlanco.svg"
+                        src="/logoFondoBlanco.svg"  
                         className="Header-icon"
                         alt="Logo Sabores del Hogar"
                     />
@@ -39,24 +43,24 @@ export const Header = () => {
                 <a href="/Login">
                     <FaUser className="Header-login-icon" size={26} color="#fff" />
                 </a>
-
             </nav>
 
-            {/* no borrar xq es de suma de importancia el hr de abajo */}
-            <hr></hr>
+      
+            <hr />
 
-            <navbar className='navbar'>
+            
+            <nav className="navbar">
                 <ul className="navbar-list">
                     <li><a href="/">Inicio</a></li>
                     <li><a href="/Catalogo">Catalogo</a></li>
                     <li><a href="/nosotros">Nosotros</a></li>
                     <li><a href="/contacto">Contacto</a></li>
-                    <li><a href='/'>link extra</a></li>
-                    <li><a href='/'>link extra</a></li>
-                    <li><a href='/'>link extra</a></li>
-                    <li><a href='/'>link extra</a></li>
+                    <li><a href="/">link extra</a></li>
+                    <li><a href="/">link extra</a></li>
+                    <li><a href="/">link extra</a></li>
+                    <li><a href="/">link extra</a></li>
                 </ul>
-            </navbar>
+            </nav>
         </header>
     )
 }
