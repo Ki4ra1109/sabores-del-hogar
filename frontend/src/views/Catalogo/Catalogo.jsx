@@ -20,13 +20,12 @@ export default function Catalogo() {
   const navigate = useNavigate();
 
   const irAlProducto = (id) => {
-    navigate(`/producto/${id}`);
+    navigate(`/catalogo/${id}`);
   };
 
   return (
     <div className="catalogo-container">
       <Header />
-      <h1>Catálogo</h1>
       <div className="productos">
         {productos.map(producto => (
           <div 
