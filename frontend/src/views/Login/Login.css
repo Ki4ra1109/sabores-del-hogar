@@ -214,15 +214,18 @@
     margin-top: 6px;
 }
 
-.al-form input[type="text"],
-.al-form input[type="email"],
-.al-form input[type="password"] {
+.al-form input:not([type="checkbox"]),
+.al-form select,
+.al-form textarea {
     background: #8B5E3C;
     color: #e7e9ea;
     border: 1px solid #2f3336;
     padding: 12px 14px;
     border-radius: 8px;
     outline: none;
+    width: 100%;
+    margin-bottom: 12px;
+    font-size: 15px;
 }
 
 .al-form input:focus {

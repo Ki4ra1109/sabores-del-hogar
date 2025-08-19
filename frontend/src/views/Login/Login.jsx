@@ -111,13 +111,88 @@ export default function AuthLanding() {
 
       {/* Modal: Crear cuenta */}
       <Modal isOpen={showSignup} title="Crear cuenta" onClose={closeAll}>
-        <form className="al-form" onSubmit={(e) => { e.preventDefault(); /* TODO */ }}>
-          <input type="text" placeholder="Nombre completo" required />
-          <input type="email" placeholder="Correo electrónico" required />
-          <input type="password" placeholder="Contraseña" required />
+        <form
+          className="al-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            // Aquí validaciones extra si es necesario
+          }}
+        >
+          {/* Nombre */}
+          <input
+            type="text"
+            placeholder="Nombre"
+            name="nombre"
+            required
+          />
+
+          {/* Apellido */}
+          <input
+            type="text"
+            placeholder="Apellido"
+            name="apellido"
+            required
+          />
+
+          {/* RUT */}
+          <input
+            type="text"
+            placeholder="RUT (ej: 12.345.678-9)"
+            name="rut"
+            pattern="^(\d{1,2}\.\d{3}\.\d{3}-[\dkK])$"
+            title="Formato válido: 12.345.678-9"
+            required
+          />
+
+          {/* Correo */}
+          <input
+            type="email"
+            placeholder="Correo electrónico"
+            name="correo"
+            required
+          />
+
+          {/* Contraseña */}
+          <input
+            type="password"
+            placeholder="Contraseña (mínimo 9, letras y números)"
+            name="password"
+            minLength={9}
+            pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{9,}$"
+            title="Debe tener al menos 9 caracteres, incluyendo letras y números"
+            required
+          />
+
+          {/* Teléfono */}
+          <input
+            type="tel"
+            placeholder="Teléfono (+56...)"
+            name="telefono"
+            pattern="^\+56\d{8,9}$"
+            title="Debe comenzar con +56 seguido de 8 o 9 dígitos"
+            required
+          />
+
+          {/* Fecha de nacimiento */}
+          <input
+            type="date"
+            name="fechaNacimiento"
+            required
+            onKeyDown={(e) => e.preventDefault()} // evita modificar con teclado
+          />
+
+          {/* Dirección (opcional) */}
+          <input
+            type="text"
+            placeholder="Dirección (opcional)"
+            name="direccion"
+          />
+
+          {/* Aceptar términos */}
           <label className="al-check">
             <input type="checkbox" required /> Acepto los Términos y la Política de Privacidad
           </label>
+
           <button type="submit" className="al-btn al-btn-primary">Registrarse</button>
         </form>
         <p className="al-switch">
