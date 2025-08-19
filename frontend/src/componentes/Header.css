@@ -1,148 +1,139 @@
-header {
-    background-color: #8B5E3C;
-    width: 100%;
-}
-
 .mensaje-banner {
-    background-color: #F8D7DA;
-    /* pastel bonito */
-    overflow: hidden;
-    /* esconde lo que se sale */
-    white-space: nowrap;
-}
-
-.mensaje-banner p {
-    display: inline-block;
-    padding: 10px 0;
-    font-weight: bold;
-    font-size: 15px;
-    color: #8B5E3C;
-    animation: correr 10s linear infinite;
-}
-
-@keyframes correr {
-    0% {
-        transform: translateX(100%);
-    }
-
-    100% {
-        transform: translateX(-100%);
-    }
+  background-color: #f5d0c5;
+  text-align: center;
+  padding: 5px;
+  font-size: 0.9rem;
+  color: #333;
 }
 
 .Header-nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 20px;
+  background-color: #8b5e3c;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  flex-wrap: wrap;
 }
 
 .Header-icon {
-    height: 100px;
-    transition: transform 0.3s ease, filter 0.3s ease;
-    cursor: pointer;
-}
-
-.Header-icon:hover {
-    transform: scale(1.1) rotate(3deg);
-    filter: drop-shadow(0 0 8px rgba(255, 182, 193, 0.7));
+  width: 60px;
+  height: auto;
 }
 
 .NombreEmpresa {
-    font-family:'Times New Roman', Times, serif;
-    font-size: 50px;
-    color: #F8D7DA ;
-    text-transform: uppercase;
-    flex: 1;
-    text-align: center;
-    margin-left: 230px;
-}
-
-.NombreEmpresa:hover{
-    color: #FFD166 ;
-}
-
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 100px;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: white;
+  flex-grow: 1;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 2px;
 }
 
 .buscar-container {
-    position: relative;
-    margin: 10px;
-    width: 200px;
+  display: flex;
+  align-items: center;
+  background-color: white;
+  border-radius: 20px;
+  padding: 2px 10px;
+  margin-right: 15px;
 }
 
 .buscar-input {
-    width: 100%;
-    padding: 8px 32px 8px 12px;
-    border: 1px solid #ccc;
-    border-radius: 20px;
-    outline: none;
-}
-
-.buscar-input:focus {
-    border-color: #000000;
-    box-shadow: 0 0 4px #f8bbd0;
+  border: none;
+  outline: none;
+  padding: 5px;
+  width: 150px;
 }
 
 .buscar-icon {
-    position: absolute;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: gray;
-    pointer-events: none;
+  color: gray;
+  margin-left: 5px;
 }
 
-.Header-carrito-icon {
-  font-size: 28px;
-  color: #fff1e6;  
-  margin-left: 10px; 
-  transition: transform 0.2s ease;
-}
-
-.Header-carrito-icon:hover {
-  transform: scale(1.1);
-  color: #ffd6a5;
-}
-
+.Header-carrito-icon,
 .Header-login-icon {
-    height: 40px;
-    margin: 20px;
-    transition: transform 0.3s ease, filter 0.3s ease;
-    cursor: pointer;
+  margin-left: 15px;
+  cursor: pointer;
 }
 
-.Header-login-icon:hover {
-    transform: scale(1.1) rotate(3deg);
-    filter: drop-shadow(0 0 8px rgba(255, 182, 193, 0.7));
+hr {
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 0;
 }
 
 .navbar {
-    padding: 10px 20px;
+  background-color: #a97155;
+  width: 100%;
 }
 
 .navbar-list {
-    list-style: none;
-    display: flex;
-    justify-content: space-between;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  list-style: none;
+  padding: 10px 0;
+  margin: 0;
+  gap: 20px;
+}
+
+.navbar-list li a {
+  text-decoration: none;
+  color: white;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.navbar-list li a:hover {
+  color: #ffd700;
+}
+
+@media (max-width: 768px) {
+  .Header-nav {
+    flex-direction: column;
     align-items: center;
-}
+    gap: 10px;
+  }
 
-.navbar-list li {
-    flex: 1;
+  .NombreEmpresa {
+    font-size: 1.4rem;
     text-align: center;
+    margin: 10px 0;
+  }
+
+  .buscar-container {
+    width: 100%;
+    max-width: 300px;
+    margin: 10px 0;
+  }
+
+  .buscar-input {
+    width: 100%;
+  }
+
+  .Header-carrito-icon,
+  .Header-login-icon {
+    margin: 10px;
+  }
+
+  .navbar-list {
+    gap: 10px;
+    font-size: 0.9rem;
+  }
 }
 
-.navbar-list a {
-    text-decoration: none;
-    color: #F8D7DA;
-    font-weight: bold;
-    transition: color 0.3s;
-}
+@media (max-width: 480px) {
+  .Header-icon {
+    width: 50px;
+  }
 
-.navbar-list a:hover {
-    color: #FFD166 ;
+  .NombreEmpresa {
+    font-size: 1.2rem;
+  }
+
+  .navbar-list {
+    flex-direction: column;
+    gap: 8px;
+  }
 }
