@@ -48,7 +48,7 @@ export const Header = () => {
             <navbar className='navbar'>
                 <ul className="navbar-list">
                     <li><a href="/">Inicio</a></li>
-                    <li><a href="/productos">Productos</a></li>
+                    <li><a href="/Catalogo">Catalogo</a></li>
                     <li><a href="/nosotros">Nosotros</a></li>
                     <li><a href="/contacto">Contacto</a></li>
                     <li><a href='/'>link extra</a></li>
