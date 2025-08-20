@@ -66,3 +66,69 @@
   text-align: justify;
   color: #444;
 }
+
+.separador {
+  width: 100%;
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+  padding: 0;
+  line-height: 0;
+}
+/* seccion de desarrolladores */
+.developers-section {
+  text-align: center;
+  padding: 3rem 1rem;
+  background-color: #FFF1E6;
+}
+
+.developers-title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #e63946;
+  margin-bottom: 2rem;
+  font-family: 'Quicksand', Arial, sans-serif;
+}
+
+.developers-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.developer-card {
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+  width: 250px;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.developer-card:hover {
+  transform: translateY(-5px);
+}
+
+.developer-img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  margin: 15px auto;
+  margin-bottom: 1rem;
+}
+
+.developer-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-family: 'Quicksand', Arial, sans-serif;
+}
+
+.developer-role {
+  color: #555;
+  font-size: 1rem;
+  font-family: 'Quicksand', Arial, sans-serif;
+}
