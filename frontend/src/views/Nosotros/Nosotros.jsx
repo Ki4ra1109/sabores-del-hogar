@@ -2,6 +2,8 @@ import { Header } from '../../componentes/Header';
 import { Footer } from '../../componentes/Footer';
 import './Nosotros.css';
 
+import img1 from '../../assets/nosotros/torta.jpg';
+
 export default function Nosotros() {
   return (
     <>
@@ -10,6 +12,9 @@ export default function Nosotros() {
         <div className="nosotros-card">
         <h1 className='nosotros-container-tittle'> Sobre Nosotros</h1>
         <p>
+          <div className='nosotros-container-img'>
+            <img src={img1} alt="Foto sobre nosotros" />
+          </div>
           Sandra, la mente y corazón detrás de Sabores de Hogar, comenzó su aventura en la repostería tras finalizar un curso que le permitió equiparse y dar vida a su emprendimiento. Lo que inició como tortas para la familia, pronto se convirtió en pedidos personalizados gracias a la recomendación de sus propios clientes.
         </p>
         <p>
