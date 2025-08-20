@@ -1,0 +1,156 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap');
+
+.nosotros-container {
+  background-color: #FFF1E6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem 1rem;
+}
+
+.nosotros-container-tittle {
+  color: #E63946;
+  margin-bottom: 2rem;
+  font-size: 2.8rem;
+  text-align: center;
+  font-family: 'Quicksand', Arial, sans-serif;
+  position: relative;
+}
+
+.nosotros-container-tittle::after {
+  content: "";
+  width: 80px;
+  height: 4px;
+  background: #E63946;
+  display: block;
+  margin: 0.8rem auto 0 auto;
+  border-radius: 2px;
+}
+
+.nosotros-card {
+  max-width: 900px;
+  background: #ffffff;
+  border-radius: 1.2rem;
+  box-shadow: 0 4px 20px rgba(230, 57, 70, 0.15);
+  padding: 2.5rem;
+  font-family: 'Quicksand', Arial, sans-serif;
+  color: #333;
+  text-align: center;
+  animation: fadeIn 1s ease-in-out;
+}
+
+.nosotros-container-img {
+  margin: 0 auto 2rem auto;
+  max-width: 500px;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+
+.nosotros-container-img img {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.nosotros-container-img img:hover {
+  transform: scale(1.05);
+}
+
+.nosotros-card p {
+  font-size: 1.15rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.8;
+  text-align: justify;
+  color: #444;
+}
+
+.separador {
+  width: 100%;
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+  padding: 0;
+  line-height: 0;
+  background-color: #FFF1E6;
+}
+/* seccion de desarrolladores */
+.developers-section {
+  text-align: center;
+  padding: 0.1rem 1rem 10rem 1rem;
+  background-color: #FFF1E6;
+}
+
+.developers-title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #e63946;
+  margin-bottom: 2rem;
+  font-family: 'Quicksand', Arial, sans-serif;
+}
+
+.developers-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.developer-card {
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+  width: 250px;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.developer-card:hover {
+  transform: translateY(-5px);
+}
+
+.developer-img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  margin: 15px auto;
+  margin-bottom: 1rem;
+}
+
+.developer-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-family: 'Quicksand', Arial, sans-serif;
+}
+
+.developer-role {
+  color: #555;
+  font-size: 1rem;
+  font-family: 'Quicksand', Arial, sans-serif;
+}
+
+.developer-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
+  background-color: #24292e;
+  color: #fff;
+  border-radius: 0.5rem;
+  font-family: 'Quicksand', Arial, sans-serif;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.developer-btn:hover {
+  background-color: #000;
+  transform: translateY(-3px);
+}

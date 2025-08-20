@@ -52,7 +52,7 @@ export default function AuthLanding() {
       </svg>
 
       <div className="al-grid">
-        {/* Columna izquierda: “X”/logo grande (puedes cambiar por tu imagen) */}
+        {/* Columna izquierda: “X”/logo grande*/}
         <div className="al-left">
           <div className="al-x-mark">
             <img
@@ -99,7 +99,7 @@ export default function AuthLanding() {
 
       {/* Modal: Iniciar sesión */}
       <Modal isOpen={showLogin} title="Iniciar sesión" onClose={closeAll}>
-        <form className="al-form" onSubmit={(e) => { e.preventDefault(); /* TODO */ }}>
+        <form className="al-form" onSubmit={(e) => { e.preventDefault();}}>
           <input type="email" placeholder="Correo electrónico" required />
           <input type="password" placeholder="Contraseña" required />
           <button type="submit" className="al-btn al-btn-primary">Entrar</button>
