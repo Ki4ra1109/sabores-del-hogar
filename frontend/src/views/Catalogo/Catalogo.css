@@ -1,4 +1,78 @@
-.catalogo-container {
-    background-color: #E6F7FF;
-    min-height: 100vh;
+.productos-container {
+  background-color: #FFF1E6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Contenedor principal */
+.catalogo-body {
+  width: 100%;
+  max-width: 1200px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.catalogo-body h1 {
+  font-size: 2.5rem;
+  color: #8B5E3C;
+  margin-bottom: 2rem;
+  font-weight: bold;
+}
+
+/* Grid de productos */
+.productos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 2rem;
+  width: 100%;
+}
+
+/* Card de producto */
+.producto-card {
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  padding: 1rem;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.producto-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+}
+
+.producto-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 0.7rem;
+  margin-bottom: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.producto-card:hover img {
+  transform: scale(1.05);
+}
+
+.producto-card h2 {
+  font-size: 1.2rem;
+  color: #333;
+  margin-bottom: 0.3rem;
+  font-weight: 600;
+}
+
+.producto-card .precio {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #E63946;
+  background: rgba(230, 57, 70, 0.1);
+  padding: 0.3rem 0.6rem;
+  border-radius: 8px;
+  display: inline-block;
 }
