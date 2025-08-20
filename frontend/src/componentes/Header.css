@@ -1,4 +1,152 @@
 header {
+
+  background-color: #8B5E3C;
+  width: 100%;
+}
+
+.mensaje-banner {
+  background-color: #F8D7DA;
+  /* pastel bonito */
+  overflow: hidden;
+  /* esconde lo que se sale */
+  white-space: nowrap;
+}
+
+.mensaje-banner p {
+  display: inline-block;
+  padding: 10px 0;
+  font-weight: bold;
+  font-size: 15px;
+  color: #8B5E3C;
+  animation: correr 10s linear infinite;
+}
+
+@keyframes correr {
+  0% {
+    transform: translateX(100%);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.Header-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+}
+
+.Header-icon {
+  height: 100px;
+  transition: transform 0.3s ease, filter 0.3s ease;
+  cursor: pointer;
+}
+
+.Header-icon:hover {
+  transform: scale(1.1) rotate(3deg);
+  filter: drop-shadow(0 0 8px rgba(255, 182, 193, 0.7));
+}
+
+.NombreEmpresa {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 50px;
+  color: #F8D7DA;
+  text-transform: uppercase;
+  flex: 1;
+  text-align: center;
+  margin-left: 230px;
+}
+
+.NombreEmpresa:hover {
+  color: #FFD166;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 100px;
+}
+
+.buscar-container {
+  position: relative;
+  margin: 10px;
+  width: 200px;
+}
+
+.buscar-input {
+  width: 100%;
+  padding: 8px 32px 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  outline: none;
+}
+
+.buscar-input:focus {
+  border-color: #000000;
+  box-shadow: 0 0 4px #f8bbd0;
+}
+
+.buscar-icon {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: gray;
+  pointer-events: none;
+}
+
+.Header-carrito-icon {
+  font-size: 28px;
+  color: #fff1e6;
+  margin-left: 10px;
+  transition: transform 0.2s ease;
+}
+
+.Header-carrito-icon:hover {
+  transform: scale(1.1);
+  color: #ffd6a5;
+}
+
+.Header-login-icon {
+  height: 40px;
+  margin: 20px;
+  transition: transform 0.3s ease, filter 0.3s ease;
+  cursor: pointer;
+}
+
+.Header-login-icon:hover {
+  transform: scale(1.1) rotate(3deg);
+  filter: drop-shadow(0 0 8px rgba(255, 182, 193, 0.7));
+}
+
+.navbar {
+  padding: 10px 20px;
+}
+
+.navbar-list {
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-list li {
+  flex: 1;
+  text-align: center;
+}
+
+.navbar-list a {
+  text-decoration: none;
+  color: #F8D7DA;
+  font-weight: bold;
+  transition: color 0.3s;
+}
+
+.navbar-list a:hover {
+  color: #FFD166;
+
     background-color: #8B5E3C;
     width: 100%;
 }
