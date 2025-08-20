@@ -1,19 +1,17 @@
 import { Footer } from '../../componentes/Footer';
 import { Header } from '../../componentes/Header';
 import './Catalogo.css';
-import carrusel1 from '../../assets/home/carrusel1.jpg';
-import carrusel3 from '../../assets/home/carrusel3.jpg';
 import { useNavigate } from 'react-router-dom';
 
 const productos = [
-  { id: 1, nombre: "Torta Milhoja Manjar Crema", precio: "35.000", imagen: carrusel1 },
-  { id: 2, nombre: "Torta Milhoja Manjar Lúcuma", precio: "18.500", imagen: carrusel3 },
-  { id: 3, nombre: "Torta Milhoja Manjar Crema", precio: "35.000", imagen: carrusel1 },
-  { id: 4, nombre: "Torta Milhoja Manjar Lúcuma", precio: "18.500", imagen: carrusel3 },
-  { id: 5, nombre: "Torta Milhoja Manjar Crema", precio: "35.000", imagen: carrusel1 },
-  { id: 6, nombre: "Torta Milhoja Manjar Lúcuma", precio: "18.500", imagen: carrusel3 },
-  { id: 7, nombre: "Torta Milhoja Manjar Crema", precio: "35.000", imagen: carrusel1 },
-  { id: 8, nombre: "Torta Milhoja Manjar Lúcuma", precio: "18.500", imagen: carrusel3 },
+  { id: 1, nombre: "Torta de Chocolate", precio: "25.000 - $75.000", imagen: "https://images.unsplash.com/photo-1693040743049-71cd4630ab5a?q=80&w=735&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" },
+  { id: 2, nombre: "Torta de Mora", precio: "20.000 - $65.000", imagen: "https://images.unsplash.com/photo-1559620192-032c4bc4674e?q=80&w=729&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" },
+  { id: 3, nombre: "Torta de Frutilla", precio: "22.000 - $70.000", imagen: "https://images.unsplash.com/photo-1579356094148-9b74dab60f5b?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" },
+  { id: 4, nombre: "Torta de Zanahoria", precio: "18.000 - $60.000", imagen: "https://plus.unsplash.com/premium_photo-1714669899928-eb0b28430295?q=80&w=1976&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" },
+  { id: 5, nombre: "Torta de Red Velvet", precio: "19.500 - $56.000", imagen: "https://plus.unsplash.com/premium_photo-1713920189849-61a19937fbda?q=80&w=688&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" },
+  { id: 6, nombre: "Torta de Limon", precio: "18.500 - $40.000", imagen: "https://images.unsplash.com/photo-1728911296471-8c57f645a44e?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" },
+  { id: 7, nombre: "Torta de Piña", precio: "13.500 - $30.000", imagen: "https://images.unsplash.com/photo-1633062781822-e32867fe7d4a?q=80&w=1166&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" },
+  { id: 8, nombre: "Torta de Frambuesa", precio: "18.500 - $35.000", imagen: "https://plus.unsplash.com/premium_photo-1714670623261-a2e9797d4e05?q=80&w=688&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
 ];
 
 export default function Catalogo() {
@@ -24,25 +22,23 @@ export default function Catalogo() {
   };
 
   return (
-    <div className="catalogo-container">
+    <div className="productos-container">
       <Header />
-      <div className="productos">
-        {productos.map(producto => (
-          <div 
-            key={producto.id} 
-            className="producto-card"
-            onClick={() => irAlProducto(producto.id)}
-            style={{ cursor: 'pointer' }}
-          >
-            <div className="producto-img-container">
-              <img src={producto.imagen} alt={producto.nombre} className="producto-img" />
+      <div className="catalogo-body">
+        <h1>Nuestro Catálogo de Tortas</h1>
+        <div className="productos-grid">
+          {productos.map(producto => (
+            <div 
+              key={producto.id} 
+              className="producto-card"
+              onClick={() => irAlProducto(producto.id)}
+            >
+              <img src={producto.imagen} alt={producto.nombre} />
+              <h2>{producto.nombre}</h2>
+              <p className="precio">${producto.precio}</p>
             </div>
-            <div className="producto-info">
-              <h2 className="producto-nombre">{producto.nombre}</h2>
-              <span className="producto-precio">${producto.precio}</span>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
       <Footer />
     </div>
