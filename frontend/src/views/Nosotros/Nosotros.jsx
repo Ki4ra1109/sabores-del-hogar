@@ -1,6 +1,7 @@
 // Nosotros.jsx
 import { Header } from '../../componentes/Header';
 import { Footer } from '../../componentes/Footer';
+import { FaGithub } from "react-icons/fa";
 import './Nosotros.css';
 
 import img1 from '../../assets/nosotros/torta.jpg';
@@ -10,17 +11,20 @@ const teamMembers = [
   {
     name: "Cristóbal Tello",
     role: "Desarrollador",
-    img: "https://github.com/Cristobal100.png"
+    img: "https://github.com/Cristobal100.png",
+    github: "https://github.com/Cristobal100"
   },
   {
     name: "Kiara Rubio",
     role: "Desarrolladora",
     img: "https://github.com/Ki4ra1109.png",
+    github: "https://github.com/Ki4ra1109"
   },
   {
     name: "Agustín Liberona",
     role: "Desarrollador",
-    img: "https://github.com/AgustinnLiberona.png"
+    img: "https://github.com/AgustinnLiberona.png",
+    github: "https://github.com/AgustinnLiberona"
   }
 ];
 
@@ -74,6 +78,15 @@ export default function Nosotros() {
               />
               <h3 className="developer-name">{member.name}</h3>
               <p className="developer-role">{member.role}</p>
+              <a 
+                href={member.github} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="developer-btn"
+              >
+                <FaGithub size={20} style={{ marginRight: "8px" }} />
+                GitHub
+              </a>
             </div>
           ))}
         </div>
