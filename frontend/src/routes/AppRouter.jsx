@@ -12,7 +12,6 @@ export default function AppRouter() {
           <Route path="/" element={<Home />} />
           <Route path="/Catalogo" element={<Catalogo />} />
           <Route path="/Login" element={<Login />} />
-          <Route path="/catalogo" element={<Catalogo />} />
           <Route path="/nosotros" element={<Nosotros />} />
         </Routes>
       </main>
