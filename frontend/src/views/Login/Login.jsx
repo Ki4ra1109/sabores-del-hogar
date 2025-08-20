@@ -66,7 +66,7 @@ export default function AuthLanding() {
         {/* Columna derecha: títulos y acciones */}
         <div className="al-right">
           <h1 className="al-title">
-            Sabores unicos<br />Que esperas para ser parte
+            ¡Sabores únicos!<br />¿Qué esperas para ser parte?
           </h1>
 
           <h2 className="al-subtitle">Únete hoy</h2>
@@ -79,7 +79,7 @@ export default function AuthLanding() {
 
           <button className="al-btn al-btn-pill al-btn-light">
             <FaApple className="al-icon" />
-            Registrarse con Apple
+            Inicia sesión con Apple
           </button>
 
           <div className="al-divider">

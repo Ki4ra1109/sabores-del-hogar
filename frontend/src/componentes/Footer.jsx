@@ -4,10 +4,10 @@ import "./Footer.css";
 export const Footer = () => {
 
     const redes = [
-        { nombre: 'Instagram', url: 'https://www.instagram.com/sabores_del_hogar_2025', img: '../../public/instagram.png' },
-        { nombre: 'Facebook', url: 'https://web.facebook.com/profile.php?id=61579258721818', img: '../../public/facebook.png' },
-        { nombre: 'Twitter', url: 'https://x.com/SDHogar2025', img: '../../public/twitter.png' },
-        { nombre: 'TiktoK', url: 'https://www.tiktok.com/@saboresdelhogar2', img: '../../public/tiktok-icono.png' },
+        { nombre: 'Instagram', url: 'https://www.instagram.com/sabores_del_hogar_2025', img: 'https://cdn-icons-png.flaticon.com/128/3955/3955024.png' },
+        { nombre: 'Facebook', url: 'https://web.facebook.com/profile.php?id=61579258721818', img: 'https://cdn-icons-png.flaticon.com/128/2504/2504903.png' },
+        { nombre: 'Twitter', url: 'https://x.com/SDHogar2025', img: 'https://cdn-icons-png.flaticon.com/512/5968/5968830.png' },
+        { nombre: 'TiktoK', url: 'https://www.tiktok.com/@saboresdelhogar2', img: 'https://cdn-icons-png.flaticon.com/128/3116/3116491.png' },
     ];
 
     return (

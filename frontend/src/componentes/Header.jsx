@@ -52,6 +52,9 @@ export const Header = () => {
                     <li><a href="/Catalogo">Catálogo</a></li>
                     <li><a href="/nosotros">Nosotros</a></li>
                     <li><a href="/contacto">Contacto</a></li>
+                    <li><a href="/UserNormal">Vista User Normal</a></li>
+                    <li><a href="/UserAdmin">Vista User Admin</a></li>
+
                 </ul>
             </nav>
             {/* carrito Sidebar */}
