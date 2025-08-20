@@ -7,9 +7,14 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 // en caso de querer agregar más imagenes al carrusel tienen que importarlas acá primero y luego agregarlas en el const imagenes
+// imagenes del carrusel
 import img1 from '../../assets/home/carrusel4.jpg';
 import img2 from '../../assets/home/carrusel5.jpg';
 import img3 from '../../assets/home/carrusel6.jpg';
+
+// Imagenes sobre nosotros y trayectoria
+import img4 from '../../assets/nosotros/sobrenosotros.jpg';
+import img5 from '../../assets/nosotros/trayectoria.jpg';
 
 
 const imagenes = [img1, img2, img3];
@@ -127,10 +132,13 @@ export default function Home() {
           </path>
         </svg>
       </div>
-      <div className="home-cards-row">
+      {/* cards de "sobre nosotros" y "nuestra trayectoria" */}
+      <div className="historia-card">
+        <h2 className="historia-card-title">¿Cómo comenzó todo?</h2>
+        <div className="historia-card-content">
         <div className="sobre-nosotros-card">
           <div className="sobre-nosotros-card-img">
-            <img src={img1} alt="Foto sobre nosotros" />
+            <img src={img4} alt="Foto sobre nosotros" />
           </div>
           <div className="sobre-nosotros-card-info">
             <h2>Sobre Nosotros</h2>
@@ -147,7 +155,7 @@ export default function Home() {
         </div>
         <div className="trayectoria-card">
           <div className="trayectoria-card-img">
-            <img src={img2} alt="Foto trayectoria" />
+            <img src={img5} alt="Foto trayectoria" />
           </div>
           <div className="trayectoria-card-info">
             <h2>Nuestra Trayectoria</h2>
@@ -156,6 +164,7 @@ export default function Home() {
             </p>
           </div>
         </div>
+      </div>
       </div>
       <Footer/>
     </div>

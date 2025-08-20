@@ -164,16 +164,6 @@
   padding: 0;
   line-height: 0;
 }
-.sobre-nosotros {
-  width: 100%;
-  max-width: 900px;
-  margin: 0.1rem auto 0 auto;
-  background: #FFF1E6;
-  border-radius: 1rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  padding: 2rem;
-  text-align: center;
-}
 
 /* texto debajo del carrusel */
 .bienvenida {
@@ -202,160 +192,84 @@
   margin: 0;
 }
 
-/* nosotros */
-.sobre-nosotros-card {
+/* cards historia / sobre nosotros */
+/* hisotira */
+.historia-card {
   width: 100%;
-  max-width: 900px;
-  margin: 0.1rem auto 10rem auto; /* agrega espacio abajo para separar del footer */
-  background: #FFF1E6;
-  border-radius: 1rem;
-  box-shadow: 0 2px 16px rgba(230,57,70,0.10);
-  display: flex;
-  align-items: center;
-  gap: 2.5rem;
-  padding: 2.5rem;
-  text-align: left;
+  max-width: 1100px;
+  margin: 0.1rem auto 6rem auto;
+  text-align: center;
 }
 
-.sobre-nosotros-card-img {
-  flex: 0 0 160px;
-  width: 160px;
-  height: 160px;
-  border-radius: 1rem;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 0;
-  margin-right: 2rem;
-}
-
-.sobre-nosotros-card-info,
-.trayectoria-card-info {
-  flex: 1;
-}
-
-.trayectoria-card {
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: center;
-  min-width: 0;
-}
-
-.trayectoria-card-info h2,
-.sobre-nosotros-card-info h2 {
-  color: #E63946;
-  margin-bottom: 1rem;
+.historia-card-title {
   font-size: 2rem;
+  font-weight: 700;
+  color: #E63946;
+  margin-bottom: 2rem;
 }
 
-.trayectoria-card-info p,
-.sobre-nosotros-card-info p {
-  color: #333;
-  font-size: 1.2rem;
-}
-
-.sobre-nosotros-btn {
-  margin-top: 1.5rem;
-  padding: 0.7rem 2rem;
-  background: #E63946;
-  color: #fff;
-  border: none;
-  border-radius: 2rem;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(230,57,70,0.08);
-  transition: background 0.2s;
-}
-.sobre-nosotros-btn:hover {
-  background: #F28D8D;
-  color: #8B5E3C;
-}
-
-/* nuevas clases para la card de trayectoria */
-.home-cards-row {
-  display: flex;
-  flex-wrap: nowrap;
+.historia-card-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 2rem;
-  justify-content: center;
-  align-items: stretch;
-  margin: 0.1rem auto 10rem auto;
-  max-width: 1400px;
 }
 
+/* sobre nosotros */
 .sobre-nosotros-card,
 .trayectoria-card {
-  width: 100%;
-  max-width: 900px;
-  background: #FFF1E6;
+  background: #fff;
   border-radius: 1rem;
-  box-shadow: 0 2px 16px rgba(230,57,70,0.10);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  overflow: hidden;
   display: flex;
-  align-items: center;
-  gap: 2.5rem;
-  padding: 2.5rem;
-  text-align: left;
+  flex-direction: column;
+  transition: transform 0.3s ease;
 }
 
-.sobre-nosotros-card-img,
-.trayectoria-card-img {
-  flex: 0 0 160px;
-  width: 160px;
-  height: 160px;
-  border-radius: 1rem;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 0;
-  margin-right: 2rem;
+.sobre-nosotros-card:hover,
+.trayectoria-card:hover {
+  transform: translateY(-5px);
 }
 
 .sobre-nosotros-card-img img,
 .trayectoria-card-img img {
   width: 100%;
-  height: 100%;
+  height: 220px;
   object-fit: cover;
-  border-radius: 1rem;
 }
 
 .sobre-nosotros-card-info,
 .trayectoria-card-info {
-  flex: 1;
+  padding: 1.5rem;
+  text-align: left;
 }
 
-.sobre-nosotros-card-info h2,
-.trayectoria-card-info h2 {
-  color: #E63946;
-  margin-bottom: 1rem;
-  font-size: 2rem;
+.sobre-nosotros-card-info h3,
+.trayectoria-card-info h3 {
+  font-size: 1.5rem;
+  color: #8B5E3C;
+  margin-bottom: 0.8rem;
 }
 
 .sobre-nosotros-card-info p,
 .trayectoria-card-info p {
-  color: #333;
-  font-size: 1.2rem;
+  font-size: 1rem;
+  color: #444;
+  line-height: 1.5;
 }
 
 .sobre-nosotros-btn {
-  margin-top: 1.5rem;
-  padding: 0.7rem 2rem;
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
   background: #E63946;
-  color: #fff;
   border: none;
-  border-radius: 2rem;
-  font-size: 1.1rem;
+  border-radius: 0.5rem;
+  color: #fff;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(230,57,70,0.08);
-  transition: background 0.2s;
+  transition: background 0.3s ease;
 }
+
 .sobre-nosotros-btn:hover {
-  background: #F28D8D;
-  color: #8B5E3C;
+  background: #d62828;
 }
