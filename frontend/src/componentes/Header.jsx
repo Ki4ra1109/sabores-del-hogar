@@ -1,19 +1,17 @@
-import React from 'react'
+import React, { useState } from 'react';
 import "./Header.css";
-import { FaSearch } from "react-icons/fa";
-import { FaShoppingCart } from "react-icons/fa";
-import { FaUser } from "react-icons/fa";
-import { Link } from 'react-router-dom';
+import { FaSearch, FaShoppingCart, FaUser } from "react-icons/fa";
+import Carrito from './Carrito';
 
 export const Header = () => {
+    const [abrirCarrito, setAbrirCarrito] = useState(false);
+    const [carrito, setCarrito] = useState([]); 
+
     return (
         <header>
-            
             <div className="mensaje-banner">
-                <p>🎉 Bienvenido a mi página — Ofertas especiales todo el mes 🎉 - aqui debemos mas adelante implementar mensaje escrito por el admin</p>
+                <p>🎉 Bienvenido a mi página — Ofertas especiales todo el mes 🎉</p>
             </div>
-            
-          
             <nav className="Header-nav">
                 <a href="/">
                     <img
@@ -22,9 +20,7 @@ export const Header = () => {
                         alt="Logo Sabores del Hogar"
                     />
                 </a>
-
                 <h1 className="NombreEmpresa">Sabores del hogar</h1>
-
                 <div className="buscar-container">
                     <input
                         type="text"
@@ -35,30 +31,39 @@ export const Header = () => {
                         <FaSearch />
                     </span>
                 </div>
-
-                <a href="/" className="Header-carrito-icon">
+                {/* boton carrito funcional */}
+                <button 
+                    className="Header-carrito-icon" 
+                    onClick={(e) => {
+                        e.preventDefault();
+                        setAbrirCarrito(true)
+                    }}
+                >
                     <FaShoppingCart size={30} color="#fff" />
-                </a>
-
+                </button>
                 <a href="/Login">
                     <FaUser className="Header-login-icon" size={26} color="#fff" />
                 </a>
             </nav>
-
-      
             <hr />
-
-            
             <nav className="navbar">
                 <ul className="navbar-list">
                     <li><a href="/">Inicio</a></li>
-                    <li><a href="/Catalogo">Catalogo</a></li>
+                    <li><a href="/Catalogo">Catálogo</a></li>
                     <li><a href="/nosotros">Nosotros</a></li>
                     <li><a href="/contacto">Contacto</a></li>
                     <li><a href="/UserNormal">Vista User Normal</a></li>
                     <li><a href="/UserAdmin">Vista User Admin</a></li>
+
                 </ul>
             </nav>
+            {/* carrito Sidebar */}
+            <Carrito 
+                carrito={carrito} 
+                setCarrito={setCarrito} 
+                abrir={abrirCarrito} 
+                setAbrir={setAbrirCarrito} 
+            />
         </header>
-    )
+    );
 }
