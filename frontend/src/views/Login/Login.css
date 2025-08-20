@@ -217,9 +217,9 @@
 .al-form input:not([type="checkbox"]),
 .al-form select,
 .al-form textarea {
-    background: #8B5E3C;
-    color: #e7e9ea;
-    border: 1px solid #2f3336;
+    background: #e7a97a;
+    color: #000000 !important;   /* <- Forzar blanco en el texto */
+    border: 1px solid #000000;
     padding: 12px 14px;
     border-radius: 8px;
     outline: none;
@@ -228,9 +228,21 @@
     font-size: 15px;
 }
 
-.al-form input:focus {
+/* Para cuando el campo está enfocado */
+.al-form input:focus,
+.al-form select:focus,
+.al-form textarea:focus {
     border-color: #8ecdf7;
+    color: #000000 !important;   /* <- Mantener blanco */
 }
+
+/* Para el texto de ayuda dentro (placeholder) */
+.al-form input::placeholder,
+.al-form textarea::placeholder {
+    color: #000000;   /* Blanco más suave para diferenciar */
+    opacity: 0.9;
+}
+
 
 .al-check {
     display: flex;
