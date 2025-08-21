@@ -294,3 +294,283 @@ header {
 .navbar-list a:hover {
     color: #FFD166 ;
 }
+.Header-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.buscar-container {
+  position: relative;
+  margin: 10px;
+  width: 260px;
+}
+
+.buscar-input {
+  width: 100%;
+  padding: 8px 36px 8px 12px;
+  background: #fff;
+}
+
+.buscar-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #333;
+  pointer-events: none;
+  line-height: 0;
+  font-size: 16px;
+}
+
+.buscar-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 100%;
+  max-height: 280px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.12);
+  padding: .4rem 0;
+  z-index: 1200;
+}
+
+.buscar-dropdown li {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .55rem .75rem;
+  cursor: pointer;
+}
+
+.buscar-dropdown li:hover { background: #fff7f0; }
+
+.buscar-dropdown img {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.res-nombre { display: block; font-weight: 700; color: #333; }
+.res-precio { display: block; font-size: .85rem; color: #8B5E3C; }
+
+.Header-carrito-icon,
+.Header-login-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+.Header-carrito-icon {
+  background: transparent;
+  border: none;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+.Header-login-icon {
+  width: 26px;
+  height: 26px;
+  margin: 0 8px;
+}
+
+.navbar .has-submenu { position: relative; }
+
+.navbar .has-submenu .submenu {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: calc(100% + 8px);
+  min-width: 180px;
+  background: #8B5E3C;
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.15);
+  padding: .5rem 0;
+  display: none;
+  z-index: 1000;
+}
+
+.navbar .has-submenu:hover .submenu { display: block; }
+
+.submenu li { list-style: none; }
+
+.submenu a {
+  display: block;
+  padding: .55rem 1rem;
+  color: #F8D7DA;
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.submenu a:hover { background: #734b2f; color: #FFD166; }
+
+.navbar-list a:hover {
+  color: #FFD166;
+  background: none !important;
+  width: auto !important;
+}
+/*Submenú fijo al hover*/
+.navbar .has-submenu { position: relative; z-index: 2; }
+.navbar .has-submenu .submenu {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 100%;
+  margin-top: 8px;
+  min-width: 180px;
+  background: #8B5E3C;
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.15);
+  padding: .5rem 0;
+  display: none;
+  z-index: 1000;
+}
+.navbar .has-submenu:hover .submenu { display: block; }
+.submenu li { list-style: none; }
+.submenu a {
+  display: block;
+  padding: .55rem 1rem;
+  color: #F8D7DA;
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.submenu a:hover { background: #734b2f; color: #FFD166; }
+
+.buscar-container { position: relative; }
+.buscar-input { padding-right: 36px; }
+.buscar-icon {
+  position: absolute;
+  right: 10px;
+  left: auto;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #333;
+  pointer-events: none;
+  line-height: 0;
+  font-size: 16px;
+}
+/* Submenú fijo al hover */
+.navbar .has-submenu { position: relative; z-index: 3; }
+.navbar .has-submenu .submenu {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 100%;
+  min-width: 180px;
+  background: #8B5E3C;
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.15);
+  padding: .5rem 0;
+  display: none;
+  z-index: 1000;
+}
+.navbar .has-submenu:hover .submenu,
+.navbar .has-submenu:focus-within .submenu { display: block; }
+.submenu li { list-style: none; }
+.submenu a {
+  display: block;
+  padding: .55rem 1rem;
+  color: #F8D7DA;
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.submenu a:hover { background: #734b2f; color: #FFD166; }
+
+/* Lupa a la derecha y dropdown flotante del buscador */
+.header-actions { display: flex; align-items: center; gap: 16px; }
+.buscar-container { position: relative; width: 260px; }
+.buscar-input { padding-right: 40px; }
+.buscar-submit {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  line-height: 0;
+}
+.buscar-submit svg { width: 18px; height: 18px; }
+
+.buscar-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 100%;
+  max-height: 280px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.12);
+  padding: .4rem 0;
+  z-index: 1200;
+}
+.buscar-dropdown li {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .55rem .75rem;
+  cursor: pointer;
+}
+.buscar-dropdown li:hover { background: #fff7f0; }
+.buscar-dropdown img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
+.res-nombre { display: block; font-weight: 700; color: #333; }
+.res-precio { display: block; font-size: .85rem; color: #8B5E3C; }
+.navbar .has-submenu {
+  position: relative;
+  padding-bottom: 10px;
+  margin-bottom: -10px;
+  z-index: 3;
+}
+.navbar .has-submenu .submenu {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 100%;
+  margin-top: 0;
+  min-width: 180px;
+  background: #8B5E3C;
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.15);
+  padding: .5rem 0;
+  display: none;
+  z-index: 1000;
+}
+.navbar .has-submenu:hover .submenu,
+.navbar .has-submenu:focus-within .submenu,
+.navbar .has-submenu .submenu:hover {
+  display: block;
+}
+
+.buscar-container { position: relative; }
+.buscar-input { padding-right: 40px; }
+.buscar-submit {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  line-height: 0;
+}
+.buscar-submit svg { width: 18px; height: 18px; }
