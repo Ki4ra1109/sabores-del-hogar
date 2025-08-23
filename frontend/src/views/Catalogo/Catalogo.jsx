@@ -1,25 +1,36 @@
+// src/views/Catalogo/Catalogo.jsx
 import { Footer } from '../../componentes/Footer';
 import { Header } from '../../componentes/Header';
 import productos from '../../data/productos';
 import './Catalogo.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useMemo } from 'react';
 
 export default function Catalogo() {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const irAlProducto = (id) => {
-    navigate(`/catalogo/${id}`);
-  };
+  const irAlProducto = (id) => navigate(`/catalogo/${id}`);
+
+  const cat = new URLSearchParams(location.search).get('cat'); // "tortas"  "dulces" 
+  const lista = useMemo(() => {
+    if (!cat) return productos;
+    return productos.filter(p => p.categoria === cat);
+  }, [cat]);
 
   return (
     <div className="productos-container">
       <Header />
       <div className="catalogo-body">
-        <h1>Nuestro Catálogo de Tortas</h1>
+        <h1>
+          {cat === 'tortas' ? 'Nuestro Catálogo de Tortas'
+            : cat === 'dulces' ? 'Nuestro Catálogo de Dulces'
+            : 'Nuestro Catálogo'}
+        </h1>
         <div className="productos-grid">
-          {productos.map(producto => (
-            <div 
-              key={producto.id} 
+          {lista.map(producto => (
+            <div
+              key={producto.id}
               className="producto-card"
               onClick={() => irAlProducto(producto.id)}
             >
