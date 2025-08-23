@@ -23,7 +23,7 @@
   font-weight: bold;
 }
 
-/* Grid de productos */
+/* Grid de los productos */
 .productos-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -31,7 +31,7 @@
   width: 100%;
 }
 
-/* Card de producto */
+/* Cards de los producto */
 .producto-card {
   background: #fff;
   border-radius: 1rem;
