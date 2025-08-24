@@ -21,7 +21,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem;
-  background-color: #8B5E3C;
+  background-color: #572420;
   color: white;
 }
 
@@ -61,7 +61,7 @@
 
 .info-item h3 {
   font-size: 1rem;
-  color: #8B5E3C;
+  color: #572420;
   margin-bottom: 0.3rem;
 }
 
@@ -101,10 +101,10 @@
 }
 
 .finalizar-btn {
-  background-color: #8B5E3C;
+  background-color: #572420;
   color: white;
 }
 
 .finalizar-btn:hover {
-  background-color: #a36d4a;
+  background-color: #361412;
 }

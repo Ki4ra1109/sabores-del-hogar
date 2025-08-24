@@ -1,5 +1,5 @@
 header {
-  background-color: #8B5E3C;
+  background-color: #572420;
   width: 100%;
 }
 
@@ -46,7 +46,7 @@ header {
   text-transform: uppercase;
   flex: 1;
   text-align: center;
-  margin-left: 230px;
+  margin-left: 375px;
 }
 .NombreEmpresa:hover { color: #FFD166; }
 
@@ -189,7 +189,7 @@ header {
   top: 100%;
   margin-top: 0;
   min-width: 180px;
-  background: #8B5E3C;
+  background: #572420;
   border-radius: 12px;
   box-shadow: 0 10px 24px rgba(0,0,0,.15);
   padding: .5rem 0;
@@ -213,14 +213,14 @@ header {
 /*Panel de Inicio de sesion */
 :root{
   --hdr-bg:#8B5E3C;
-  --panel-bg:#8B5E3C;
+  --panel-bg:#572420;
   --panel-shadow:0 12px 28px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.12);
   --panel-radius:14px;
   --input-bg:#FFF1E6;
   --input-bd:#D9C6B0;
   --txt:#2C2A29;
   --txt-inv:#FFFFFF;
-  --btn-primary:#E63946;        /* botón Iniciar Sesion */
+  --btn-primary:#E63946;
   --btn-primary-hover:#d62828;
 }
 .auth-popover{ position:relative; display:flex; align-items:center; }
