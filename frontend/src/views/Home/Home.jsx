@@ -124,10 +124,26 @@ export default function Home() {
 
       {/* separador debajo del carrusel, efecto visual de "crema" para reutilizarlo*/}
       <div className="separador">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" style={{ display: 'block', transform: 'scaleY(-1)' }}>
-          <path 
-            fill="#572420" 
-            fillOpacity="1" 
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 1440 320"
+          preserveAspectRatio="none"
+          style={{ display: 'block', transform: 'scaleY(-1)', width: '100%', height: 'auto' }}
+        >
+          <defs>
+            {/* chispitas */}
+            <pattern id="sprinkles" width="60" height="60" patternUnits="userSpaceOnUse">
+              <rect x="10" y="10" width="10" height="3" rx="1.5" fill="#FFD166" transform="rotate(20 15 11)" />
+              <rect x="30" y="5" width="10" height="3" rx="1.5" fill="#06D6A0" transform="rotate(-15 35 6)" />
+              <rect x="20" y="30" width="10" height="3" rx="1.5" fill="#E63946" transform="rotate(10 25 31)" />
+              <rect x="40" y="45" width="10" height="3" rx="1.5" fill="#118AB2" transform="rotate(-25 45 46)" />
+            </pattern>
+          </defs>
+
+          {/* chocolate */}
+          <path
+            fill="#572420"
+            fillOpacity="1"
             d="M0,192 C60,240 120,160 180,200 
               C240,240 300,120 360,180 
               C420,240 480,80 540,160 
@@ -136,11 +152,24 @@ export default function Home() {
               C960,260 1020,100 1080,160 
               C1140,220 1200,140 1260,200 
               C1320,260 1380,120 1440,180 
-              L1440,320 L0,320 Z">
-          </path>
+              L1440,320 L0,320 Z"
+          />
+
+          {/* patron chispitas dentro del chocolates */}
+          <path
+            fill="url(#sprinkles)"
+            d="M0,192 C60,240 120,160 180,200 
+              C240,240 300,120 360,180 
+              C420,240 480,80 540,160 
+              C600,240 660,100 720,180 
+              C780,260 840,140 900,200 
+              C960,260 1020,100 1080,160 
+              C1140,220 1200,140 1260,200 
+              C1320,260 1380,120 1440,180 
+              L1440,320 L0,320 Z"
+          />
         </svg>
       </div>
-
       {/* cards de "sobre nosotros" y "nuestra trayectoria" */}
       <div className="historia-card">
         <h2 className="historia-card-title">¿Cómo comenzó todo?</h2>
