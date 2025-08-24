@@ -91,8 +91,9 @@ export const Header = () => {
   return (
     <header>
       <div className="mensaje-banner">
-        <p>🎉 Bienvenido a mi página — Ofertas especiales todo el mes 🎉</p>
+        <p>🎉 Bienvenido a mi Sabores del Hogar — Ofertas especiales todo el mes 🎉</p>
       </div>
+
 
       <nav className="Header-nav">
         <a href="/">

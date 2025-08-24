@@ -5,21 +5,25 @@ header {
 
 /* barra superior */
 .mensaje-banner {
-  background-color: #F8D7DA;
-  overflow: hidden;
-  white-space: nowrap;
+    background-color: #F8D7DA;
+    overflow: hidden;
+    white-space: nowrap;
 }
+
 .mensaje-banner p {
-  display: inline-block;
-  padding: 10px 0;
-  font-weight: bold;
-  font-size: 15px;
-  color: #8B5E3C;
-  animation: correr 10s linear infinite;
+    display: block;
+    width: 100%;
+    padding: 10px 0;
+    font-weight: bold;
+    font-size: 15px;
+    color: #8B5E3C;
+    animation: correr 12s linear infinite;
+    text-align: center;
 }
+
 @keyframes correr {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
 }
 
 /*Barra superior*/
