@@ -1,4 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap');
+.html, body {
+  background-color: #FFF1E6;
+}
 
 .nosotros-container {
   background-color: #FFF1E6;
@@ -73,7 +76,6 @@
   margin-bottom: 0;
   padding: 0;
   line-height: 0;
-  background-color: #FFF1E6;
 }
 /* seccion de desarrolladores */
 .developers-section {
