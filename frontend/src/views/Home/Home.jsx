@@ -126,7 +126,7 @@ export default function Home() {
       <div className="separador">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" style={{ display: 'block', transform: 'scaleY(-1)' }}>
           <path 
-            fill="#8B5E3C" 
+            fill="#572420" 
             fillOpacity="1" 
             d="M0,192 C60,240 120,160 180,200 
               C240,240 300,120 360,180 
@@ -179,7 +179,7 @@ export default function Home() {
       <div className="separador">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" style={{ display: 'block', transform: 'scaleY(-1)' }}>
           <path 
-            fill="#8B5E3C" 
+            fill="#572420" 
             fillOpacity="1" 
             d="M0,192 C60,240 120,160 180,200 
               C240,240 300,120 360,180 
@@ -222,7 +222,7 @@ export default function Home() {
       <div className="separador">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" style={{ display: 'block', transform: 'scaleY(-1)' }}>
           <path 
-            fill="#8B5E3C" 
+            fill="#572420" 
             fillOpacity="1" 
             d="M0,192 C60,240 120,160 180,200 
               C240,240 300,120 360,180 
