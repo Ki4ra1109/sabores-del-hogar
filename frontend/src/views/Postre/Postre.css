@@ -1,0 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap');
+
+.postre-container {
+    background-color: #FFF1E6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Quicksand', Arial, sans-serif;
+}

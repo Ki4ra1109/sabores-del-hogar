@@ -329,7 +329,13 @@ export default function Home() {
       <div className="arma-tu-postre-card">
         <div className="arma-tu-postre-content">
           <h2>Arma tu postre</h2>
-          <p>Próximamente...</p>
+          <p>¿No te convencen los postres que ofrecemos? ¡Arma tu postre a gusto tuyo!</p>
+          <button
+                className="arma-tu-postre-btn"
+                onClick={() => navigate("/postre")}
+              >
+                Saber más
+          </button>
         </div>
       </div>
       <Footer/>
