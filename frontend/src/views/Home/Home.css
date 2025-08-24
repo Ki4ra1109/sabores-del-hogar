@@ -352,3 +352,20 @@
   font-size: 18px;
   color: #555555;
 }
+
+.arma-tu-postre-btn {
+  display: block;
+  margin: 1rem auto 0;
+  padding: 0.6rem 1.2rem;
+  background: #E63946;
+  border: none;
+  border-radius: 0.5rem;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.arma-tu-postre-btn:hover {
+  background: #d62828;
+}
