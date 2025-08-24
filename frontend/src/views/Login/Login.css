@@ -2,7 +2,7 @@
 /* Layout base */
 .al-landing {
     min-height: 100vh;
-    background: #8B5E3C;
+    background: #572420;
     color: #fff;
     font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 }
@@ -41,7 +41,6 @@
     font-weight: 800;
     letter-spacing: -6px;
     color: #ffffff;
-    /* gris claro (placeholder) */
     opacity: 0.85;
 }
 
@@ -49,12 +48,11 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
-    /* mantiene proporción */
 }
 
 /* Col derecha (titulares y CTA) */
 .al-right {
-    max-width: 520px;
+    max-width: 620px;
 }
 
 .al-title {
@@ -218,7 +216,7 @@
 .al-form select,
 .al-form textarea {
     background: #e7a97a;
-    color: #000000 !important;   /* <- Forzar blanco en el texto */
+    color: #000000 !important;
     border: 1px solid #000000;
     padding: 12px 14px;
     border-radius: 8px;
@@ -233,13 +231,13 @@
 .al-form select:focus,
 .al-form textarea:focus {
     border-color: #8ecdf7;
-    color: #000000 !important;   /* <- Mantener blanco */
+    color: #000000 !important;
 }
 
 /* Para el texto de ayuda dentro (placeholder) */
 .al-form input::placeholder,
 .al-form textarea::placeholder {
-    color: #000000;   /* Blanco más suave para diferenciar */
+    color: #000000;
     opacity: 0.9;
 }
 
