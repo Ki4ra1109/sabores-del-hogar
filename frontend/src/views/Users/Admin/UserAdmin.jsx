@@ -1,465 +1,783 @@
-import React, { useState } from 'react';
-import { Footer } from '../../../componentes/Footer';
-import { Header } from '../../../componentes/Header';
+import React, { useState, useEffect } from "react";
+import { Footer } from "../../../componentes/Footer";
+import { Header } from "../../../componentes/Header";
 import "./UserAdmin.css";
 
-const UserNormal = () => {
-  const [activeSection, setActiveSection] = useState("home");
+function PedidosSection() {
+  const [q, setQ] = useState("");
+  const pedidos = [];
+  const list = pedidos.filter(p =>
+    q.trim() ? String(p.id).includes(q.trim()) : true
+  );
 
-  const productos = [
-    { nombre: "Cheesecake de Frambuesa", precio: 4990, cantidad: 12, stock: 5 },
-    { nombre: "Muffin de Arándanos", precio: 2590, cantidad: 7, stock: 2 },
-    { nombre: "Croissant de Mantequilla", precio: 1500, cantidad: 15, stock: 10 },
-    { nombre: "Tarta de Limón", precio: 5500, cantidad: 25, stock: 18 },
-    { nombre: "Brownie con Nueces", precio: 3200, cantidad: 9, stock: 4 },
-    { nombre: "Galletas de Chocolate", precio: 1200, cantidad: 20, stock: 12 },
-    { nombre: "Pan de Chocolate", precio: 1800, cantidad: 8, stock: 3 },
-    { nombre: "Cupcake de Vainilla", precio: 2200, cantidad: 10, stock: 7 },
-    { nombre: "Tiramisu Individual", precio: 4200, cantidad: 5, stock: 1 },
-    { nombre: "Donut Glaseado", precio: 1500, cantidad: 6, stock: 0 },
-  ];
+  return (
+    <>
+      <div className="orders-search">
+        <input
+          className="orders-input"
+          type="number"
+          inputMode="numeric"
+          placeholder="Buscar por # de pedido (ej: 1004)"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+      </div>
 
-  const [period, setPeriod] = useState("day");
+      <div className="card">
+        <h2>Gestión de pedidos</h2>
+        <div className="orders">
+          {list.length === 0 && (
+            <div className="empty"><p>No hay pedidos registrados todavía.</p></div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
 
-  const data = {
+function GananciasSection() {
+  const periodos = {
     day: [
-      { label: "Lun", value: 45600 },
-      { label: "Mar", value: 70000 },
-      { label: "Mié", value: 55090 },
-      { label: "Jue", value: 84900 },
-      { label: "Vie", value: 60500 },
-      { label: "Sáb", value: 95000 },
-      { label: "Dom", value: 54500 },
+      { l: "Lun", v: 45600 }, { l: "Mar", v: 70000 }, { l: "Mié", v: 55090 },
+      { l: "Jue", v: 84900 }, { l: "Vie", v: 60500 }, { l: "Sáb", v: 95000 }, { l: "Dom", v: 54500 },
     ],
     week: [
-      { label: "Semana 1", value: 28000 },
-      { label: "Semana 2", value: 35000 },
-      { label: "Semana 3", value: 30000 },
-      { label: "Semana 4", value: 40000 },
+      { l: "Sem 1", v: 28000 }, { l: "Sem 2", v: 35000 }, { l: "Sem 3", v: 30000 }, { l: "Sem 4", v: 40000 },
     ],
     month: [
-      { label: "Ene", value: 120000 },
-      { label: "Feb", value: 110000 },
-      { label: "Mar", value: 140000 },
-      { label: "Abr", value: 130000 },
-      { label: "May", value: 150000 },
-      { label: "Jun", value: 160000 },
+      { l: "Ene", v: 120000 }, { l: "Feb", v: 110000 }, { l: "Mar", v: 140000 },
+      { l: "Abr", v: 130000 }, { l: "May", v: 150000 }, { l: "Jun", v: 160000 },
     ],
   };
+  const [period, setPeriod] = useState("day");
+  const data = periodos[period];
+  const max = Math.max(...data.map(d => d.v));
 
-  const clientes = [
-    { nombre: "Joaquín Riveros", email: "joaquin.riveros@example.com", telefono: "+56 9 2345 6789" },
-    { nombre: "Camila Fernández", email: "camila.fernandez@example.com", telefono: "+56 9 8765 4321" },
-    { nombre: "Sebastián Morales", email: "sebastian.morales@example.com", telefono: "+56 9 1122 3344" },
-    { nombre: "Valentina Rojas", email: "valentina.rojas@example.com", telefono: "+56 9 5566 7788" },
-    { nombre: "Lucas Pérez", email: "lucas.perez@example.com", telefono: "+56 9 9988 7766" },
-    { nombre: "Isidora Soto", email: "isidora.soto@example.com", telefono: "+56 9 2233 4455" },
-    { nombre: "Matías González", email: "matias.gonzalez@example.com", telefono: "+56 9 6677 8899" },
-    { nombre: "Fernanda Díaz", email: "fernanda.diaz@example.com", telefono: "+56 9 3344 5566" },
-    { nombre: "Ignacio Castillo", email: "ignacio.castillo@example.com", telefono: "+56 9 7788 9900" },
-    { nombre: "Antonia Rivas", email: "antonia.rivas@example.com", telefono: "+56 9 4455 6677" },
+  return (
+    <div className="card">
+      <div className="card-head">
+        <h2>Ganancias</h2>
+        <div className="tabs">
+          <button className={`tab ${period==="day"?"on":""}`} onClick={()=>setPeriod("day")}>Día</button>
+          <button className={`tab ${period==="week"?"on":""}`} onClick={()=>setPeriod("week")}>Semana</button>
+          <button className={`tab ${period==="month"?"on":""}`} onClick={()=>setPeriod("month")}>Mes</button>
+        </div>
+      </div>
+      <div className="chart">
+        {data.map((d,i)=>(
+          <div key={i} className="col">
+            <div className="bar" style={{height:`${(d.v/max)*100}%`}} title={`$${d.v.toLocaleString()}`}/>
+            <span className="lbl">{d.l}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ProductosSection() {
+  const [showForm, setShowForm] = useState(false);
+  const [items, setItems] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+
+  const [form, setForm] = useState({
+    nombre: "",
+    categoria: "tortas",
+    precioRango: "",
+    imagen: "",
+    descripcion: "",
+    porciones: [],
+    activo: true,
+    sku: "",
+    usarPorciones: true
+  });
+  const [errors, setErrors] = useState({});
+
+  const toggleForm = () => setShowForm(v => !v);
+
+  const PORCIONES = [12, 18, 24, 30, 50];
+
+  const onChange = (e) => {
+    const { name, value, type, checked } = e.target;
+
+    if (name === "categoria") {
+      const usar = value === "tortas";
+      setForm(prev => ({
+        ...prev,
+        categoria: value,
+        usarPorciones: usar,
+        porciones: usar ? prev.porciones : []
+      }));
+      return;
+    }
+
+    if (name === "usarPorciones") {
+      setForm(prev => ({
+        ...prev,
+        usarPorciones: checked,
+        porciones: checked ? prev.porciones : []
+      }));
+      return;
+    }
+
+    setForm(prev => ({
+      ...prev,
+      [name]: type === "checkbox" && name !== "porciones" ? checked : value
+    }));
+  };
+
+  const onTogglePorcion = (p) => {
+    if (!form.usarPorciones) return;
+    setForm(prev => {
+      const exists = prev.porciones.includes(p);
+      return { ...prev, porciones: exists ? prev.porciones.filter(x => x !== p) : [...prev.porciones, p] };
+    });
+  };
+
+  const isValidUrl = (u) => {
+    if (!u) return true;
+    try {
+      const url = new URL(u);
+      return url.protocol === "http:" || url.protocol === "https:";
+    } catch { return false; }
+  };
+
+  const validate = () => {
+    const e = {};
+    if (!form.nombre.trim()) e.nombre = "Ingresa un nombre";
+    if (!form.categoria) e.categoria = "Selecciona una categoría";
+    if (!form.precioRango.trim()) e.precioRango = "Ingresa un rango de precio";
+    if (!isValidUrl(form.imagen)) e.imagen = "URL de imagen no válida";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const reset = () => {
+    setForm({
+      nombre: "",
+      categoria: "tortas",
+      precioRango: "",
+      imagen: "",
+      descripcion: "",
+      porciones: [],
+      activo: true,
+      sku: "",
+      usarPorciones: true
+    });
+    setErrors({});
+    setEditingId(null);
+  };
+
+  const onSubmit = (e) => {
+    e.preventDefault();
+    if (!validate()) return;
+    const payload = {
+      id: editingId ?? Date.now(),
+      nombre: form.nombre.trim(),
+      categoria: form.categoria,
+      precio: form.precioRango.trim(),
+      imagen: form.imagen.trim(),
+      descripcion: form.descripcion.trim(),
+      variantes: form.usarPorciones ? form.porciones.map(p => ({ personas: p })) : [],
+      activo: form.activo,
+      sku: form.sku.trim()
+    };
+
+    setItems(prev =>
+      editingId ? prev.map(it => (it.id === editingId ? payload : it)) : [payload, ...prev]
+    );
+
+    reset();
+    setShowForm(false);
+  };
+
+  const startEdit = (item) => {
+    setEditingId(item.id);
+    setForm({
+      nombre: item.nombre || "",
+      categoria: item.categoria || "tortas",
+      precioRango: item.precio || "",
+      imagen: item.imagen || "",
+      descripcion: item.descripcion || "",
+      porciones: (item.variantes || []).map(v => v.personas),
+      activo: !!item.activo,
+      sku: item.sku || "",
+      usarPorciones: (item.variantes || []).length > 0 || (item.categoria === "tortas"),
+    });
+    setShowForm(true);
+  };
+
+  const removeItem = (id) => {
+    setItems(prev => prev.filter(p => p.id !== id));
+    if (editingId === id) reset();
+  };
+
+  const safeThumb = (src) => {
+    const url = (src || "").trim();
+    if (!url) return "/placeholder.jpg";
+    if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/")) return url;
+    return "/placeholder.jpg";
+  };
+
+  return (
+    <div className="card">
+      <div className="card-head">
+        <h2>Gestión de productos</h2>
+        <button className="btn" onClick={toggleForm}>
+          {showForm ? "Cerrar formulario" : "Añadir nuevo producto"}
+        </button>
+      </div>
+
+      {showForm && (
+        <form className="product-form" onSubmit={onSubmit} noValidate>
+          <div className="form-grid">
+            <div className="field">
+              <label>Nombre</label>
+              <input
+                name="nombre"
+                value={form.nombre}
+                onChange={onChange}
+                placeholder="Ej: Torta de Chocolate"
+              />
+              {errors.nombre && <span className="err">{errors.nombre}</span>}
+            </div>
+
+            <div className="field">
+              <label>Categoría</label>
+              <select name="categoria" value={form.categoria} onChange={onChange}>
+                <option value="tortas">Tortas</option>
+                <option value="dulces">Dulces</option>
+              </select>
+              {errors.categoria && <span className="err">{errors.categoria}</span>}
+            </div>
+
+            <div className="field">
+              <label>Rango de precio</label>
+              <input
+                name="precioRango"
+                value={form.precioRango}
+                onChange={onChange}
+                placeholder="Ej: 18.000 - 60.000"
+              />
+              {errors.precioRango && <span className="err">{errors.precioRango}</span>}
+            </div>
+
+            <div className="field">
+              <label>URL de imagen</label>
+              <input
+                name="imagen"
+                value={form.imagen}
+                onChange={onChange}
+                placeholder="https://..."
+              />
+              {errors.imagen && <span className="err">{errors.imagen}</span>}
+            </div>
+
+            <div className="field field-span">
+              <label>Descripción breve</label>
+              <textarea
+                name="descripcion"
+                value={form.descripcion}
+                onChange={onChange}
+                placeholder="Opcional"
+                rows={3}
+              />
+            </div>
+
+            <div className="field">
+              <label>Porciones</label>
+              {form.categoria === "dulces" && (
+                <div className="field check" style={{ marginBottom: 8 }}>
+                  <label>
+                    <input
+                      type="checkbox"
+                      name="usarPorciones"
+                      checked={form.usarPorciones}
+                      onChange={onChange}
+                    /> Habilitar porciones para este producto
+                  </label>
+                </div>
+              )}
+              <div className="chips">
+                {PORCIONES.map(p => (
+                  <button
+                    type="button"
+                    key={p}
+                    className={`chip ${form.porciones.includes(p) ? "on" : ""}`}
+                    onClick={() => onTogglePorcion(p)}
+                    disabled={!form.usarPorciones}
+                    aria-disabled={!form.usarPorciones}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="field">
+              <label>SKU (opcional)</label>
+              <input
+                name="sku"
+                value={form.sku}
+                onChange={onChange}
+                placeholder="SKU interno"
+              />
+            </div>
+
+            <div className="field check">
+              <label><input type="checkbox" name="activo" checked={form.activo} onChange={onChange} /> Activo</label>
+            </div>
+          </div>
+
+          <div className="row mt form-actions">
+            <button type="submit" className="btn primary">{editingId ? "Guardar cambios" : "Guardar producto"}</button>
+            <button type="button" className="btn" onClick={reset}>Limpiar</button>
+          </div>
+        </form>
+      )}
+
+      <div className="grid">
+        {items.length === 0 && (
+          <div className="empty">
+            <p>No hay productos agregados aún.</p>
+          </div>
+        )}
+        {items.map((p) => (
+          <div key={p.id} className="product">
+            {p.imagen && (
+              <img
+                src={safeThumb(p.imagen)}
+                alt={p.nombre}
+                loading="lazy"
+                onError={(e)=>{ e.currentTarget.src="/placeholder.jpg"; }}
+                style={{ width: "100%", maxHeight: 140, objectFit: "cover", borderRadius: 8, marginBottom: 8 }}
+              />
+            )}
+            <h4>{p.nombre}</h4>
+            <p>Categoría: {p.categoria}</p>
+            <p>Precio: ${p.precio}</p>
+            {p.variantes?.length > 0 && (
+              <p>Porciones: {p.variantes.map(v => v.personas).join(", ")}</p>
+            )}
+            {p.sku && <p>SKU: {p.sku}</p>}
+            <div className="row">
+              <button className="btn sm" onClick={() => startEdit(p)}>Modificar</button>
+              <button className="btn sm danger" onClick={() => removeItem(p.id)}>Eliminar</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DescuentosSection() {
+  const [showForm, setShowForm] = useState(false);
+  const [coupons, setCoupons] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+
+  const [form, setForm] = useState({
+    code: "",
+    description: "",
+    type: "percent",
+    value: "",
+    minSpend: "",
+    start: "",
+    end: "",
+    active: true,
+  });
+  const [errors, setErrors] = useState({});
+
+  const toggleForm = () => setShowForm(v => !v);
+
+  const onChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setForm(prev => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+  };
+
+  const validate = () => {
+    const e = {};
+    const code = form.code.trim().toUpperCase();
+    if (!code) e.code = "Ingresa un código";
+    const exists = coupons.some(c => c.code === code && c.id !== editingId);
+    if (code && exists) e.code = "El código ya existe";
+    if (form.type !== "free_shipping") {
+      const n = Number(form.value);
+      if (!form.value || Number.isNaN(n) || n <= 0) e.value = "Valor inválido";
+    }
+    if (form.start && form.end && new Date(form.start) > new Date(form.end)) {
+      e.end = "La fecha fin debe ser mayor o igual a inicio";
+    }
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const reset = () => {
+    setForm({
+      code: "",
+      description: "",
+      type: "percent",
+      value: "",
+      minSpend: "",
+      start: "",
+      end: "",
+      active: true,
+    });
+    setErrors({});
+    setEditingId(null);
+  };
+
+  const onSubmit = (e) => {
+    e.preventDefault();
+    if (!validate()) return;
+
+    const payload = {
+      id: editingId ?? Date.now(),
+      code: form.code.trim().toUpperCase(),
+      description: form.description.trim(),
+      type: form.type,
+      value: form.type === "free_shipping" ? null : Number(form.value),
+      minSpend: form.minSpend ? Number(form.minSpend) : null,
+      start: form.start || null,
+      end: form.end || null,
+      active: !!form.active,
+    };
+
+    setCoupons(prev =>
+      editingId ? prev.map(c => (c.id === editingId ? payload : c)) : [payload, ...prev]
+    );
+
+    reset();
+    setShowForm(false);
+  };
+
+  const startEdit = (c) => {
+    setEditingId(c.id);
+    setForm({
+      code: c.code,
+      description: c.description || "",
+      type: c.type,
+      value: c.value ?? "",
+      minSpend: c.minSpend ?? "",
+      start: c.start ?? "",
+      end: c.end ?? "",
+      active: !!c.active,
+    });
+    setShowForm(true);
+  };
+
+  const removeCoupon = (id) => {
+    setCoupons(prev => prev.filter(c => c.id !== id));
+    if (editingId === id) reset();
+  };
+
+  return (
+    <div className="card">
+      <div className="card-head">
+        <h2>Códigos de descuento</h2>
+        <button className="btn" onClick={toggleForm}>
+          {showForm ? "Cerrar formulario" : "Agregar nuevo código"}
+        </button>
+      </div>
+
+      {showForm && (
+        <form className="product-form" onSubmit={onSubmit} noValidate>
+          <div className="form-grid">
+            <div className="field">
+              <label>Código</label>
+              <input
+                name="code"
+                value={form.code}
+                onChange={onChange}
+                placeholder="Ej: CUMP2025"
+              />
+              {errors.code && <span className="err">{errors.code}</span>}
+            </div>
+
+            <div className="field">
+              <label>Tipo</label>
+              <select name="type" value={form.type} onChange={onChange}>
+                <option value="percent">Porcentaje (%)</option>
+                <option value="amount">Monto fijo</option>
+                <option value="free_shipping">Envío gratis</option>
+              </select>
+            </div>
+
+            {form.type !== "free_shipping" && (
+              <div className="field">
+                <label>Valor</label>
+                <input
+                  name="value"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.value}
+                  onChange={onChange}
+                  placeholder={form.type === "percent" ? "Ej: 10 = 10%" : "Ej: 5000"}
+                />
+                {errors.value && <span className="err">{errors.value}</span>}
+              </div>
+            )}
+
+            <div className="field">
+              <label>Mínimo a gastar (opcional)</label>
+              <input
+                name="minSpend"
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.minSpend}
+                onChange={onChange}
+                placeholder="Ej: 20000"
+              />
+            </div>
+
+            <div className="field">
+              <label>Vigencia desde</label>
+              <input
+                name="start"
+                type="date"
+                value={form.start}
+                onChange={onChange}
+              />
+            </div>
+
+            <div className="field">
+              <label>Vigencia hasta</label>
+              <input
+                name="end"
+                type="date"
+                value={form.end}
+                onChange={onChange}
+              />
+              {errors.end && <span className="err">{errors.end}</span>}
+            </div>
+
+            <div className="field field-span">
+              <label>Descripción</label>
+              <textarea
+                name="description"
+                rows={2}
+                value={form.description}
+                onChange={onChange}
+                placeholder="Texto visible para el cliente"
+              />
+            </div>
+
+            <div className="field check">
+              <label><input type="checkbox" name="active" checked={form.active} onChange={onChange} /> Activo</label>
+            </div>
+          </div>
+
+          <div className="row mt form-actions">
+            <button type="submit" className="btn primary">{editingId ? "Guardar cambios" : "Crear código"}</button>
+            <button type="button" className="btn" onClick={reset}>Limpiar</button>
+          </div>
+        </form>
+      )}
+
+      <div className="list">
+        {coupons.length === 0 && (
+          <div className="empty"><p>No hay códigos aún. Crea uno con “Agregar nuevo código”.</p></div>
+        )}
+
+        {coupons.map(c => (
+          <div key={c.id} className="discount">
+            <div>
+              <p><strong>Código:</strong> {c.code}</p>
+              {c.description && <p><strong>Descripción:</strong> {c.description}</p>}
+              <p>
+                <strong>Tipo:</strong>{" "}
+                {c.type === "percent" ? `Descuento ${c.value}%`
+                  : c.type === "amount" ? `Descuento $${c.value?.toLocaleString("es-CL")}`
+                  : "Envío gratis"}
+              </p>
+              {c.minSpend != null && <p><strong>Mínimo:</strong> ${Number(c.minSpend).toLocaleString("es-CL")}</p>}
+              {(c.start || c.end) && (
+                <p><strong>Vigencia:</strong> {c.start || "—"} {c.end ? `→ ${c.end}` : ""}</p>
+              )}
+              <p><strong>Estado:</strong> {c.active ? "Activo" : "Inactivo"}</p>
+            </div>
+            <div className="row">
+              <button className="btn sm" onClick={() => startEdit(c)}>Modificar</button>
+              <button className="btn sm danger" onClick={() => removeCoupon(c.id)}>Eliminar</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const UserNormal = () => {
+  const [active, setActive] = useState("inicio");
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    const main = document.querySelector(".main-content");
+    if (main) main.scrollTo({ top: 0, behavior: "smooth" });
+  }, [active]);
+
+  const sections = [
+    { id: "inicio", label: "Inicio" },
+    { id: "pedidos", label: "Gestión de pedidos" },
+    { id: "productos", label: "Gestión de productos" },
+    { id: "clientes", label: "Gestión de clientes" },
+    { id: "ganancias", label: "Visualizar ganancias" },
+    { id: "interactivo", label: "Dashboard interactivo" },
+    { id: "descuentos", label: "Códigos de descuento" },
+    { id: "account", label: "Cuenta" },
+    { id: "settings", label: "Configuración" },
   ];
 
-  // Encontrar valor máximo para escalar la altura
-  const maxValue = Math.max(...data[period].map(d => d.value));
+  const renderInicio = () => (
+    <div className="card-stack">
+      <div className="card">
+        <h2>👋 Bienvenido al Panel</h2>
+        <p>Resumen de actividades y alertas recientes.</p>
+      </div>
+      <div className="card">
+        <h3>Mensajes Importantes</h3>
+        <ul className="bullets">
+          <li>Cliente “Juan Pérez” reporta retraso en entrega.</li>
+          <li>Error en la página de pagos detectado.</li>
+          <li>Pedido #1023 necesita revisión.</li>
+          <li>“Cheesecake de Frambuesa” sin stock.</li>
+        </ul>
+      </div>
+      <div className="card kpis">
+        <div><strong>5</strong><span>Pedidos pendientes</span></div>
+        <div><strong>12</strong><span>Clientes nuevos</span></div>
+        <div><strong>3</strong><span>Sin stock</span></div>
+        <div><strong>2</strong><span>Alertas</span></div>
+      </div>
+    </div>
+  );
+
+  const renderClientes = () => (
+    <div className="card">
+      <h2>Gestión de clientes</h2>
+      <div className="list">
+        {[
+          { n: "Joaquín Riveros", e: "joaquin.riveros@example.com", t: "+56 9 2345 6789" },
+          { n: "Camila Fernández", e: "camila.fernandez@example.com", t: "+56 9 8765 4321" },
+          { n: "Sebastián Morales", e: "sebastian.morales@example.com", t: "+56 9 1122 3344" },
+          { n: "Valentina Rojas", e: "valentina.rojas@example.com", t: "+56 9 5566 7788" },
+        ].map((c, i) => (
+          <div key={i} className="client">
+            <div>
+              <h4>{c.n}</h4>
+              <p>{c.e}</p>
+              <p>{c.t}</p>
+            </div>
+            <div className="row">
+              <button className="btn sm">Modificar</button>
+              <button className="btn sm danger">Eliminar</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderInteractivo = () => (
+    <div className="card">
+      <h2>Dashboard interactivo</h2>
+      <p style={{color:"#555"}}>Cuando conectes tu base de datos, este panel mostrará KPIs reales.</p>
+    </div>
+  );
+
+  const renderAccount = () => (
+    <div className="card">
+      <h2>Cuenta</h2>
+      <div className="grid2">
+        <div className="field"><label>Correo</label><input defaultValue="usuario.demo@example.com" /></div>
+        <div className="field"><label>Nombre</label><input defaultValue="Joaquín" /></div>
+        <div className="field"><label>Apellido</label><input defaultValue="Riveros" /></div>
+        <div className="field"><label>Teléfono</label><input defaultValue="+56 9 2345 6789" /></div>
+        <div className="field"><label>Dirección</label><input defaultValue="Av. Libertad 1234, Santiago" /></div>
+      </div>
+      <div className="row mt">
+        <button className="btn primary">Guardar</button>
+        <button className="btn">Cancelar</button>
+      </div>
+    </div>
+  );
+
+  const renderSettings = () => (
+    <div className="card">
+      <h2>Configuración</h2>
+      <div className="grid2">
+        <div className="field">
+          <label>Tema de color</label>
+          <select defaultValue="default">
+            <option value="default">Café (default)</option>
+            <option value="oscuro">Oscuro</option>
+            <option value="claro">Claro</option>
+            <option value="pastel">Pastel</option>
+          </select>
+        </div>
+        <div className="field check">
+          <label><input type="checkbox" /> Modo oscuro</label>
+        </div>
+        <div className="field check">
+          <label><input type="checkbox" defaultChecked /> Notificaciones</label>
+        </div>
+        <div className="field">
+          <label>Tamaño de fuente</label>
+          <select defaultValue="media">
+            <option value="pequena">Pequeña</option>
+            <option value="media">Media</option>
+            <option value="grande">Grande</option>
+          </select>
+        </div>
+        <div className="field">
+          <label>Idioma</label>
+          <select defaultValue="es">
+            <option value="es">Español</option>
+            <option value="en">Inglés</option>
+            <option value="pt">Portugués</option>
+          </select>
+        </div>
+        <div className="field check">
+          <label><input type="checkbox" defaultChecked /> Mostrar foto de perfil</label>
+        </div>
+      </div>
+      <button className="btn danger mt">Cerrar sesión</button>
+    </div>
+  );
 
   return (
     <div>
       <Header />
       <div className="user-container">
-        {/* Sidebar */}
-        <aside className="sidebar">
+        <aside className="sidebar" aria-label="Menú de administración">
           <ul>
-            <li onClick={() => setActiveSection("inicio")}>Inicio</li>
-            <li onClick={() => setActiveSection("account")}>Cuenta</li>
-            <li onClick={() => setActiveSection("ventas")}>Sistema predictivo de ventas</li>
-            <li onClick={() => setActiveSection("interactivo")}>Dashboard interactivo</li>
-            <li onClick={() => setActiveSection("pedidos")}>Gestión de pedidos</li>
-            <li onClick={() => setActiveSection("ganancias")}>Visualizar ganancias</li>
-            <li onClick={() => setActiveSection("productos")}>Gestión de productos</li>
-            <li onClick={() => setActiveSection("clientes")}>Gestión de clientes</li>
-            <li onClick={() => setActiveSection("descuentos")}>Crear códigos de descuento</li>
-            <li onClick={() => setActiveSection("settings")}>Configuración</li>
+            {sections.map(s => (
+              <li
+                key={s.id}
+                className={active===s.id ? "active" : ""}
+                tabIndex={0}
+                onClick={()=>setActive(s.id)}
+                onKeyDown={(e)=> (e.key==="Enter" || e.key===" ") && setActive(s.id)}
+                aria-current={active===s.id ? "page" : undefined}
+              >
+                {s.label}
+              </li>
+            ))}
           </ul>
         </aside>
 
-        {/* Contenido central */}
-        <main className="main-content">
-
-          {/* Inicio */}
-          {activeSection === "inicio" && (
-            <div className="admin-home">
-              <h2>👋 Bienvenido al Panel de Administración</h2>
-              <p>Resumen de las actividades más importantes y alertas recientes.</p>
-
-              <div className="admin-cards">
-                {/* Mensaje de bienvenida */}
-                <div className="admin-card welcome-card">
-                  <h3>Hola, Administrador</h3>
-                  <p>Revisa las novedades y gestiona tu negocio de forma eficiente.</p>
-                </div>
-
-                {/* Mensajes importantes */}
-                <div className="admin-card important-msgs">
-                  <h3>Mensajes Importantes</h3>
-                  <ul>
-                    <li>Cliente "Juan Pérez" ha dejado un comentario sobre retraso en entrega.</li>
-                    <li>Error crítico en la página de pagos detectado.</li>
-                    <li>Pedido con ID #1023 necesita revisión urgente.</li>
-                    <li>Producto "Cheesecake de Frambuesa" agotado en stock.</li>
-                    <li>Recordatorio: Revisión de promociones para este mes.</li>
-                  </ul>
-                </div>
-
-                {/* Estadísticas rápidas */}
-                <div className="admin-card quick-stats">
-                  <h3>Resumen rápido</h3>
-                  <p>Pedidos pendientes: 5</p>
-                  <p>Clientes nuevos: 12</p>
-                  <p>Productos sin stock: 3</p>
-                  <p>Alertas críticas: 2</p>
-                </div>
-              </div>
-            </div>
-
-          )}
-
-          {/* Cuenta */}
-          {activeSection === "account" && (
-            <div className="datos-cuenta">
-              <h2>Datos de tu cuenta</h2>
-              <div className="campo"><strong>Correo electrónico:</strong> usuario.demo@example.com</div>
-              <div className="campo"><strong>Contraseña:</strong> •••••••••</div>
-              <div className="campo"><strong>Nombre:</strong> Joaquín</div>
-              <div className="campo"><strong>Apellido:</strong> Riveros</div>
-              <div className="campo"><strong>RUT:</strong> 21.345.678-9</div>
-              <div className="campo"><strong>Teléfono:</strong> +56 9 2345 6789</div>
-              <div className="campo"><strong>Fecha de Nacimiento:</strong> 15/08/2000</div>
-              <div className="campo"><strong>Dirección:</strong> Av. Libertad 1234, Santiago</div>
-            </div>
-          )}
-
-          {/* Ventas */}
-          {activeSection === "ventas" && (
-
-            <div className="predictive-sales">
-              <h2 className="section-title">Sistema Predictivo de Ventas</h2>
-              <p className="section-subtitle">
-                Resumen de ventas recientes y tendencias para optimizar precios y cantidades.
-              </p>
-
-              <div className="predictive-grid">
-                <div className="sales-card highlight">
-                  <h3>🔥 Top Productos del Día</h3>
-                  <ul>
-                    <li>🥐 Croissant – <span>120 vendidos</span></li>
-                    <li>☕ Café Latte – <span>95 vendidos</span></li>
-                    <li>🍰 Cheesecake – <span>60 vendidos</span></li>
-                  </ul>
-                </div>
-
-                <div className="sales-card">
-                  <h3>📅 Tendencia Semanal</h3>
-                  <p>
-                    Los productos más pedidos esta semana muestran un crecimiento de{" "}
-                    <strong className="positive">+18%</strong> en pastelería.
-                  </p>
-                </div>
-
-                <div className="sales-card">
-                  <h3>💡 Recomendación</h3>
-                  <p>
-                    📈 Aumentar stock de <strong>Croissant</strong> en un 20% durante la
-                    mañana.
-                  </p>
-                </div>
-
-                <div className="sales-card">
-                  <h3>💵 Margen de Ganancia</h3>
-                  <p>
-                    Los postres premium generan un margen promedio del{" "}
-                    <strong className="highlight-number">35%</strong>.
-                  </p>
-                </div>
-              </div>
-
-              <div className="extra-info">
-                <h3>Pronóstico de Stock</h3>
-                <p>
-                  Basado en la demanda actual, se espera un incremento en{" "}
-                  <strong>panadería artesanal</strong> en los próximos 7 días.
-                </p>
-              </div>
-            </div>
-
-          )}
-
-          {/* Dashboard Interactivo */}
-          {activeSection === "interactivo" && (
-            <div className="dashboard-container">
-              <h2>Dashboard interactivo</h2>
-              <p>Datos digitalizados para tomar mejores decisiones.</p>
-
-              <table className="dashboard-table">
-                <thead>
-                  <tr>
-                    <th>Artículo</th>
-                    <th>Precio Unitario</th>
-                    <th>Cantidad Vendida</th>
-                    <th>Total</th>
-                    <th>Stock</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {productos.map((item, index) => {
-                    const total = item.precio * item.cantidad;
-                    const estado =
-                      item.stock === 0
-                        ? "❌ Sin stock"
-                        : item.stock < 5
-                          ? "⚠️ Stock bajo"
-                          : "✅ Disponible";
-
-                    return (
-                      <tr key={index}>
-                        <td>{item.nombre}</td>
-                        <td>${item.precio.toLocaleString("es-CL")}</td>
-                        <td>{item.cantidad}</td>
-                        <td>${total.toLocaleString("es-CL")}</td>
-                        <td>{item.stock}</td>
-                        <td
-                          className={
-                            estado.includes("Sin")
-                              ? "estado-rojo"
-                              : estado.includes("bajo")
-                                ? "estado-amarillo"
-                                : "estado-verde"
-                          }
-                        >
-                          {estado}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Gestion de pedidos */}
-          {activeSection === "pedidos" && (
-            <div className="order-management">
-              <h2>🛒 Gestión de Pedidos</h2>
-              <p>Administra los pedidos activos y revisa su historial.</p>
-
-              <div className="orders-list">
-                {[...Array(15)].map((_, index) => {
-                  const estado = index % 3 === 0 ? "Por entregar" : "Entregado";
-                  return (
-                    <div key={index} className={`order-card ${estado === "Entregado" ? "delivered" : "pending"}`}>
-                      <div className="order-info">
-                        <p><strong>Pedido #{1000 + index}</strong></p>
-                        <p>Producto: {["Croissant", "Cheesecake", "Cupcake", "Torta de Maracuya"][index % 4]}</p>
-                        <p>Cantidad: {Math.floor(Math.random() * 5) + 1}</p>
-                        <p>Estado: <span className="order-status">{estado}</span></p>
-                      </div>
-                      <div className="order-actions">
-                        <button className="edit-btn">Modificar</button>
-                        <button className="delete-btn">Eliminar</button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Vista de Ganancias */}
-          {activeSection === "ganancias" && (
-            <div className="earnings-container">
-              <h2>Visualizar Ganancias</h2>
-              <p>Consulta ganancias por día, semana o mes.</p>
-
-              <div className="period-selector">
-                {["day", "week", "month"].map(p => (
-                  <button
-                    key={p}
-                    className={period === p ? "active" : ""}
-                    onClick={() => setPeriod(p)}
-                  >
-                    {p === "day" ? "Día" : p === "week" ? "Semana" : "Mes"}
-                  </button>
-                ))}
-              </div>
-
-              <div className="line-chart">
-                {data[period].map((point, index) => {
-                  const height = (point.value / maxValue) * 100;
-                  return (
-                    <div key={index} className="chart-point">
-                      <div
-                        className="line-bar"
-                        style={{ height: `${height}%` }}
-                        title={`$${point.value.toLocaleString()}`}
-                      ></div>
-                      <span className="label">{point.label}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Vista de productos(stock) */}
-          {activeSection === "productos" && (
-            <div className="products-container">
-              <h2>Gestión de productos</h2>
-              <p>Agrega, modifica o elimina productos del sistema.</p>
-
-              {/* Botón separado para agregar nuevos productos */}
-              <div className="add-product-btn">
-                <button>Añadir nuevo producto</button>
-              </div>
-
-              <div className="products-list">
-                {productos.map((producto, index) => (
-                  <div key={index} className="product-card">
-                    <div className="product-info">
-                      <h4>{producto.nombre}</h4>
-                      <p>Precio: ${producto.precio.toLocaleString()}</p>
-                      <p>Stock: {producto.stock}</p>
-                      <p>Cantidad disponible: {producto.cantidad}</p>
-                    </div>
-                    <div className="product-actions">
-                      <button>Modificar</button>
-                      <button>Eliminar</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-          )}
-
-          {/* Vista clientes(Users en la base de datos) */}
-          {activeSection === "clientes" && (
-            <div className="clients-container">
-              <h2>Gestión de clientes</h2>
-              <p>Edita o elimina información de clientes registrados.</p>
-
-              <div className="clients-list">
-                {clientes.map((cliente, index) => (
-                  <div key={index} className="client-card">
-                    <div className="client-info">
-                      <h4>{cliente.nombre}</h4>
-                      <p>Email: {cliente.email}</p>
-                      <p>Teléfono: {cliente.telefono}</p>
-                    </div>
-                    <div className="client-actions">
-                      <button>Modificar</button>
-                      <button>Eliminar</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Vista de descuentos */}
-          {activeSection === "descuentos" && (
-            <div className="discounts-container">
-              <h2>Crear códigos de descuento</h2>
-              <p>Gestiona los descuentos automáticos y modifica el mensaje mostrado a los clientes.</p>
-
-              {/* Mensaje superior */}
-              <div className="discount-message">
-                <label>Mensaje para clientes:</label>
-                <input type="text" placeholder="Feliz cumpleaños, disfruta tu descuento!" />
-              </div>
-
-              {/* Lista de códigos de descuento */}
-              <div className="discounts-list">
-                {[
-                  { codigo: "CUMP2025", descripcion: "10% de descuento cumpleaños", vigencia: "30/09/2025" },
-                  { codigo: "PROMOSEP", descripcion: "15% de descuento septiembre", vigencia: "30/09/2025" },
-                  { codigo: "ENVIOGRATIS", descripcion: "Envío gratis en pedidos mayores a $20.000", vigencia: "31/12/2025" },
-                ].map((d, index) => (
-                  <div key={index} className="discount-card">
-                    <div className="discount-info">
-                      <p><strong>Código:</strong> {d.codigo}</p>
-                      <p><strong>Descripción:</strong> {d.descripcion}</p>
-                      <p><strong>Vigencia:</strong> {d.vigencia}</p>
-                    </div>
-                    <div className="discount-actions">
-                      <button>Modificar</button>
-                      <button>Eliminar</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Botón para agregar un nuevo código */}
-              <button className="add-discount-btn">Agregar nuevo código</button>
-            </div>
-
-          )}
-
-          {/* Configuración */}
-          {activeSection === "settings" && (
-            <div className="configuracion">
-              <h2>Configuración</h2>
-              <p>Aquí puedes cambiar ajustes visuales y de tu cuenta.</p>
-
-              <div className="config-item">
-                <label htmlFor="color-tema">Tema de color:</label>
-                <select id="color-tema">
-                  <option value="default">Café (default)</option>
-                  <option value="oscuro">Oscuro</option>
-                  <option value="claro">Claro</option>
-                  <option value="pastel">Pastel</option>
-                </select>
-              </div>
-
-              <div className="config-item">
-                <label htmlFor="modo-oscuro">Modo oscuro</label>
-                <input type="checkbox" id="modo-oscuro" />
-              </div>
-
-              <div className="config-item">
-                <label htmlFor="notificaciones">Notificaciones</label>
-                <input type="checkbox" id="notificaciones" defaultChecked />
-              </div>
-
-              <div className="config-item">
-                <label htmlFor="fuente">Tamaño de fuente:</label>
-                <select id="fuente" defaultValue="media">
-                  <option value="pequena">Pequeña</option>
-                  <option value="media">Media</option>
-                  <option value="grande">Grande</option>
-                </select>
-              </div>
-
-              <div className="config-item">
-                <label htmlFor="idioma">Idioma:</label>
-                <select id="idioma" defaultValue="es">
-                  <option value="es">Español</option>
-                  <option value="en">Inglés</option>
-                  <option value="pt">Portugués</option>
-                </select>
-              </div>
-
-              <div className="config-item">
-                <label htmlFor="perfil">Mostrar foto de perfil</label>
-                <input type="checkbox" id="perfil" defaultChecked />
-              </div>
-
-              <div className="config-item">
-                <button className="logout-btn">Cerrar sesión</button>
-              </div>
-            </div>
-          )}
-
+        <main className="main-content" role="region" aria-live="polite">
+          {active === "inicio" && renderInicio()}
+          {active === "pedidos" && <PedidosSection />}
+          {active === "productos" && <ProductosSection />}
+          {active === "clientes" && renderClientes()}
+          {active === "ganancias" && <GananciasSection />}
+          {active === "interactivo" && renderInteractivo()}
+          {active === "descuentos" && <DescuentosSection />}
+          {active === "account" && renderAccount()}
+          {active === "settings" && renderSettings()}
         </main>
       </div>
       <Footer />
