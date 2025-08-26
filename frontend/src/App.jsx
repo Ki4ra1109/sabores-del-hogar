@@ -3,8 +3,7 @@ import './index.css';
 import AppRouter from "./routes/AppRouter";
 import Loader from "./componentes/Loader";
 
-
-// import { CarritoProvider } from "./context/CarritoContext";
+import { CarritoProvider } from "./context/CarritoContext";
 
 function App() {
   const [loading, setLoading] = useState(true);
