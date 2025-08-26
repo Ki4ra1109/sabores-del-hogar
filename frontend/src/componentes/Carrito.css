@@ -1,7 +1,21 @@
+.carrito-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease;
+  z-index: 990;
+}
+.carrito-overlay.activo {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .carrito-sidebar {
   position: fixed;
   top: 0;
-  right: -400px; 
+  right: -400px;
   width: 400px;
   height: 100%;
   background-color: #fefaf5;
@@ -11,9 +25,8 @@
   display: flex;
   flex-direction: column;
 }
-
 .carrito-sidebar.activo {
-  right: 0; 
+  right: 0;
 }
 
 .carrito-header {
@@ -24,7 +37,6 @@
   background-color: #572420;
   color: white;
 }
-
 .cerrar-btn {
   background: none;
   border: none;
@@ -51,20 +63,17 @@
   border-bottom: 1px solid #ddd;
   padding-bottom: 0.5rem;
 }
-
 .carrito-item img {
   width: 70px;
   height: 70px;
   object-fit: cover;
   border-radius: 8px;
 }
-
 .info-item h3 {
   font-size: 1rem;
   color: #572420;
   margin-bottom: 0.3rem;
 }
-
 .info-item p {
   font-size: 0.9rem;
   color: #444;
@@ -77,6 +86,10 @@
   flex-direction: column;
   gap: 0.8rem;
 }
+.carrito-total {
+  font-weight: 800;
+  margin: 0 0 .5rem;
+}
 
 .vaciar-btn,
 .finalizar-btn {
@@ -87,7 +100,6 @@
   font-weight: 600;
   transition: background 0.3s ease;
 }
-
 .vaciar-btn {
   background-color: #E63946;
   color: white;
@@ -95,16 +107,9 @@
   align-items: center;
   gap: 0.5rem;
 }
-
-.vaciar-btn:hover {
-  background-color: #d62828;
-}
-
+.vaciar-btn:hover { background-color: #d62828; }
 .finalizar-btn {
   background-color: #572420;
   color: white;
 }
-
-.finalizar-btn:hover {
-  background-color: #361412;
-}
+.finalizar-btn:hover { background-color: #361412; }
