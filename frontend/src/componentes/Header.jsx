@@ -3,14 +3,14 @@ import "./Header.css";
 import { FaSearch, FaShoppingCart, FaUser, FaEye, FaEyeSlash } from "react-icons/fa";
 import Carrito from './Carrito';
 import productos from '../data/productos';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+
 export const Header = () => {
   const [abrirCarrito, setAbrirCarrito] = useState(false);
   const [carrito, setCarrito] = useState([]);
   const [query, setQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
 
-  
   const [authOpen, setAuthOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
@@ -24,8 +24,12 @@ export const Header = () => {
     }
   });
 
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const buscadorRef = useRef(null);
   const authRef = useRef(null);
+  const submenuRef = useRef(null);
+
   const navigate = useNavigate();
 
   const resultados = useMemo(() => {
@@ -42,8 +46,16 @@ export const Header = () => {
       if (authRef.current && !authRef.current.contains(e.target)) {
         setAuthOpen(false);
       }
+      if (submenuRef.current && !submenuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
     };
-    const onEsc = (e) => { if (e.key === 'Escape') setAuthOpen(false); };
+    const onEsc = (e) => {
+      if (e.key === 'Escape') {
+        setAuthOpen(false);
+        setMenuOpen(false);
+      }
+    };
     document.addEventListener("mousedown", onDocClick);
     document.addEventListener("keydown", onEsc);
     return () => {
@@ -63,7 +75,6 @@ export const Header = () => {
     if (resultados.length > 0) irADetalle(resultados[0].id);
   };
 
- 
   const nameFromEmail = (mail) => {
     if (!mail) return "Usuario";
     const base = mail.split("@")[0] || "usuario";
@@ -72,8 +83,6 @@ export const Header = () => {
 
   const onLoginSubmit = (e) => {
     e.preventDefault();
-
-    // Se integrara el llamado al back mas adelante
     const mockUser = { name: nameFromEmail(email), email };
     setUser(mockUser);
     localStorage.setItem("sdh_user", JSON.stringify(mockUser));
@@ -87,22 +96,20 @@ export const Header = () => {
     setAuthOpen(false);
   };
 
-
   return (
     <header>
       <div className="mensaje-banner">
         <p>🎉 Bienvenido a mi Sabores del Hogar — Ofertas especiales todo el mes 🎉</p>
       </div>
 
-
       <nav className="Header-nav">
-        <a href="/">
+        <Link to="/">
           <img
             src="/logoFondoBlanco.svg"
             className="Header-icon"
             alt="Logo Sabores del Hogar"
           />
-        </a>
+        </Link>
 
         <h1 className="NombreEmpresa">Sabores del hogar</h1>
 
@@ -143,7 +150,6 @@ export const Header = () => {
             <FaShoppingCart size={30} color="#fff" />
           </button>
 
-          {/*LOGIN*/}
           <div className={`auth-popover ${authOpen ? 'open' : ''}`} ref={authRef}>
             <button
               className="Header-login-trigger"
@@ -197,9 +203,15 @@ export const Header = () => {
                     <button type="submit" className="auth-primary">Iniciar Sesión</button>
                   </form>
 
-                  <a className="auth-link" href="/forgot">Olvidé mi contraseña</a>
+                  <Link className="auth-link" to="/forgot">Olvidé mi contraseña</Link>
                   <div className="auth-divider" />
-                  <a className="auth-secondary" href="/Login">Registrarme</a>
+                  <Link
+                    className="auth-secondary"
+                    to="/Login"
+                    onClick={() => setAuthOpen(false)}
+                  >
+                    Registrarme
+                  </Link>
                 </>
               ) : (
                 <>
@@ -220,18 +232,46 @@ export const Header = () => {
 
       <nav className="navbar">
         <ul className="navbar-list">
-          <li><a href="/">Inicio</a></li>
-          <li className="has-submenu">
-            <a href="/Catalogo">Catálogo</a>
+          <li><Link to="/">Inicio</Link></li>
+
+          <li
+            className={`has-submenu ${menuOpen ? 'open' : ''}`}
+            ref={submenuRef}
+            onMouseEnter={() => setMenuOpen(true)}
+            onMouseLeave={() => setMenuOpen(false)}
+          >
+            <Link
+              to="/Catalogo"
+              onClick={(e) => {
+                e.preventDefault();
+                setMenuOpen((v) => !v);
+              }}
+            >
+              Catálogo
+            </Link>
+
             <ul className="submenu">
-              <li><a href="/Catalogo?cat=tortas">Tortas</a></li>
-              <li><a href="/Catalogo?cat=dulces">Dulces</a></li>
+              <li>
+                <Link
+                  to="/Catalogo?cat=tortas"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Tortas
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/Catalogo?cat=dulces"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Dulces
+                </Link>
+              </li>
             </ul>
           </li>
-          <li><a href="/nosotros">Nosotros</a></li>
-          <li><a href="/contacto">Contacto</a></li>
-          <li><a href="/UserNormal">Vista User Normal</a></li>
-          <li><a href="/UserAdmin">Vista User Admin</a></li>
+
+          <li><Link to="/nosotros">Nosotros</Link></li>
+          <li><Link to="/contacto">Contacto</Link></li>
         </ul>
       </nav>
 
