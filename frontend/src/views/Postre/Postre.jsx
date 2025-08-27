@@ -1,219 +1,304 @@
-import { Footer } from '../../componentes/Footer';
-import { Header } from '../../componentes/Header';
-import { useState } from 'react';
-import './Postre.css';
+import React, { useMemo, useState } from "react";
+import { Header } from "../../componentes/Header";
+import { Footer } from "../../componentes/Footer";
+import { useCarrito } from "../../context/carritoContext";
+import "./Postre.css";
 
-export const Postre = () => {
-    const [opcion, setOpcion] = useState('');
-    const [bizcocho, setBizcocho] = useState('');
-    const [relleno, setRelleno] = useState('');
-    const [ingredienteExtra1, setIngredienteExtra1] = useState(false);
-    const [ingredienteExtra2, setIngredienteExtra2] = useState(false);
-    const [ingredienteExtra3, setIngredienteExtra3] = useState(false);
-    const [crema, setCrema] = useState('');
-    const [personas, setPersonas] = useState(15); // Para tortas
-    const [cantidad, setCantidad] = useState(6); // Para cupcakes
-
-    const precios = {
-        basePersona: 1000,
-        gananciaFija: 7000,
-        bizcocho: 3000,
-        relleno: 2500,
-        extra: 1500,
-        crema: 2000,
-    };
-
-    const calcularTotalTorta = () => {
-        if (opcion !== 'torta') return 0;
-        const cant = Math.max(15, Number(personas) || 15);
-        let total = cant * precios.basePersona + precios.gananciaFija;
-        if (bizcocho) total += precios.bizcocho;
-        if (relleno) total += precios.relleno;
-        if (crema) total += precios.crema;
-        if (ingredienteExtra1) total += precios.extra;
-        if (ingredienteExtra2) total += precios.extra;
-        return total;
-    };
-
-    const calcularTotalCupcake = () => {
-        if (opcion !== 'cupcake') return 0;
-        const cant = Math.max(6, Number(cantidad) || 6);
-        let total = cant * precios.basePersona + precios.gananciaFija;
-        if (bizcocho) total += precios.bizcocho;
-        if (relleno) total += precios.relleno;
-        if (ingredienteExtra1) total += precios.extra;
-        if (ingredienteExtra2) total += precios.extra;
-        if (ingredienteExtra3) total += precios.extra;
-        if (crema) total += precios.crema;
-        return total;
-    };
-
-    const onChangePersonas = (e) => {
-        const v = Number(e.target.value);
-        setPersonas(isNaN(v) ? 15 : Math.max(15, v));
-    };
-
-    const onChangeCantidades = (e) => {
-        const v = Number(e.target.value);
-        setCantidad(isNaN(v) ? 6 : Math.max(6, v));
-    };
-
-    return (
-        <>
-            <Header />
-            <div className="postre-container">
-                <div className="postre-card">
-                    <h2>Arma tu Postre</h2>
-
-                    {/* formulario principal*/}
-                    <label>¿Qué deseas preparar?</label>
-                    <select value={opcion} onChange={(e) => setOpcion(e.target.value)}>
-                        <option value="">Selecciona una opción</option>
-                        <option value="torta">Torta</option>
-                        <option value="galleta">Galletas</option>
-                        <option value="cupcake">Cupcakes</option>
-                    </select>
-
-                    {/* Torta */}
-                    {opcion === 'torta' && (
-                        <>
-                            <label>Cantidad de personas (mín. 15)</label>
-                            <input
-                                type="number"
-                                min={15}
-                                value={personas}
-                                onChange={onChangePersonas}
-                            />
-
-                            <label>Tipo de Bizcocho</label>
-                            <select value={bizcocho} onChange={(e) => setBizcocho(e.target.value)}>
-                                <option value="">Selecciona</option>
-                                <option value="vainilla">Vainilla</option>
-                                <option value="chocolate">Chocolate</option>
-                                <option value="redvelvet">Red Velvet</option>
-                            </select>
-
-                            <label>Tipo de Relleno</label>
-                            <select value={relleno} onChange={(e) => setRelleno(e.target.value)}>
-                                <option value="">Selecciona</option>
-                                <option value="frutilla">Frutilla</option>
-                                <option value="manjar">Manjar</option>
-                                <option value="cremaPastelera">Crema Pastelera</option>
-                            </select>
-
-                            <label>Ingredientes Extra (Opcionales)</label>
-                            <div className="checkbox-group">
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        checked={ingredienteExtra1}
-                                        onChange={() => setIngredienteExtra1(!ingredienteExtra1)}
-                                    />
-                                    Chips de chocolate
-                                </label>
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        checked={ingredienteExtra2}
-                                        onChange={() => setIngredienteExtra2(!ingredienteExtra2)}
-                                    />
-                                    Nueces
-                                </label>
-                            </div>
-
-                            <label>Sabor de Crema</label>
-                            <select value={crema} onChange={(e) => setCrema(e.target.value)}>
-                                <option value="">Selecciona</option>
-                                <option value="vainilla">Vainilla</option>
-                                <option value="chocolate">Chocolate</option>
-                                <option value="frutilla">Frutilla</option>
-                            </select>
-
-                            <div className="total-precio">
-                                <h3>Total estimado: <strong>${calcularTotalTorta().toLocaleString('es-CL')}</strong></h3>
-                            </div>
-                        </>
-                    )}
-
-                    {/* Cupcakes */}
-                    {opcion === 'cupcake' && (
-                        <>
-                            <label>Cantidad de cupcakes (mín. 6)</label>
-                            <input
-                                type="number"
-                                min={6}
-                                value={cantidad}
-                                onChange={onChangeCantidades}
-                            />
-
-                            <label>Tipo de Bizcocho</label>
-                            <select value={bizcocho} onChange={(e) => setBizcocho(e.target.value)}>
-                                <option value="">Selecciona</option>
-                                <option value="vainilla">Vainilla</option>
-                                <option value="chocolate">Chocolate</option>
-                                <option value="redvelvet">Red Velvet</option>
-                            </select>
-
-                            <label>Tipo de Relleno</label>
-                            <select value={relleno} onChange={(e) => setRelleno(e.target.value)}>
-                                <option value="">Selecciona</option>
-                                <option value="frutilla">Frutilla</option>
-                                <option value="manjar">Manjar</option>
-                                <option value="cremaPastelera">Crema Pastelera</option>
-                            </select>
-
-                            <label>Ingredientes Extra (Opcionales)</label>
-                            <div className="checkbox-group">
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        checked={ingredienteExtra1}
-                                        onChange={() => setIngredienteExtra1(!ingredienteExtra1)}
-                                    />
-                                    Chips de chocolate
-                                </label>
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        checked={ingredienteExtra2}
-                                        onChange={() => setIngredienteExtra2(!ingredienteExtra2)}
-                                    />
-                                    Nueces
-                                </label>
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        checked={ingredienteExtra3}
-                                        onChange={() => setIngredienteExtra3(!ingredienteExtra3)}
-                                    />
-                                    Chips de colores
-                                </label>
-                            </div>
-
-                            <label>Sabor de Crema</label>
-                            <select value={crema} onChange={(e) => setCrema(e.target.value)}>
-                                <option value="">Selecciona</option>
-                                <option value="vainilla">Vainilla</option>
-                                <option value="chocolate">Chocolate</option>
-                                <option value="frutilla">Frutilla</option>
-                            </select>
-
-                            <div className="total-precio">
-                                <h3>Total estimado: <strong>${calcularTotalCupcake().toLocaleString('es-CL')}</strong></h3>
-                            </div>
-                        </>
-                    )}
-
-                    {opcion === 'galleta' && (
-                        <div>
-                            {/* datos pa la galleta */}
-                        </div>
-                    )}
-                </div>
-            </div>
-            <Footer />
-        </>
-    );
+const precios = {
+  basePersona: 1000,
+  gananciaFija: 7000,
+  bizcocho: 3000,
+  relleno: 2500,
+  crema: 2000,
+  extra: 1500,
 };
 
+const Postre = () => {
+  // carrito (si existe el contexto)
+  let ctx = undefined;
+  try {
+    ctx = useCarrito();
+  } catch (_) {
+    ctx = undefined; // si no hay provider, no rompemos
+  }
+
+  // estado general
+  const [opcion, setOpcion] = useState("");
+  const [personas, setPersonas] = useState(15);   // torta
+  const [cantidad, setCantidad] = useState(6);    // cupcakes
+
+  const [bizcocho, setBizcocho] = useState("");
+  const [relleno, setRelleno] = useState("");
+  const [crema, setCrema] = useState("");
+
+  const [extraChips, setExtraChips] = useState(false);
+  const [extraNueces, setExtraNueces] = useState(false);
+  const [extraChipsColores, setExtraChipsColores] = useState(false); // solo cupcakes
+
+  // cupcakes: ¿con relleno?
+  const [cupcakeConRelleno, setCupcakeConRelleno] = useState(false);
+
+  // cantidad válidas
+  const personasOK = Math.max(15, Number.isFinite(+personas) ? +personas : 15);
+  const cantidadOK = Math.max(6, Number.isFinite(+cantidad) ? +cantidad : 6);
+
+  // total
+  const total = useMemo(() => {
+    if (opcion !== "torta" && opcion !== "cupcake") return 0;
+
+    const base = (opcion === "torta" ? personasOK : cantidadOK) * precios.basePersona;
+    let t = base + precios.gananciaFija;
+
+    if (bizcocho) t += precios.bizcocho;
+    if (crema) t += precios.crema;
+
+    // relleno:
+    if (opcion === "torta") {
+      if (relleno) t += precios.relleno;
+    } else if (opcion === "cupcake") {
+      if (cupcakeConRelleno && relleno) t += precios.relleno;
+    }
+
+    // extras
+    if (extraChips) t += precios.extra;
+    if (extraNueces) t += precios.extra;
+    if (opcion === "cupcake" && extraChipsColores) t += precios.extra;
+
+    return t;
+  }, [
+    opcion,
+    personasOK,
+    cantidadOK,
+    bizcocho,
+    relleno,
+    crema,
+    extraChips,
+    extraNueces,
+    extraChipsColores,
+    cupcakeConRelleno,
+  ]);
+
+  // handlers cantidad
+  const onChangePersonas = (e) => setPersonas(Math.max(15, parseInt(e.target.value || 15, 10)));
+  const onChangeCantidad = (e) => setCantidad(Math.max(6, parseInt(e.target.value || 6, 10)));
+
+  // agregar al carrito (contexto si existe; si no, localStorage)
+  const handleAgregar = () => {
+    if (!opcion || !bizcocho || !crema || (opcion === "torta" && !relleno) || (opcion === "cupcake" && cupcakeConRelleno && !relleno)) {
+      alert("Completa los campos requeridos antes de agregar al carrito.");
+      return;
+    }
+
+    const extras = [
+      extraChips ? "Chips de chocolate" : null,
+      extraNueces ? "Nueces" : null,
+      opcion === "cupcake" && extraChipsColores ? "Chips de colores" : null,
+    ].filter(Boolean);
+
+    const producto = {
+      id: `postre-${Date.now()}`,
+      nombre: opcion === "torta" ? "Torta personalizada" : "Cupcakes personalizados",
+      detalle: {
+        tipo: opcion,
+        cantidad: opcion === "torta" ? personasOK : cantidadOK,
+        bizcocho,
+        relleno: opcion === "cupcake" ? (cupcakeConRelleno ? relleno : "Sin relleno") : relleno,
+        crema,
+        extras,
+      },
+      // Para tu Carrito.jsx: precio * cantidad -> usamos cantidad:1 y precio = total final
+      precio: total,
+      cantidad: 1,
+      imagen: "/assets/personalizado.png",
+    };
+
+    // 1) contexto si existe
+    if (ctx && typeof ctx.agregarAlCarrito === "function") {
+      ctx.agregarAlCarrito(producto);
+    }
+
+    // 2) fallback localStorage para no romper
+    try {
+      const current = JSON.parse(localStorage.getItem("carrito") || "[]");
+      current.push(producto);
+      localStorage.setItem("carrito", JSON.stringify(current));
+      // evento por si tu Header escucha
+      window.dispatchEvent(new CustomEvent("carrito:agregado", { detail: producto }));
+    } catch (_) {}
+
+    alert("¡Producto agregado al carrito!");
+  };
+
+  return (
+    <>
+      <Header />
+      <div className="postre-layout">
+        {/* LEFT: formulario */}
+        <div className="postre-card">
+          <h2>Arma tu Postre</h2>
+
+          <div className="postre-form-grid">
+            {/* Categoría */}
+            <div className="campo">
+              <label>Categoría</label>
+              <select
+                value={opcion}
+                onChange={(e) => {
+                  setOpcion(e.target.value);
+                  // reset campos dependientes
+                  setRelleno("");
+                  setCupcakeConRelleno(false);
+                }}
+              >
+                <option value="">Selecciona</option>
+                <option value="torta">Torta</option>
+                <option value="cupcake">Cupcakes</option>
+              </select>
+            </div>
+
+            {/* Cantidad */}
+            {opcion === "torta" && (
+              <div className="campo">
+                <label>Cantidad de personas (mín. 15)</label>
+                <input type="number" min={15} value={personasOK} onChange={onChangePersonas} />
+              </div>
+            )}
+            {opcion === "cupcake" && (
+              <div className="campo">
+                <label>Cantidad de cupcakes (mín. 6)</label>
+                <input type="number" min={6} value={cantidadOK} onChange={onChangeCantidad} />
+              </div>
+            )}
+
+            {/* Bizcocho */}
+            <div className="campo">
+              <label>Tipo de Bizcocho</label>
+              <select value={bizcocho} onChange={(e) => setBizcocho(e.target.value)}>
+                <option value="">Selecciona</option>
+                <option value="vainilla">Vainilla</option>
+                <option value="chocolate">Chocolate</option>
+                <option value="redvelvet">Red Velvet</option>
+              </select>
+            </div>
+
+            {/* Relleno */}
+            <div className="campo">
+              <label>Tipo de Relleno</label>
+
+              {opcion === "cupcake" ? (
+                <>
+                  <div className="checkbox-inline">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={cupcakeConRelleno}
+                        onChange={() => {
+                          setCupcakeConRelleno((v) => !v);
+                          setRelleno("");
+                        }}
+                      />
+                      ¿Con relleno?
+                    </label>
+                  </div>
+                  <select
+                    value={relleno}
+                    onChange={(e) => setRelleno(e.target.value)}
+                    disabled={!cupcakeConRelleno}
+                  >
+                    <option value="">Selecciona</option>
+                    <option value="frambuesa">Frambuesa</option>
+                    <option value="manjar">Manjar</option>
+                    <option value="chocolate">Chocolate</option>
+                    <option value="cremaVainilla">Crema de vainilla</option>
+                  </select>
+                </>
+              ) : (
+                <select value={relleno} onChange={(e) => setRelleno(e.target.value)} disabled={opcion !== "torta"}>
+                  <option value="">Selecciona</option>
+                  <option value="frutilla">Frutilla</option>
+                  <option value="manjar">Manjar</option>
+                  <option value="cremaPastelera">Crema Pastelera</option>
+                </select>
+              )}
+            </div>
+
+            {/* Crema */}
+            <div className="campo">
+              <label>Sabor de Crema</label>
+              <select value={crema} onChange={(e) => setCrema(e.target.value)}>
+                <option value="">Selecciona</option>
+                <option value="vainilla">Vainilla</option>
+                <option value="chocolate">Chocolate</option>
+                <option value="frutilla">Frutilla</option>
+              </select>
+            </div>
+
+            {/* Extras */}
+            <div className="campo campo-extras">
+              <label>Extras (opcionales)</label>
+              <div className="checkbox-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={extraChips}
+                    onChange={() => setExtraChips((v) => !v)}
+                  />
+                  Chips de chocolate
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={extraNueces}
+                    onChange={() => setExtraNueces((v) => !v)}
+                  />
+                  Nueces
+                </label>
+                {opcion === "cupcake" && (
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={extraChipsColores}
+                      onChange={() => setExtraChipsColores((v) => !v)}
+                    />
+                    Chips de colores
+                  </label>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT: resumen */}
+        <aside className="resumen-card">
+          <h3>Resumen del Pedido</h3>
+          <p><strong>Categoría:</strong> {opcion || "-"}</p>
+          <p><strong>Cantidad:</strong> {opcion === "torta" ? personasOK : opcion === "cupcake" ? cantidadOK : "-"}</p>
+          <p><strong>Bizcocho:</strong> {bizcocho || "-"}</p>
+          <p><strong>Relleno:</strong> {opcion === "cupcake" ? (cupcakeConRelleno ? (relleno || "-") : "Sin relleno") : (relleno || "-")}</p>
+          <p><strong>Crema:</strong> {crema || "-"}</p>
+          <p>
+            <strong>Extras:</strong>{" "}
+            {[
+              extraChips ? "Chips de chocolate" : null,
+              extraNueces ? "Nueces" : null,
+              opcion === "cupcake" && extraChipsColores ? "Chips de colores" : null,
+            ]
+              .filter(Boolean)
+              .join(", ") || "-"}
+          </p>
+
+          <div className="total-linia">
+            <span>Total:</span>
+            <strong>${total.toLocaleString("es-CL")}</strong>
+          </div>
+
+          <button className="btn-agregar" onClick={handleAgregar}>
+            Agregar al carrito
+          </button>
+        </aside>
+      </div>
+      <Footer />
+    </>
+  );
+};
 export default Postre;
