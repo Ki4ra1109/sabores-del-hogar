@@ -15,6 +15,7 @@ export const Header = () => {
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
   const [showPwd, setShowPwd] = useState(false);
+
   const [user, setUser] = useState(() => {
     try {
       const raw = localStorage.getItem("sdh_user");
@@ -23,6 +24,7 @@ export const Header = () => {
       return null;
     }
   });
+
 
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -75,25 +77,35 @@ export const Header = () => {
     if (resultados.length > 0) irADetalle(resultados[0].id);
   };
 
-  const nameFromEmail = (mail) => {
-    if (!mail) return "Usuario";
-    const base = mail.split("@")[0] || "usuario";
-    return base.charAt(0).toUpperCase() + base.slice(1);
+  const onLoginSubmit = async (e) => {
+    e.preventDefault(); // evita que la página se recargue
+
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/login", { // URL del backend
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password: pwd })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        // login exitoso: guardar info del usuario y redirigir
+        setUser(data.user); // 'user' es tu estado global o local
+        localStorage.setItem("sdh_user", JSON.stringify(data.user));
+      } else {
+        alert(data.message); // mostrar error
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error en la conexión con el servidor");
+    }
   };
 
-  const onLoginSubmit = (e) => {
-    e.preventDefault();
-    const mockUser = { name: nameFromEmail(email), email };
-    setUser(mockUser);
-    localStorage.setItem("sdh_user", JSON.stringify(mockUser));
-    setAuthOpen(false);
-    setPwd("");
-  };
 
   const onLogout = () => {
     setUser(null);
     localStorage.removeItem("sdh_user");
-    setAuthOpen(false);
   };
 
   return (
@@ -120,8 +132,8 @@ export const Header = () => {
               placeholder="Buscar..."
               className="buscar-input"
               value={query}
-              onChange={(e)=>{ setQuery(e.target.value); setShowResults(true); }}
-              onFocus={()=> setShowResults(true)}
+              onChange={(e) => { setQuery(e.target.value); setShowResults(true); }}
+              onFocus={() => setShowResults(true)}
             />
             <button className="buscar-submit" aria-label="buscar" type="submit">
               <FaSearch />
@@ -130,7 +142,7 @@ export const Header = () => {
             {showResults && resultados.length > 0 && (
               <ul className="buscar-dropdown">
                 {resultados.map(r => (
-                  <li key={r.id} onMouseDown={()=> irADetalle(r.id)}>
+                  <li key={r.id} onMouseDown={() => irADetalle(r.id)}>
                     <img src={r.imagen} alt={r.nombre} />
                     <div>
                       <span className="res-nombre">{r.nombre}</span>
@@ -144,7 +156,7 @@ export const Header = () => {
 
           <button
             className="Header-carrito-icon"
-            onClick={(e)=>{ e.preventDefault(); setAbrirCarrito(true); }}
+            onClick={(e) => { e.preventDefault(); setAbrirCarrito(true); }}
             title="Carrito"
           >
             <FaShoppingCart size={30} color="#fff" />
@@ -160,8 +172,8 @@ export const Header = () => {
             >
               <FaUser className="Header-login-icon" size={26} color="#fff" />
               <div className="auth-mini-text">
-                <span>Hola{user ? "," : "!"}</span>
-                <strong>{user ? user.name : "Inicia sesión"}</strong>
+                <span>Hola{user ? `, ${user.nombre}` : "!"}</span>
+                <strong>{user ? user.nombre : "Inicia sesión"}</strong>
               </div>
             </button>
 
@@ -174,7 +186,7 @@ export const Header = () => {
                       <input
                         type="email"
                         value={email}
-                        onChange={(e)=>setEmail(e.target.value)}
+                        onChange={(e) => setEmail(e.target.value)}
                         required
                       />
                     </label>
@@ -186,13 +198,13 @@ export const Header = () => {
                           type={showPwd ? "text" : "password"}
                           minLength={8}
                           value={pwd}
-                          onChange={(e)=>setPwd(e.target.value)}
+                          onChange={(e) => setPwd(e.target.value)}
                           required
                         />
                         <button
                           type="button"
                           className="pwd-toggle"
-                          onClick={()=> setShowPwd(s=>!s)}
+                          onClick={() => setShowPwd(s => !s)}
                           aria-label="Mostrar/ocultar contraseña"
                         >
                           {showPwd ? <FaEyeSlash /> : <FaEye />}
@@ -215,13 +227,34 @@ export const Header = () => {
                 </>
               ) : (
                 <>
-                  <p style={{color:"#fff", margin:"4px 0 10px"}}>
-                    Sesión iniciada como <strong>{user.name}</strong>
+                  <p style={{ color: "#fff", margin: "4px 0 10px" }}>
+                    Sesión iniciada como <strong>{user.nombre}</strong>
                   </p>
-                  <button className="auth-primary" onClick={onLogout}>
+
+                  <button
+                    className="auth-primary"
+                    onClick={() => {
+                      if (user.rol === "admin") {
+                        navigate("/Useradmin"); // Ruta para admins
+                      } else {
+                        navigate("/Usernormal"); // Ruta para usuarios normales
+                      }
+                    }}
+                  >
+                    Ir al perfil
+                  </button>
+
+                  <button
+                    className="auth-primary"
+                    onClick={() => {
+                      onLogout();           // Limpiar sesión
+                      navigate("/");    // Redirigir a home
+                    }}
+                  >
                     Cerrar sesión
                   </button>
                 </>
+
               )}
             </div>
           </div>

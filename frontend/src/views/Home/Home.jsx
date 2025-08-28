@@ -62,7 +62,7 @@ export default function Home() {
 
   return (
     <div className="home-container">
-      <Header/>
+      <Header />
       <div className="home-carrusel">
         {!animado && (
           <>
@@ -83,7 +83,7 @@ export default function Home() {
             />
           </>
         )}
-        
+
         {animado && (
           <>
             <img
@@ -98,7 +98,7 @@ export default function Home() {
             />
           </>
         )}
-        
+
         {/* estos son los botones del carrusel, los hice importando unos iconos del node.js asi que si los quieren reutilizar solo copienlo
         y lo pegan en sus codigos, tambien el css hay que copiarlo*/}
         <button
@@ -257,8 +257,8 @@ export default function Home() {
         <h2 className="productos-destacados-title">✨ Nuestros Productos Destacados ✨</h2>
         <div className="productos-grid">
           {destacados.map(producto => (
-            <div 
-              key={producto.id} 
+            <div
+              key={producto.id}
               className="producto-card"
               onClick={() => irAlProducto(producto.id)}
             >
@@ -270,7 +270,7 @@ export default function Home() {
         </div>
         {/* boton catalogo*/}
         <div className="ver-catalogo-btn-container">
-          <button 
+          <button
             className="ver-catalogo-btn"
             onClick={() => navigate("/catalogo")}
           >
@@ -292,7 +292,7 @@ export default function Home() {
           </button>
         </div>
       </div>
-      <Footer/>
+      <Footer />
     </div>
   );
 }
