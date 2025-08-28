@@ -5,13 +5,14 @@
 
 .sidebar {
     width: 220px;
-    background: #572420;
+    background: #6b4429;
     color: #fff;
     padding: 20px;
     border-top: 1px solid #ffffff;
     border-bottom: 1px solid #ffffff;
     border-right: 1px solid #ffffff;
 }
+
 
 .sidebar ul {
     list-style: none;
