@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Footer } from "../../../componentes/Footer";
 import { Header } from "../../../componentes/Header";
 import "./UserAdmin.css";
@@ -83,19 +83,26 @@ function ProductosSection() {
   const [form, setForm] = useState({
     nombre: "",
     categoria: "tortas",
-    precioRango: "",
+    precioMin: "",
+    precioMax: "",
     imagen: "",
     descripcion: "",
     porciones: [],
     activo: true,
     sku: "",
-    usarPorciones: true
+    usarPorciones: true,
+    porcionPrecios: {} // { [tam]: "50000" }
   });
   const [errors, setErrors] = useState({});
 
   const toggleForm = () => setShowForm(v => !v);
 
   const PORCIONES = [12, 18, 24, 30, 50];
+
+  const num = (v) => {
+    const n = Number(String(v).replace(/[^\d.]/g, ""));
+    return Number.isFinite(n) ? n : NaN;
+  };
 
   const onChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -106,7 +113,8 @@ function ProductosSection() {
         ...prev,
         categoria: value,
         usarPorciones: usar,
-        porciones: usar ? prev.porciones : []
+        porciones: usar ? prev.porciones : [],
+        porcionPrecios: usar ? prev.porcionPrecios : {}
       }));
       return;
     }
@@ -115,7 +123,16 @@ function ProductosSection() {
       setForm(prev => ({
         ...prev,
         usarPorciones: checked,
-        porciones: checked ? prev.porciones : []
+        porciones: checked ? prev.porciones : [],
+        porcionPrecios: checked ? prev.porcionPrecios : {}
+      }));
+      return;
+    }
+
+    if (name.startsWith("precioMin") || name.startsWith("precioMax")) {
+      setForm(prev => ({
+        ...prev,
+        [name]: value.replace(/[^\d]/g, "")
       }));
       return;
     }
@@ -130,7 +147,10 @@ function ProductosSection() {
     if (!form.usarPorciones) return;
     setForm(prev => {
       const exists = prev.porciones.includes(p);
-      return { ...prev, porciones: exists ? prev.porciones.filter(x => x !== p) : [...prev.porciones, p] };
+      const next = exists ? prev.porciones.filter(x => x !== p) : [...prev.porciones, p].sort((a,b)=>a-b);
+      const nextPrecios = { ...prev.porcionPrecios };
+      if (exists) delete nextPrecios[p];
+      return { ...prev, porciones: next, porcionPrecios: nextPrecios };
     });
   };
 
@@ -142,12 +162,63 @@ function ProductosSection() {
     } catch { return false; }
   };
 
+  const preciosCap = () => {
+    const min = num(form.precioMin);
+    const max = num(form.precioMax);
+    const ps = form.porciones.slice().sort((a,b)=>a-b);
+    if (!ps.length || !Number.isFinite(min) || !Number.isFinite(max) || min <= 0 || max <= 0 || min > max) {
+      return {};
+    }
+    const pMin = ps[0];
+    const pMax = ps[ps.length - 1];
+    const caps = {};
+    ps.forEach(p => {
+      if (pMin === pMax) {
+        caps[p] = max; // caso borde, una sola porción
+      } else {
+        const t = (p - pMin) / (pMax - pMin); // 0..1
+        const cap = Math.round(min + t * (max - min));
+        caps[p] = cap;
+      }
+    });
+    return caps;
+  };
+
+  const caps = preciosCap();
+
+  const onChangePrecioPorcion = (p, v) => {
+    const limpio = v.replace(/[^\d]/g, "");
+    setForm(prev => ({
+      ...prev,
+      porcionPrecios: { ...prev.porcionPrecios, [p]: limpio }
+    }));
+  };
+
   const validate = () => {
     const e = {};
     if (!form.nombre.trim()) e.nombre = "Ingresa un nombre";
     if (!form.categoria) e.categoria = "Selecciona una categoría";
-    if (!form.precioRango.trim()) e.precioRango = "Ingresa un rango de precio";
+
+    const min = num(form.precioMin);
+    const max = num(form.precioMax);
+    if (!Number.isFinite(min) || min <= 0) e.precioMin = "Ingresa un mínimo válido";
+    if (!Number.isFinite(max) || max <= 0) e.precioMax = "Ingresa un máximo válido";
+    if (Number.isFinite(min) && Number.isFinite(max) && min >= max) e.precioMax = "El máximo debe ser mayor al mínimo";
+
     if (!isValidUrl(form.imagen)) e.imagen = "URL de imagen no válida";
+
+    if (form.usarPorciones && form.porciones.length > 0 && Object.keys(caps).length) {
+      form.porciones.forEach(p => {
+        const val = num(form.porcionPrecios[p]);
+        const cap = caps[p];
+        if (!Number.isFinite(val) || val <= 0) {
+          e[`por_${p}`] = `Ingresa un precio válido`;
+        } else if (val > cap) {
+          e[`por_${p}`] = `No debe superar $${cap.toLocaleString("es-CL")}`;
+        }
+      });
+    }
+
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -156,13 +227,15 @@ function ProductosSection() {
     setForm({
       nombre: "",
       categoria: "tortas",
-      precioRango: "",
+      precioMin: "",
+      precioMax: "",
       imagen: "",
       descripcion: "",
       porciones: [],
       activo: true,
       sku: "",
-      usarPorciones: true
+      usarPorciones: true,
+      porcionPrecios: {}
     });
     setErrors({});
     setEditingId(null);
@@ -171,14 +244,24 @@ function ProductosSection() {
   const onSubmit = (e) => {
     e.preventDefault();
     if (!validate()) return;
+
+    const min = num(form.precioMin);
+    const max = num(form.precioMax);
+
     const payload = {
       id: editingId ?? Date.now(),
       nombre: form.nombre.trim(),
       categoria: form.categoria,
-      precio: form.precioRango.trim(),
+      precioMin: min,
+      precioMax: max,
       imagen: form.imagen.trim(),
       descripcion: form.descripcion.trim(),
-      variantes: form.usarPorciones ? form.porciones.map(p => ({ personas: p })) : [],
+      variantes: form.usarPorciones
+        ? form.porciones.map(p => ({
+            personas: p,
+            precio: num(form.porcionPrecios[p]) || caps[p] || min
+          }))
+        : [],
       activo: form.activo,
       sku: form.sku.trim()
     };
@@ -193,16 +276,20 @@ function ProductosSection() {
 
   const startEdit = (item) => {
     setEditingId(item.id);
+    const porcionPrecios = {};
+    (item.variantes || []).forEach(v => { porcionPrecios[v.personas] = String(v.precio || ""); });
     setForm({
       nombre: item.nombre || "",
       categoria: item.categoria || "tortas",
-      precioRango: item.precio || "",
+      precioMin: item.precioMin ? String(item.precioMin) : "",
+      precioMax: item.precioMax ? String(item.precioMax) : "",
       imagen: item.imagen || "",
       descripcion: item.descripcion || "",
-      porciones: (item.variantes || []).map(v => v.personas),
+      porciones: (item.variantes || []).map(v => v.personas).sort((a,b)=>a-b),
       activo: !!item.activo,
       sku: item.sku || "",
       usarPorciones: (item.variantes || []).length > 0 || (item.categoria === "tortas"),
+      porcionPrecios
     });
     setShowForm(true);
   };
@@ -252,14 +339,33 @@ function ProductosSection() {
             </div>
 
             <div className="field">
-              <label>Rango de precio</label>
+              <label>Precio mínimo</label>
               <input
-                name="precioRango"
-                value={form.precioRango}
+                name="precioMin"
+                type="number"
+                inputMode="numeric"
+                min="0"
+                step="1"
+                value={form.precioMin}
                 onChange={onChange}
-                placeholder="Ej: 18.000 - 60.000"
+                placeholder="Ej: 25000"
               />
-              {errors.precioRango && <span className="err">{errors.precioRango}</span>}
+              {errors.precioMin && <span className="err">{errors.precioMin}</span>}
+            </div>
+
+            <div className="field">
+              <label>Precio máximo</label>
+              <input
+                name="precioMax"
+                type="number"
+                inputMode="numeric"
+                min="0"
+                step="1"
+                value={form.precioMax}
+                onChange={onChange}
+                placeholder="Ej: 75000"
+              />
+              {errors.precioMax && <span className="err">{errors.precioMax}</span>}
             </div>
 
             <div className="field">
@@ -284,7 +390,7 @@ function ProductosSection() {
               />
             </div>
 
-            <div className="field">
+            <div className="field field-span">
               <label>Porciones</label>
               {form.categoria === "dulces" && (
                 <div className="field check" style={{ marginBottom: 8 }}>
@@ -313,6 +419,41 @@ function ProductosSection() {
                 ))}
               </div>
             </div>
+
+            {form.usarPorciones && form.porciones.length > 0 && (
+              <div className="field field-span">
+                <label>Precio por porción</label>
+                <div className="list" style={{marginTop: 6}}>
+                  {form.porciones.map(p => {
+                    const cap = caps[p];
+                    const val = form.porcionPrecios[p] ?? "";
+                    return (
+                      <div key={p} className="client" style={{alignItems:"center"}}>
+                        <div>
+                          <strong>{p} personas</strong>
+                          <div style={{fontSize:12, color:"#555"}}>
+                            Máximo permitido: ${cap ? cap.toLocaleString("es-CL") : "—"}
+                          </div>
+                          {errors[`por_${p}`] && <div className="err">{errors[`por_${p}`]}</div>}
+                        </div>
+                        <div className="row">
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            min="0"
+                            step="1"
+                            value={val}
+                            onChange={(e)=>onChangePrecioPorcion(p, e.target.value)}
+                            placeholder={cap ? String(cap) : ""}
+                            style={{width:160}}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="field">
               <label>SKU (opcional)</label>
@@ -355,9 +496,18 @@ function ProductosSection() {
             )}
             <h4>{p.nombre}</h4>
             <p>Categoría: {p.categoria}</p>
-            <p>Precio: ${p.precio}</p>
+            {(p.precioMin && p.precioMax) && (
+              <p>Precio: ${p.precioMin.toLocaleString("es-CL")} - ${p.precioMax.toLocaleString("es-CL")}</p>
+            )}
             {p.variantes?.length > 0 && (
-              <p>Porciones: {p.variantes.map(v => v.personas).join(", ")}</p>
+              <p>
+                Porciones:{" "}
+                {p.variantes
+                  .slice()
+                  .sort((a,b)=>a.personas-b.personas)
+                  .map(v => `${v.personas}p $${Number(v.precio||0).toLocaleString("es-CL")}`)
+                  .join(" · ")}
+              </p>
             )}
             {p.sku && <p>SKU: {p.sku}</p>}
             <div className="row">
@@ -611,11 +761,13 @@ function DescuentosSection() {
 
 const UserNormal = () => {
   const [active, setActive] = useState("inicio");
+  const mainRef = useRef(null);
 
   useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
-    const main = document.querySelector(".main-content");
-    if (main) main.scrollTo({ top: 0, behavior: "smooth" });
   }, [active]);
 
   const sections = [
@@ -629,6 +781,14 @@ const UserNormal = () => {
     { id: "account", label: "Cuenta" },
     { id: "settings", label: "Configuración" },
   ];
+
+  const goSection = (id) => {
+    setActive(id);
+    if (mainRef.current) {
+      mainRef.current.scrollTop = 0;
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const renderInicio = () => (
     <div className="card-stack">
@@ -758,8 +918,8 @@ const UserNormal = () => {
                 key={s.id}
                 className={active===s.id ? "active" : ""}
                 tabIndex={0}
-                onClick={()=>setActive(s.id)}
-                onKeyDown={(e)=> (e.key==="Enter" || e.key===" ") && setActive(s.id)}
+                onClick={()=>goSection(s.id)}
+                onKeyDown={(e)=> (e.key==="Enter" || e.key===" ") && goSection(s.id)}
                 aria-current={active===s.id ? "page" : undefined}
               >
                 {s.label}
@@ -768,7 +928,7 @@ const UserNormal = () => {
           </ul>
         </aside>
 
-        <main className="main-content" role="region" aria-live="polite">
+        <main ref={mainRef} className="main-content" role="region" aria-live="polite">
           {active === "inicio" && renderInicio()}
           {active === "pedidos" && <PedidosSection />}
           {active === "productos" && <ProductosSection />}
