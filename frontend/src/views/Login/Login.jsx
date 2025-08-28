@@ -34,18 +34,9 @@ export default function AuthLanding() {
   const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
 
-  const openLogin = () => {
-    setShowSignup(false);
-    setShowLogin(true);
-  };
-  const openSignup = () => {
-    setShowLogin(false);
-    setShowSignup(true);
-  };
-  const closeAll = () => {
-    setShowLogin(false);
-    setShowSignup(false);
-  };
+  const openLogin = () => { setShowSignup(false); setShowLogin(true); };
+  const openSignup = () => { setShowLogin(false); setShowSignup(true); };
+  const closeAll = () => { setShowLogin(false); setShowSignup(false); };
 
   return (
     <div className="al-landing">
@@ -111,6 +102,7 @@ export default function AuthLanding() {
       <LoginModal isOpen={showLogin} onClose={closeAll} onSwap={openSignup} />
       <SignupModal isOpen={showSignup} onClose={closeAll} onSwap={openLogin} />
 
+      {/* AQUÍ estaba el error: faltaba abrir el <svg> */}
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 230" style={{ display: "block", transform: "scaleY(1)" }}>
         <path
           stroke="none"
@@ -351,8 +343,7 @@ function SignupModal({ isOpen, onClose, onSwap }) {
         </div>
 
         <label className="al-check">
-          <input type="checkbox" name="accept" checked={form.accept} onChange={onChange} /> Acepto los Términos y la Política de
-          Privacidad
+          <input type="checkbox" name="accept" checked={form.accept} onChange={onChange} /> Acepto los Términos y la Política de Privacidad
         </label>
         {errors.accept && <span className="al-error">{errors.accept}</span>}
 
