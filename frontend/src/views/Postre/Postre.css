@@ -1,7 +1,7 @@
-/* Layout general */
 .postre-container {
   display: flex;
   align-items: flex-start;
+  justify-content: center; /* <-- Agregado para centrar */
   gap: 30px;
   padding: 30px;
   background-color: #f5f5f5;
@@ -9,29 +9,28 @@
   box-sizing: border-box;
 }
 
-/* Card del formulario (izquierda) */
 .postre-card {
   background: #fff;
   border-radius: 12px;
-  padding: 26px;
+  padding: 22px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
-  flex: 1 1 700px;    /* crece para ocupar el espacio disponible */
+  flex: 1 1 540px;
   min-width: 420px;
+  max-width: 860px;
   display: flex;
-  flex-direction: column; /* importante: h2 arriba y luego el grid */
+  flex-direction: column;
   box-sizing: border-box;
+  min-height: 680px;
 }
 
-/* Título encima del grid */
 .titulo-formulario {
   font-size: 1.6rem;
   font-weight: 700;
   margin: 0 0 18px 0;
   color: #6b2c2c;
-  text-align: left; /* o center si prefieres */
+  text-align: left;
 }
 
-/* Grid de campos: dos columnas consistentes */
 .postre-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -40,25 +39,21 @@
   align-items: start;
 }
 
-/* Si quieres que algún campo ocupe las 2 columnas: .full */
 .postre-form-grid .full {
   grid-column: 1 / -1;
 }
 
-/* Campo individual: etiqueta arriba, input debajo */
 .campo {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-
 .campo label {
   font-weight: 700;
   font-size: 0.95rem;
   color: #3c3c3c;
 }
 
-/* Inputs y selects */
 .campo input[type="text"],
 .campo input[type="number"],
 .campo select,
@@ -72,7 +67,6 @@
   box-sizing: border-box;
 }
 
-/* checkbox inline small tweak */
 .checkbox-inline {
   display: flex;
   align-items: center;
@@ -80,15 +74,29 @@
   font-weight: 600;
 }
 
-/* Extras y checkbox group */
+.campo.filler {
+  visibility: hidden;
+  min-height: 56px;
+}
+
+.campo-extras {
+  padding: 12px;
+  border: 1px dashed #e6caca;
+  border-radius: 10px;
+  background: #fff9f9;
+}
+.campo-extras > label {
+  color: #6b2c2c;
+}
+
 .campo-extras .checkbox-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
   margin-top: 6px;
 }
 
-/* Card resumen (derecha) */
+/* Card resumen (derecha) - NO TOCAR */
 .resumen-card {
   background: #fff;
   border-radius: 12px;
@@ -99,7 +107,6 @@
   flex-direction: column;
   box-sizing: border-box;
 }
-
 .resumen-card h3 {
   margin: 0 0 10px 0;
   color: #b12d2d;
@@ -114,7 +121,6 @@
   align-items: center;
   font-size: 1rem;
 }
-
 .btn-agregar {
   margin-top: 16px;
   background: #b12d2d;
@@ -125,7 +131,6 @@
   font-size: 1rem;
   cursor: pointer;
 }
-
 .btn-agregar:hover {
   background: #8f2222;
 }
@@ -146,9 +151,17 @@
   .postre-card {
     min-width: 0;
     width: 100%;
+    min-height: unset;
   }
   .resumen-card {
     width: 100%;
     order: 2;
   }
+}
+
+.contenedor-extras-resumen {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 2rem;
 }
