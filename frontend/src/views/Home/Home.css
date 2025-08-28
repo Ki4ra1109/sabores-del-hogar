@@ -17,7 +17,7 @@
     align-items: center;
 }
 
-/* estilos del carrusel */
+/* Carrusel */
 .home-carrusel {
     max-width: 900px;
     width: 98vw;
@@ -37,84 +37,11 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.6s cubic-bezier(.4,0,.2,1), 
-                opacity 0.6s cubic-bezier(.4,0,.2,1);
+    transition: transform 0.6s cubic-bezier(.4,0,.2,1), opacity 0.6s cubic-bezier(.4,0,.2,1);
     position: absolute;
     border-radius: 1rem;
 }
 
-.home-carrusel-img.principal {
-    z-index: 3;
-    opacity: 1;
-    border-radius: 1rem;
-}
-
-/* animaciones del carrusel */
-.home-carrusel-img.principal.from-izquierda {
-    animation: slideFromLeft 0.6s forwards;
-    z-index: 4;
-}
-
-.home-carrusel-img.principal.from-derecha {
-    animation: slideFromRight 0.6s forwards;
-    z-index: 4;
-}
-
-.home-carrusel-img.principal.to-izquierda {
-    animation: slideToLeft 0.6s forwards;
-    z-index: 3;
-}
-
-.home-carrusel-img.principal.to-derecha {
-    animation: slideToRight 0.6s forwards;
-    z-index: 3;
-}
-
-@keyframes slideFromLeft {
-    from {
-        transform: translateX(-100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-@keyframes slideFromRight {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-@keyframes slideToLeft {
-    from {
-        transform: translateX(0);
-        opacity: 1;
-    }
-    to {
-        transform: translateX(-100%);
-        opacity: 0;
-    }
-}
-
-@keyframes slideToRight {
-    from {
-        transform: translateX(0);
-        opacity: 1;
-    }
-    to {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-}
-
-/* botones del carrusel */
 .home-carrusel-btn {
   position: absolute;
   top: 50%;
@@ -130,7 +57,6 @@
   align-items: center;
   justify-content: center;
   z-index: 10;
-  opacity: 1;
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   transition: transform 0.2s ease;
 }
@@ -151,20 +77,7 @@
   right: 24px;
 }
 
-.home-container h1 {
-    margin-bottom: 0.5rem;
-}
-
-/* separador */
-.separador {
-  width: 100%;
-  margin-top: 0.5rem;
-  margin-bottom: 0;
-  padding: 0;
-  line-height: 0;
-}
-
-/* texto debajo del carrusel */
+/* Texto bienvenida */
 .bienvenida {
   width: 100%;
   max-width: 700px;
@@ -191,7 +104,7 @@
   margin: 0;
 }
 
-/* hisotira */
+/* Historia */
 .historia-card {
   width: 100%;
   max-width: 1100px;
@@ -213,7 +126,7 @@
   gap: 2rem;
 }
 
-/* sobre nosotros */
+/* Sobre nosotros y trayectoria */
 .sobre-nosotros-card,
 .trayectoria-card {
   background: #fff;
@@ -283,8 +196,7 @@
   background: #d62828;
 }
 
-/* productos destacados*/
-
+/* Productos destacados */
 .productos-destacados {
   width: 100%;
   max-width: 1100px;
@@ -322,8 +234,7 @@
   background-color: #d62828;
 }
 
-/* arma tu postre*/
-
+/* Arma tu postre */
 .arma-tu-postre-card {
   background-color: #ffffff;
   border-radius: 12px;
@@ -368,4 +279,60 @@
 
 .arma-tu-postre-btn:hover {
   background: #d62828;
+}
+
+/* Media Queries Responsivas */
+@media (max-width: 1024px) {
+  .home-carrusel {
+    height: 400px;
+  }
+  .bienvenida h1 {
+    font-size: 2rem;
+  }
+  .bienvenida p {
+    font-size: 1.1rem;
+  }
+  .historia-card-title {
+    font-size: 1.8rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-carrusel {
+    height: 300px;
+  }
+  .historia-card-content {
+    grid-template-columns: 1fr;
+  }
+  .sobre-nosotros-card-info h2,
+  .trayectoria-card-info h2 {
+    font-size: 1.5rem;
+  }
+  .sobre-nosotros-card-info h3,
+  .trayectoria-card-info h3 {
+    font-size: 1.3rem;
+  }
+  .arma-tu-postre-content h2 {
+    font-size: 1.5rem;
+  }
+  .arma-tu-postre-content p {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-carrusel-btn {
+    width: 48px;
+    height: 48px;
+    font-size: 1.8rem;
+  }
+  .bienvenida h1 {
+    font-size: 1.5rem;
+  }
+  .bienvenida p {
+    font-size: 1rem;
+  }
+  .productos-destacados-title {
+    font-size: 1.8rem;
+  }
 }
