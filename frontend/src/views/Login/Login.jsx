@@ -2,6 +2,8 @@ import './Login.css';
 import { useState, useEffect } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+
 
 function Modal({ isOpen, title, onClose, children }) {
   // Cerrar con ESC
@@ -27,10 +29,121 @@ function Modal({ isOpen, title, onClose, children }) {
 export default function AuthLanding() {
   const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
+  const navigate = useNavigate();
 
   const openLogin = () => { setShowSignup(false); setShowLogin(true); };
   const openSignup = () => { setShowLogin(false); setShowSignup(true); };
   const closeAll = () => { setShowLogin(false); setShowSignup(false); };
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [User, setUser] = useState("");
+
+  const onSignupSubmit = async (e) => {
+    e.preventDefault();
+
+    // Asegurarnos de que signupData exista
+    if (!signupData) {
+      alert("Datos incompletos");
+      return;
+    }
+
+    try {
+      // Crear payload seguro usando optional chaining
+      const signupPayload = {
+        nombre: signupData?.nombre || "",
+        apellido: signupData?.apellido || "",
+        rut: signupData?.rut || "",
+        correo: signupData?.correo || "",
+        password: signupData?.password || "",
+        telefono: signupData?.telefono || "",
+        fechaNacimiento: signupData?.fechaNacimiento || "",
+        direccion: signupData?.direccion || "",
+      };
+
+      // Llamada al backend con fetch
+      const res = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(signupPayload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Ocurrió un error en el registro");
+        return;
+      }
+
+      // Guardar usuario en localStorage
+      localStorage.setItem("sdh_user", JSON.stringify(data.user));
+
+      // Opcional: actualizar estado global si tienes setUser
+      setUser && setUser(data.user);
+
+      // Cerrar modal si aplica
+      closeAll && closeAll();
+
+      // Navegar al home
+      navigate("/");
+    } catch (error) {
+      console.error("Error en el registro:", error);
+      alert("Ocurrió un error en el registro");
+    }
+  };
+
+  const handleLogin = async (email, password) => {
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Error al iniciar sesión");
+        return;
+      }
+
+      // Guardar usuario en localStorage
+      localStorage.setItem("sdh_user", JSON.stringify(data.user));
+
+      // Actualizar estado global o local
+      setUser(data.user);
+
+      // Cerrar modal
+      closeAll();
+
+      // Redirigir al home
+      navigate("/");
+    } catch (error) {
+      console.error("Error al iniciar sesión:", error);
+      alert("Error de conexión con el servidor");
+    }
+  };
+
+  // Estado para todos los campos
+  const [signupData, setSignupData] = useState({
+    nombre: "",
+    apellido: "",
+    rut: "",
+    correo: "",
+    password: "",
+    telefono: "",
+    fechaNacimiento: "",
+    direccion: ""
+  });
+
+  const onChange = (e) => {
+    const { name, value } = e.target;
+    setSignupData({ ...signupData, [name]: value });
+  };
+
 
   return (
     <div className="al-landing">
@@ -52,7 +165,6 @@ export default function AuthLanding() {
       </svg>
 
       <div className="al-grid">
-        {/* Columna izquierda: “X”/logo grande*/}
         <div className="al-left">
           <div className="al-x-mark">
             <img
@@ -99,40 +211,63 @@ export default function AuthLanding() {
 
       {/* Modal: Iniciar sesión */}
       <Modal isOpen={showLogin} title="Iniciar sesión" onClose={closeAll}>
-        <form className="al-form" onSubmit={(e) => { e.preventDefault();}}>
-          <input type="email" placeholder="Correo electrónico" required />
-          <input type="password" placeholder="Contraseña" required />
-          <button type="submit" className="al-btn al-btn-primary">Entrar</button>
+        <form
+          className="al-form al-form-grid"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleLogin(email, password);
+          }}
+        >
+          <input
+            type="email"
+            placeholder="Correo electrónico"
+            name="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input
+            type="password"
+            placeholder="Contraseña"
+            name="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <button type="submit" className="al-btn al-btn-primary">
+            Entrar
+          </button>
         </form>
+
         <p className="al-switch">
-          ¿No tienes cuenta? <button className="al-link" onClick={openSignup}>Regístrate</button>
+          ¿No tienes cuenta?{" "}
+          <button className="al-link" onClick={openSignup}>
+            Regístrate
+          </button>
         </p>
       </Modal>
 
-      {/* Modal: Crear cuenta */}
       <Modal isOpen={showSignup} title="Crear cuenta" onClose={closeAll}>
-        <form
-          className="al-form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            // Aquí validaciones extra si es necesario
-          }}
-        >
-          {/* Nombre */}
-          <input
-            type="text"
-            placeholder="Nombre"
-            name="nombre"
-            required
-          />
-
-          {/* Apellido */}
-          <input
-            type="text"
-            placeholder="Apellido"
-            name="apellido"
-            required
-          />
+        <form className="al-form al-form-grid" onSubmit={onSignupSubmit}>
+          {/* Fila: Nombre y Apellido */}
+          <div className="al-form-row">
+            <input
+              type="text"
+              placeholder="Nombre"
+              name="nombre"
+              value={signupData.nombre}
+              onChange={onChange}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Apellido"
+              name="apellido"
+              value={signupData.apellido}
+              onChange={onChange}
+              required
+            />
+          </div>
 
           {/* RUT */}
           <input
@@ -141,14 +276,18 @@ export default function AuthLanding() {
             name="rut"
             pattern="^(\d{1,2}\.\d{3}\.\d{3}-[\dkK])$"
             title="Formato válido: 12.345.678-9"
+            value={signupData.rut}
+            onChange={onChange}
             required
           />
 
-          {/* Correo */}
+          {/* Correo electrónico */}
           <input
             type="email"
             placeholder="Correo electrónico"
             name="correo"
+            value={signupData.correo}
+            onChange={onChange}
             required
           />
 
@@ -160,43 +299,66 @@ export default function AuthLanding() {
             minLength={9}
             pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{9,}$"
             title="Debe tener al menos 9 caracteres, incluyendo letras y números"
+            value={signupData.password}
+            onChange={onChange}
             required
           />
 
-          {/* Teléfono */}
-          <input
-            type="tel"
-            placeholder="Teléfono (+56...)"
-            name="telefono"
-            pattern="^\+56\d{8,9}$"
-            title="Debe comenzar con +56 seguido de 8 o 9 dígitos"
-            required
-          />
-
-          {/* Fecha de nacimiento */}
-          <input
-            type="date"
-            name="fechaNacimiento"
-            required
-            onKeyDown={(e) => e.preventDefault()} // evita modificar con teclado
-          />
+          {/* Fila: Teléfono y Fecha de nacimiento */}
+          <div className="al-form-row">
+            <input
+              type="tel"
+              placeholder="Teléfono (+56...)"
+              name="telefono"
+              pattern="^\+56\d{8,9}$"
+              title="Debe comenzar con +56 seguido de 8 o 9 dígitos"
+              value={signupData.telefono}
+              onChange={onChange}
+              required
+            />
+            <input
+              type="date"
+              name="fechaNacimiento"
+              value={signupData.fechaNacimiento}
+              onChange={onChange}
+              required
+              onKeyDown={(e) => e.preventDefault()}
+            />
+          </div>
 
           {/* Dirección (opcional) */}
           <input
             type="text"
             placeholder="Dirección (opcional)"
             name="direccion"
+            value={signupData.direccion}
+            onChange={onChange}
           />
 
-          {/* Aceptar términos */}
+          {/* Checkbox Términos */}
           <label className="al-check">
-            <input type="checkbox" required /> Acepto los Términos y la Política de Privacidad
+            <input
+              type="checkbox"
+              name="terminos"
+              checked={signupData.terminos || false}
+              onChange={(e) =>
+                setSignupData({ ...signupData, terminos: e.target.checked })
+              }
+              required
+            />{" "}
+            Acepto los Términos y la Política de Privacidad
           </label>
 
-          <button type="submit" className="al-btn al-btn-primary">Registrarse</button>
+          <button type="submit" className="al-btn al-btn-primary">
+            Registrarse
+          </button>
         </form>
+
         <p className="al-switch">
-          ¿Ya tienes cuenta? <button className="al-link" onClick={openLogin}>Inicia sesión</button>
+          ¿Ya tienes cuenta?{" "}
+          <button className="al-link" onClick={openLogin}>
+            Inicia sesión
+          </button>
         </p>
       </Modal>
 

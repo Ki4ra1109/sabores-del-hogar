@@ -1,4 +1,3 @@
-
 /* Layout base */
 .al-landing {
     min-height: 100vh;
@@ -168,12 +167,12 @@
 }
 
 .al-modal {
-    width: min(92vw, 420px);
-    background: #8B5E3C;
-    border: 1px solid #2f3336;
+    width: 35%;
+    background: #6A1B1B; /* Color vino */
+    border: 1px solid #400d0d; /* Borde vino oscuro */
     border-radius: 16px;
     padding: 20px 20px 24px;
-    color: #e7e9ea;
+    color: #f5f5f5; /* Texto claro */
     position: relative;
     animation: al-pop .18s ease both;
 }
@@ -182,6 +181,7 @@
     margin: 0 0 12px;
     font-size: 22px;
     font-weight: 800;
+    color: #ffffff; /* Título bien visible */
 }
 
 .al-modal-close {
@@ -190,58 +190,68 @@
     right: 10px;
     background: #ffffff;
     border: 1px solid #ffffff;
-    color: #000000;
+    color: #6A1B1B; /* Ícono del botón en color vino */
     border-radius: 50%;
     width: 32px;
     height: 32px;
     cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
 }
 
 .al-modal-close:hover {
-    background: #948d8d;
+    background: #e0e0e0;
+    color: #400d0d; /* Vino más oscuro al pasar el mouse */
 }
 
 .al-modal-body {
     margin-top: 8px;
+    color: #f0f0f0; /* Texto dentro del modal */
 }
+
 
 /* Forms */
 .al-form {
     display: grid;
-    gap: 12px;
-    margin-top: 6px;
+    gap: 14px;
+    margin-top: 8px;
 }
 
+/* Inputs, selects y textarea */
 .al-form input:not([type="checkbox"]),
 .al-form select,
 .al-form textarea {
-    background: #e7a97a;
-    color: #000000 !important;
-    border: 1px solid #000000;
-    padding: 12px 14px;
-    border-radius: 8px;
+    background: #ffffff;
+    color: #2b2b2b !important;
+    border: 2px solid #800020;   /* Vino oscuro */
+    padding: 14px 16px;
+    border-radius: 10px;         /* Más cuadrado, con bordes suaves */
     outline: none;
-    width: 100%;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
     font-size: 15px;
+    box-shadow: 0 2px 6px rgba(128, 0, 32, 0.15); /* Sutil sombra */
+    transition: all 0.3s ease;
 }
 
-/* Para cuando el campo está enfocado */
+/* Efecto al enfocar */
 .al-form input:focus,
 .al-form select:focus,
 .al-form textarea:focus {
-    border-color: #8ecdf7;
-    color: #000000 !important;
+    border-color: #b03060; /* Vino más claro */
+    box-shadow: 0 0 8px rgba(176, 48, 96, 0.5);
+    background: #fff5f8; /* Un ligero fondo vino claro */
+    color: #2b2b2b !important;
 }
 
-/* Para el texto de ayuda dentro (placeholder) */
+/* Placeholder */
 .al-form input::placeholder,
 .al-form textarea::placeholder {
-    color: #000000;
-    opacity: 0.9;
+    color: #800020;
+    opacity: 0.6;
+    font-style: italic;
+    width: 100%;
 }
 
-
+/* Checkbox y switches */
 .al-check {
     display: flex;
     align-items: center;
@@ -256,13 +266,41 @@
     color: #ffffff;
 }
 
+/* Links dentro de forms */
 .al-link {
-    color: #8ecdf7;
+    color: #b03060;
     background: none;
     border: none;
     cursor: pointer;
     font-weight: 700;
+    transition: color 0.3s ease;
 }
+
+.al-link:hover {
+    color: #ff4d88; /* Efecto hover más brillante */
+}
+
+/* Formulario en grid más organizado */
+.al-form.al-form-grid {
+  display: grid;
+  gap: 14px;
+}
+
+/* Filas que tengan dos inputs */
+.al-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* En mobile se pone una columna */
+@media (max-width: 600px) {
+  .al-form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+
 
 /* Animaciones */
 @keyframes al-fade {
