@@ -6,7 +6,6 @@ import Login from "../views/Login/Login";
 import UserNormal from "../views/Users/Normal/UserNormal";
 import UserAdmin from "../views/Users/Admin/UserAdmin";
 import Nosotros from "../views/Nosotros/Nosotros";
-import Postre from "../views/Postre/Postre";
 
 export default function AppRouter() {
   return (
@@ -20,7 +19,6 @@ export default function AppRouter() {
           <Route path="/UserNormal" element={<UserNormal />}/>
           <Route path="/UserAdmin" element={<UserAdmin />}/>
           <Route path="/nosotros" element={<Nosotros />} />
-          <Route path="/postre" element={<Postre />} />
         </Routes>
       </main>
     </Router>
