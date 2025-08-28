@@ -3,6 +3,8 @@ import './index.css';
 import AppRouter from "./routes/AppRouter";
 import Loader from "./componentes/Loader";
 
+import { CarritoProvider } from "./context/carritoContext";
+
 function App() {
   const [loading, setLoading] = useState(true);
 
@@ -14,9 +16,9 @@ function App() {
   }, []);
 
   return (
-    <>
+    <CarritoProvider>
       {loading ? <Loader /> : <AppRouter />}
-    </>
+    </CarritoProvider>
   );
 }
 
