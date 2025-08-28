@@ -3,11 +3,13 @@ footer {
   background-color: #572420;
   padding: 1rem 2rem;
   display: flex;
-  flex-direction: row; 
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
   width: 100%;
+  flex-wrap: wrap;
+  box-sizing: border-box;
 }
 
 .Footer-icon {
@@ -25,10 +27,12 @@ footer {
   display: flex;
   flex-direction: row;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .red a {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
   color: #fff;
   transition: transform 0.2s ease;
@@ -47,6 +51,7 @@ footer {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
+  text-align: right;
 }
 
 .footer-links a {
@@ -63,4 +68,54 @@ footer {
   right: 10px;
   color: #FFF1E6;
   font-size: 10px;
+  margin-top: .5rem;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  footer {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .Footer-icon {
+    height: 50px;
+  }
+
+  .footer-links {
+    text-align: center;
+    font-size: 11px;
+  }
+
+  .redes-lista {
+    justify-content: center;
+  }
+
+  .veri-sitio {
+    position: relative;
+    margin-top: .5rem;
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 480px) {
+  .Footer-icon {
+    height: 45px;
+  }
+
+  .red img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .footer-links a {
+    font-size: 9px;
+  }
+
+  .veri-sitio {
+    font-size: 8px;
+  }
 }
