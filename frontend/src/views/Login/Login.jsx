@@ -1,8 +1,6 @@
 import "./Login.css";
 import { useState, useEffect, useRef } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { signInWithPopup } from "firebase/auth";
-import { auth, provider } from "../../Config/firebase";
 
 function Modal({ isOpen, title, onClose, children }) {
   const firstFocusable = useRef(null);
@@ -35,36 +33,7 @@ function Modal({ isOpen, title, onClose, children }) {
 export default function AuthLanding() {
   const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
 
-  const openLogin = () => {
-    setShowSignup(false);
-    setShowLogin(true);
-  };
-  const openSignup = () => {
-    setShowLogin(false);
-    setShowSignup(true);
-  };
-  const closeAll = () => {
-    setShowLogin(false);
-    setShowSignup(false);
-  };
-
-  const handleGoogle = async () => {
-    try {
-      setGoogleLoading(true);
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      const token = await user.getIdToken();
-      console.log("Usuario logueado:", { uid: user.uid, email: user.email });
-      console.log("Token JWT:", token);
-    } catch (error) {
-      console.error("Error en login con Google:", error);
-      alert("No se pudo iniciar sesión con Google.");
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
 
   return (
     <div className="al-landing">
@@ -128,10 +97,7 @@ export default function AuthLanding() {
         </div>
       </div>
 
-      <LoginModal isOpen={showLogin} onClose={closeAll} onSwap={openSignup} />
-      <SignupModal isOpen={showSignup} onClose={closeAll} onSwap={openLogin} />
 
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 230" style={{ display: "block", transform: "scaleY(1)" }}>
         <path
           stroke="none"
           fill="#F8D7DA"
