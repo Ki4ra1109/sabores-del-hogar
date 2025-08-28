@@ -103,10 +103,7 @@
   cursor: pointer;
 }
 
-/* responsive */
-@media (max-width: 900px) {
-  .detalle-wrap { grid-template-columns: 1fr; }
-}
+/* selector porciones */
 .selector-porciones {
   background: #fff;
   border: 1px solid #eee;
@@ -116,10 +113,75 @@
   display: grid;
   gap: 8px;
 }
-.selector-label { font-weight: 700; color: #8B5E3C; font-size: 0.95rem; }
-.selector-select {
-  border: 1px solid #ccc; border-radius: 10px; padding: 8px 10px; background: #fff; outline: none;
+
+.selector-label { 
+  font-weight: 700; 
+  color: #8B5E3C; 
+  font-size: 0.95rem; 
 }
-.selector-select:focus { border-color: #8B5E3C; box-shadow: 0 0 0 3px rgba(139,94,60,0.15); }
-.selector-resumen { font-size: 0.95rem; color: #444; }
-@media (max-width: 900px) { .selector-porciones { max-width: 100%; } }
+
+.selector-select {
+  border: 1px solid #ccc; 
+  border-radius: 10px; 
+  padding: 8px 10px; 
+  background: #fff; 
+  outline: none;
+}
+
+.selector-select:focus { 
+  border-color: #8B5E3C; 
+  box-shadow: 0 0 0 3px rgba(139,94,60,0.15); 
+}
+
+.selector-resumen { 
+  font-size: 0.95rem; 
+  color: #444; 
+}
+
+/* Media Queries Responsivas */
+@media (max-width: 1150px) {
+  .detalle-wrap {
+    padding: 1.5rem 1rem 3rem;
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .detalle-wrap { 
+    grid-template-columns: 1fr; 
+  }
+  .detalle-title {
+    font-size: 2.2rem;
+  }
+  .detalle-rango {
+    font-size: 1.1rem;
+  }
+  .detalle-precios {
+    font-size: 1rem;
+  }
+  .btn-comprar {
+    padding: 14px 24px;
+  }
+  .selector-porciones { 
+    max-width: 100%; 
+  }
+}
+
+@media (max-width: 480px) {
+  .detalle-title {
+    font-size: 1.8rem;
+  }
+  .detalle-rango {
+    font-size: 1rem;
+  }
+  .detalle-precios {
+    font-size: 0.95rem;
+  }
+  .btn-comprar {
+    width: 100%;
+    padding: 14px 0;
+  }
+  .detalle-safe {
+    font-size: 0.85rem;
+  }
+}
