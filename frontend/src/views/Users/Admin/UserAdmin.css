@@ -15,16 +15,18 @@
   display: grid;
   grid-template-columns: var(--rail) minmax(0,1fr);
   gap: var(--gap);
-  align-items: start;
+  align-items: stretch;
   padding: 16px;
   background: #f8eadd1a;
+
+  height: calc(100vh - var(--top));
+  overflow: hidden;
 }
 
 .sidebar {
-  position: sticky;
-  top: var(--top);
-  max-height: calc(100vh - var(--top) - 8px);
+  height: 100%;
   overflow: auto;
+
   background: var(--surface);
   border: 1px solid var(--surface-bd);
   border-radius: var(--radius);
@@ -70,6 +72,10 @@
 .main-content {
   min-width: 0;
   padding-bottom: 32px;
+
+  height: 100%;
+  overflow: auto;
+  scroll-behavior: smooth;
 }
 
 .card {
@@ -357,11 +363,27 @@
 }
 
 @media (max-width: 980px) {
-  .user-container { grid-template-columns: 1fr; }
-  .sidebar { position: static; max-height: none; }
-  .sidebar ul { display: grid; grid-auto-flow: column; gap: 8px; overflow-x: auto; }
+  .user-container {
+    grid-template-columns: 1fr;
+    height: auto;
+    overflow: visible;
+  }
+  .sidebar {
+    height: auto;
+    max-height: none;
+  }
+  .sidebar ul {
+    display: grid;
+    grid-auto-flow: column;
+    gap: 8px;
+    overflow-x: auto;
+  }
   .sidebar li { white-space: nowrap; }
   .grid2 { grid-template-columns: 1fr; }
+  .main-content {
+    height: auto;
+    overflow: visible;
+  }
 }
 
 .orders-search{
@@ -384,12 +406,12 @@
   box-shadow: 0 0 0 3px rgba(87,36,32,.15);
 }
 
-
 .order-actions{
   display: flex;
   gap: 10px;
   align-items: center;
 }
+
 .product-form {
   background: #fff;
   border: 1px solid #eee;
