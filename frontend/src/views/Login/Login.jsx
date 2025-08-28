@@ -1,8 +1,6 @@
 import "./Login.css";
 import { useState, useEffect, useRef } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { signInWithPopup } from "firebase/auth";
-import { auth, provider } from "../../Config/firebase";
 
 function Modal({ isOpen, title, onClose, children }) {
   const firstFocusable = useRef(null);
@@ -35,7 +33,6 @@ function Modal({ isOpen, title, onClose, children }) {
 export default function AuthLanding() {
   const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
 
   const openLogin = () => {
     setShowSignup(false);
@@ -48,22 +45,6 @@ export default function AuthLanding() {
   const closeAll = () => {
     setShowLogin(false);
     setShowSignup(false);
-  };
-
-  const handleGoogle = async () => {
-    try {
-      setGoogleLoading(true);
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      const token = await user.getIdToken();
-      console.log("Usuario logueado:", { uid: user.uid, email: user.email });
-      console.log("Token JWT:", token);
-    } catch (error) {
-      console.error("Error en login con Google:", error);
-      alert("No se pudo iniciar sesión con Google.");
-    } finally {
-      setGoogleLoading(false);
-    }
   };
 
   return (
@@ -103,12 +84,11 @@ export default function AuthLanding() {
 
           <button
             className="al-btn al-btn-pill al-btn-light"
-            onClick={handleGoogle}
+            onClick={() => {}}
             aria-label="Inicia sesión con Google"
-            disabled={googleLoading}
           >
             <FcGoogle className="al-icon" />
-            {googleLoading ? "Conectando..." : "Inicia sesión con Google"}
+            Inicia sesión con Google
           </button>
 
           <div className="al-divider">
@@ -150,8 +130,6 @@ export default function AuthLanding() {
     </div>
   );
 }
-
-/* ---------- Subcomponentes ---------- */
 
 function LoginModal({ isOpen, onClose, onSwap }) {
   const [showPass, setShowPass] = useState(false);
