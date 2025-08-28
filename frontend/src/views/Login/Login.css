@@ -1,4 +1,3 @@
-/* Layout base */
 .al-landing {
   min-height: 100vh;
   background: #572420;
@@ -27,7 +26,6 @@
   }
 }
 
-/* Col izquierda (logo grande) */
 .al-left {
   display: flex;
   justify-content: center;
@@ -48,7 +46,6 @@
   object-fit: contain;
 }
 
-/* Col derecha */
 .al-right {
   max-width: 620px;
 }
@@ -67,7 +64,6 @@
   color: #f5e8e9;
 }
 
-/* Botones */
 .al-btn {
   width: 100%;
   border: 1px solid transparent;
@@ -129,7 +125,6 @@
   font-size: 20px;
 }
 
-/* Divider */
 .al-divider {
   display: flex;
   align-items: center;
@@ -147,7 +142,6 @@
   color: #d9d9d9;
 }
 
-/* Pie “¿ya tienes cuenta?” */
 .al-have-account {
   display: flex;
   align-items: center;
@@ -155,7 +149,6 @@
   margin-top: 10px;
 }
 
-/* Modal */
 .al-modal-overlay {
   position: fixed;
   inset: 0;
@@ -167,16 +160,31 @@
 }
 
 .al-modal {
-
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 480px;
+  width: 100%;
 }
+
 .al-modal-close:hover {
-
+  background: #f3f4f6;
 }
 
-/* Inputs, selects y textarea */
 .al-form input:not([type="checkbox"]),
 .al-form select,
 .al-form textarea {
+  background: #ffffff;
+  color: #2b2b2b !important;
+  border: 2px solid #800020;
+  padding: 14px 16px;
+  border-radius: 10px;
+  outline: none;
+  margin-bottom: 14px;
+  font-size: 15px;
+  box-shadow: 0 2px 6px rgba(128, 0, 32, 0.15);
+  transition: all 0.3s ease;
+}
 
 .al-check {
   display: inline-flex;
@@ -200,38 +208,35 @@
   color: #ffffff;
 }
 
-/* Links dentro de forms */
 .al-link {
-
+  color: #800020;
+  font-weight: 700;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
 .al-link:hover {
-    color: #ff4d88; /* Efecto hover más brillante */
+  color: #ff4d88;
 }
 
-/* Formulario en grid más organizado */
 .al-form.al-form-grid {
   display: grid;
   gap: 14px;
 }
 
-/* Filas que tengan dos inputs */
 .al-form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
 
-/* En mobile se pone una columna */
 @media (max-width: 600px) {
   .al-form-row {
     grid-template-columns: 1fr;
   }
 }
 
-
-
-/* Animaciones */
 @keyframes al-fade {
   from {
     opacity: 0;
@@ -240,6 +245,7 @@
     opacity: 1;
   }
 }
+
 @keyframes al-pop {
   from {
     transform: scale(0.98);
