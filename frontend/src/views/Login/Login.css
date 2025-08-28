@@ -1,279 +1,208 @@
 /* Layout base */
 .al-landing {
-    min-height: 100vh;
-    background: #572420;
-    color: #fff;
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  min-height: 100vh;
+  background: #572420;
+  color: #fff;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans",
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 }
 
 .al-grid {
-    display: grid;
-    grid-template-columns: 1.1fr 1fr;
-    align-items: center;
-    gap: 2rem;
-    max-width: 1280px;
-    margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  align-items: center;
+  gap: 2rem;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 16px;
 }
 
 @media (max-width: 900px) {
-    .al-grid {
-        grid-template-columns: 1fr;
-        padding: 24px 16px;
-    }
-
-    .al-left {
-        display: none;
-    }
-
-    /* opcional en mobile */
+  .al-grid {
+    grid-template-columns: 1fr;
+    padding: 24px 16px;
+  }
+  .al-left {
+    display: none;
+  }
 }
 
 /* Col izquierda (logo grande) */
 .al-left {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .al-x-mark {
-    font-size: clamp(140px, 24vw, 320px);
-    font-weight: 800;
-    letter-spacing: -6px;
-    color: #ffffff;
-    opacity: 0.85;
+  font-size: clamp(140px, 24vw, 320px);
+  font-weight: 800;
+  letter-spacing: -6px;
+  color: #ffffff;
+  opacity: 0.9;
 }
 
 .x-mark-img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
-/* Col derecha (titulares y CTA) */
+/* Col derecha */
 .al-right {
-    max-width: 620px;
+  max-width: 620px;
 }
 
 .al-title {
-    font-size: clamp(36px, 6vw, 68px);
-    line-height: 0.95;
-    font-weight: 800;
-    margin: 0 0 28px;
+  font-size: clamp(36px, 6vw, 68px);
+  line-height: 0.95;
+  font-weight: 800;
+  margin: 0 0 28px;
 }
 
 .al-subtitle {
-    font-size: 28px;
-    font-weight: 700;
-    margin: 0 0 18px;
-    color: #e5e7eb;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 18px;
+  color: #f5e8e9;
 }
 
 /* Botones */
 .al-btn {
-    width: 100%;
-    border: 1px solid transparent;
-    border-radius: 999px;
-    padding: 12px 18px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: transform .06s ease, background .2s ease, border-color .2s ease, color .2s ease;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.06s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .al-btn:active {
-    transform: translateY(1px);
+  transform: translateY(1px);
+}
+
+.al-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .al-btn-pill {
-    border-radius: 999px;
+  border-radius: 999px;
 }
 
 .al-btn-light {
-    background: #fff;
-    color: #111827;
+  background: #ffffff;
+  color: #111827;
+  border-color: #ffffff;
 }
-
 .al-btn-light:hover {
-    background: #f3f4f6;
+  background: #f3f4f6;
 }
 
 .al-btn-primary {
-    background: #e7e9ea;
-    color: #0f1419;
+  background: #e7e9ea;
+  color: #0f1419;
 }
-
 .al-btn-primary:hover {
-    background: #d6d9db;
+  background: #d6d9db;
 }
 
 .al-btn-outline {
-    width: auto;
-    padding: 10px 16px;
-    border-radius: 999px;
-    border: 1px solid #ffffff;
-    background: #ffffff;
-    color: #000000;
+  width: auto;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid #ffffff;
+  background: #ffffff;
+  color: #000000;
 }
-
 .al-btn-outline:hover {
-    background: #9e9c9c;
+  background: #eaeaea;
 }
 
 .al-icon {
-    font-size: 20px;
+  font-size: 20px;
 }
 
-/* Divider “o” */
+/* Divider */
 .al-divider {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 6px 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 6px 0 14px;
 }
-
 .al-divider::before,
 .al-divider::after {
-    content: "";
-    height: 1px;
-    flex: 1;
-    background: #2f3336;
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: #2f3336;
 }
-
 .al-divider span {
-    color: #9ca3af;
+  color: #d9d9d9;
 }
 
 /* Pie “¿ya tienes cuenta?” */
 .al-have-account {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
 }
 
 /* Modal */
 .al-modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, .72);
-    display: grid;
-    place-items: center;
-    z-index: 1000;
-    animation: al-fade .15s ease both;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  animation: al-fade 0.15s ease both;
 }
 
 .al-modal {
-    width: 35%;
-    background: #6A1B1B; /* Color vino */
-    border: 1px solid #400d0d; /* Borde vino oscuro */
-    border-radius: 16px;
-    padding: 20px 20px 24px;
-    color: #f5f5f5; /* Texto claro */
-    position: relative;
-    animation: al-pop .18s ease both;
-}
 
-.al-modal-title {
-    margin: 0 0 12px;
-    font-size: 22px;
-    font-weight: 800;
-    color: #ffffff; /* Título bien visible */
 }
-
-.al-modal-close {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: #ffffff;
-    border: 1px solid #ffffff;
-    color: #6A1B1B; /* Ícono del botón en color vino */
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
-    cursor: pointer;
-    transition: background 0.2s ease, color 0.2s ease;
-}
-
 .al-modal-close:hover {
-    background: #e0e0e0;
-    color: #400d0d; /* Vino más oscuro al pasar el mouse */
-}
 
-.al-modal-body {
-    margin-top: 8px;
-    color: #f0f0f0; /* Texto dentro del modal */
-}
-
-
-/* Forms */
-.al-form {
-    display: grid;
-    gap: 14px;
-    margin-top: 8px;
 }
 
 /* Inputs, selects y textarea */
 .al-form input:not([type="checkbox"]),
 .al-form select,
 .al-form textarea {
-    background: #ffffff;
-    color: #2b2b2b !important;
-    border: 2px solid #800020;   /* Vino oscuro */
-    padding: 14px 16px;
-    border-radius: 10px;         /* Más cuadrado, con bordes suaves */
-    outline: none;
-    margin-bottom: 14px;
-    font-size: 15px;
-    box-shadow: 0 2px 6px rgba(128, 0, 32, 0.15); /* Sutil sombra */
-    transition: all 0.3s ease;
-}
 
-/* Efecto al enfocar */
-.al-form input:focus,
-.al-form select:focus,
-.al-form textarea:focus {
-    border-color: #b03060; /* Vino más claro */
-    box-shadow: 0 0 8px rgba(176, 48, 96, 0.5);
-    background: #fff5f8; /* Un ligero fondo vino claro */
-    color: #2b2b2b !important;
-}
-
-/* Placeholder */
-.al-form input::placeholder,
-.al-form textarea::placeholder {
-    color: #800020;
-    opacity: 0.6;
-    font-style: italic;
-    width: 100%;
-}
-
-/* Checkbox y switches */
 .al-check {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #ffffff;
+}
+
+.al-error {
+  color: #ffeed5;
+  background: rgba(0, 0, 0, 0.15);
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 13px;
 }
 
 .al-switch {
-    margin-top: 8px;
-    font-size: 14px;
-    color: #ffffff;
+  margin-top: 10px;
+  font-size: 14px;
+  color: #ffffff;
 }
 
 /* Links dentro de forms */
 .al-link {
-    color: #b03060;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-weight: 700;
-    transition: color 0.3s ease;
+
 }
 
 .al-link:hover {
@@ -304,23 +233,20 @@
 
 /* Animaciones */
 @keyframes al-fade {
-    from {
-        opacity: 0
-    }
-
-    to {
-        opacity: 1
-    }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
-
 @keyframes al-pop {
-    from {
-        transform: scale(.98);
-        opacity: 0
-    }
-
-    to {
-        transform: scale(1);
-        opacity: 1
-    }
+  from {
+    transform: scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
