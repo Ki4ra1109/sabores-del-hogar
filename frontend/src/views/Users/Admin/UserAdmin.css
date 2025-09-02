@@ -481,3 +481,131 @@
 @media (max-width: 980px) {
   .form-grid { grid-template-columns: 1fr; }
 }
+.grid{
+  display:grid;
+  gap:16px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+}
+
+.product.modern{
+  display:grid;
+  grid-template-columns: 120px 1fr;
+  grid-template-rows: auto 1fr auto;
+  gap:12px;
+  padding:12px;
+  background:#fff;
+  border:1px solid #ecd9d2;
+  border-radius:12px;
+  box-shadow:0 1px 2px rgba(0,0,0,.04);
+}
+
+.product.modern .thumb{
+  grid-row: 1 / span 3;
+}
+
+.product.modern .thumb img{
+  width:100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius:8px;
+  border:1px solid #ead7d0;
+}
+
+.product.modern .title-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:4px;
+}
+
+.product.modern .title{
+  margin:0;
+  font-size:16px;
+  line-height:1.2;
+}
+
+.product.modern .badge{
+  background:#f3e5e1;
+  color:#7b3a2f;
+  border:1px solid #e7cfc7;
+  padding:2px 8px;
+  border-radius:999px;
+  font-size:12px;
+  white-space:nowrap;
+}
+
+.product.modern .desc{
+  color:#5a4a47;
+  font-size:13px;
+  margin:4px 0 8px;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+.product.modern .price-range{
+  font-weight:600;
+  color:#5a2d26;
+  display:flex;
+  gap:12px;
+  margin:0 0 8px;
+}
+
+.product.modern .variants{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap:8px;
+}
+
+.product.modern .pill{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:#fff5f2;
+  border:1px solid #f0d5cd;
+  border-radius:10px;
+  padding:6px 8px;
+  font-size:13px;
+}
+
+.product.modern .card-actions{
+  grid-column: 1 / -1;
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  margin-top:8px;
+}
+/* Miniatura cuadrada y un poquito más grande */
+:root{
+  --thumb: 132px;      /* ancho columna imagen*/
+  --card-h: 320px;     /* subo apenas la altura para dar espacio */
+}
+
+.product.modern{
+  grid-template-columns: var(--thumb) 1fr;
+}
+
+
+.product.modern .thumb{
+  align-self: start;           
+}
+.product.modern .thumb img{
+  width: 100%;
+  aspect-ratio: 1 / 1;         
+  object-fit: cover;           
+  object-position: center;
+  border-radius: 10px;
+  border: 1px solid #ead7d0;
+  box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  background: #faf6f4;          
+  transition: transform .15s ease;
+}
+.product.modern:hover .thumb img{
+  transform: scale(1.015);      
+}
+
+@media (min-width: 1280px){
+  :root{ --thumb: 144px; --card-h: 330px; }
+}

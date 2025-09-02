@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Footer } from "../../../componentes/Footer";
-import { Header } from "../../../componentes/Header";
-import "./UserAdmin.css";
+import { HeaderAdmin } from "./HeaderAdmin";import "./UserAdmin.css";
 
 function PedidosSection() {
   const [q, setQ] = useState("");
@@ -80,6 +79,29 @@ function ProductosSection() {
   const [items, setItems] = useState([]);
   const [editingId, setEditingId] = useState(null);
 
+  const [preview, setPreview] = useState({ open: false, src: "", alt: "" });
+  const [zoom, setZoom] = useState(1);
+
+  const openPreview = (src, alt) => { setPreview({ open: true, src, alt }); setZoom(1); };
+  const closePreview = () => setPreview({ open: false, src: "", alt: "" });
+  const toggleZoom = () => setZoom(z => (z === 1 ? 2.25 : 1));
+
+  useEffect(() => {
+    if (!preview.open) return;
+    const onKey = (e) => e.key === "Escape" && closePreview();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [preview.open]);
+
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem("productos") || "[]");
+    if (Array.isArray(saved)) setItems(saved);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("productos", JSON.stringify(items));
+  }, [items]);
+
   const [form, setForm] = useState({
     nombre: "",
     categoria: "tortas",
@@ -89,9 +111,8 @@ function ProductosSection() {
     descripcion: "",
     porciones: [],
     activo: true,
-    sku: "",
     usarPorciones: true,
-    porcionPrecios: {} // { [tam]: "50000" }
+    porcionPrecios: {}
   });
   const [errors, setErrors] = useState({});
 
@@ -156,13 +177,14 @@ function ProductosSection() {
 
   const isValidUrl = (u) => {
     if (!u) return true;
+    if (u.startsWith("data:") || u.startsWith("blob:") || u.startsWith("/")) return true;
     try {
       const url = new URL(u);
       return url.protocol === "http:" || url.protocol === "https:";
     } catch { return false; }
   };
 
-  const preciosCap = () => {
+  const getSuggested = () => {
     const min = num(form.precioMin);
     const max = num(form.precioMax);
     const ps = form.porciones.slice().sort((a,b)=>a-b);
@@ -171,20 +193,19 @@ function ProductosSection() {
     }
     const pMin = ps[0];
     const pMax = ps[ps.length - 1];
-    const caps = {};
+    const map = {};
     ps.forEach(p => {
       if (pMin === pMax) {
-        caps[p] = max; // caso borde, una sola porción
+        map[p] = max;
       } else {
-        const t = (p - pMin) / (pMax - pMin); // 0..1
-        const cap = Math.round(min + t * (max - min));
-        caps[p] = cap;
+        const t = (p - pMin) / (pMax - pMin);
+        map[p] = Math.round(min + t * (max - min));
       }
     });
-    return caps;
+    return map;
   };
 
-  const caps = preciosCap();
+  const suggestions = getSuggested();
 
   const onChangePrecioPorcion = (p, v) => {
     const limpio = v.replace(/[^\d]/g, "");
@@ -193,6 +214,28 @@ function ProductosSection() {
       porcionPrecios: { ...prev.porcionPrecios, [p]: limpio }
     }));
   };
+
+  const aplicarSugerencias = () => {
+    if (!Object.keys(suggestions).length) return;
+    setForm(prev => ({
+      ...prev,
+      porcionPrecios: { ...prev.porcionPrecios, ...Object.fromEntries(
+        prev.porciones.map(p => [p, String(suggestions[p] ?? "")])
+      ) }
+    }));
+  };
+
+  const onUploadImage = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setForm(prev => ({ ...prev, imagen: String(reader.result || "") }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const clearImage = () => setForm(prev => ({ ...prev, imagen: "" }));
 
   const validate = () => {
     const e = {};
@@ -207,14 +250,22 @@ function ProductosSection() {
 
     if (!isValidUrl(form.imagen)) e.imagen = "URL de imagen no válida";
 
-    if (form.usarPorciones && form.porciones.length > 0 && Object.keys(caps).length) {
-      form.porciones.forEach(p => {
+    if (form.usarPorciones && form.porciones.length > 0) {
+      const ps = form.porciones.slice().sort((a,b)=>a-b);
+      let prevPrice = null;
+      ps.forEach((p, idx) => {
         const val = num(form.porcionPrecios[p]);
-        const cap = caps[p];
+        const cap = suggestions[p];
         if (!Number.isFinite(val) || val <= 0) {
           e[`por_${p}`] = `Ingresa un precio válido`;
-        } else if (val > cap) {
-          e[`por_${p}`] = `No debe superar $${cap.toLocaleString("es-CL")}`;
+        } else {
+          if (Number.isFinite(cap) && val > cap) {
+            e[`por_${p}`] = `No debe superar $${cap.toLocaleString("es-CL")} (sugerido)`;
+          }
+          if (prevPrice != null && val < prevPrice) {
+            e[`por_${p}`] = `Debe ser ≥ al precio de ${ps[idx-1]} personas ($${prevPrice.toLocaleString("es-CL")})`;
+          }
+          prevPrice = Number.isFinite(val) ? val : prevPrice;
         }
       });
     }
@@ -233,7 +284,6 @@ function ProductosSection() {
       descripcion: "",
       porciones: [],
       activo: true,
-      sku: "",
       usarPorciones: true,
       porcionPrecios: {}
     });
@@ -259,11 +309,10 @@ function ProductosSection() {
       variantes: form.usarPorciones
         ? form.porciones.map(p => ({
             personas: p,
-            precio: num(form.porcionPrecios[p]) || caps[p] || min
+            precio: num(form.porcionPrecios[p]) || suggestions[p] || min
           }))
         : [],
-      activo: form.activo,
-      sku: form.sku.trim()
+      activo: form.activo
     };
 
     setItems(prev =>
@@ -287,7 +336,6 @@ function ProductosSection() {
       descripcion: item.descripcion || "",
       porciones: (item.variantes || []).map(v => v.personas).sort((a,b)=>a-b),
       activo: !!item.activo,
-      sku: item.sku || "",
       usarPorciones: (item.variantes || []).length > 0 || (item.categoria === "tortas"),
       porcionPrecios
     });
@@ -302,8 +350,67 @@ function ProductosSection() {
   const safeThumb = (src) => {
     const url = (src || "").trim();
     if (!url) return "/placeholder.jpg";
-    if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/")) return url;
+    if (
+      url.startsWith("http://") ||
+      url.startsWith("https://") ||
+      url.startsWith("/") ||
+      url.startsWith("data:") ||
+      url.startsWith("blob:")
+    ) return url;
     return "/placeholder.jpg";
+  };
+
+  const overlayStyle = {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0,0,0,.6)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 9999,
+    padding: 24
+  };
+  const viewportStyle = {
+    position: "relative",
+    maxWidth: "90vw",
+    maxHeight: "85vh",
+    overflow: "auto",
+    background: "#fff",
+    borderRadius: 10,
+    boxShadow: "0 10px 30px rgba(0,0,0,.25)",
+    padding: 8
+  };
+  const imgStyle = {
+    display: "block",
+    width: `${zoom * 100}%`,
+    height: "auto",
+    maxWidth: "none",
+    cursor: zoom === 1 ? "zoom-in" : "zoom-out"
+  };
+  const closeBtn = {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 999,
+    border: 0,
+    background: "#ffffff",
+    color: "#333",
+    fontSize: 22,
+    lineHeight: 1,
+    cursor: "pointer",
+    boxShadow: "0 6px 18px rgba(0,0,0,.2)"
+  };
+  const hintStyle = {
+    position: "absolute",
+    left: 12,
+    bottom: 10,
+    fontSize: 12,
+    color: "#666",
+    background: "rgba(255,255,255,.85)",
+    padding: "2px 8px",
+    borderRadius: 6
   };
 
   return (
@@ -369,13 +476,28 @@ function ProductosSection() {
             </div>
 
             <div className="field">
-              <label>URL de imagen</label>
+              <label>Imagen del producto</label>
               <input
                 name="imagen"
                 value={form.imagen}
                 onChange={onChange}
-                placeholder="https://..."
+                placeholder="Pega una URL (https://...)"
               />
+              <div className="row" style={{ gap: 8, marginTop: 8, alignItems: "center" }}>
+                <input type="file" accept="image/*" onChange={onUploadImage} />
+                {form.imagen && (
+                  <>
+                    <img
+                      src={safeThumb(form.imagen)}
+                      alt="preview"
+                      style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 6, border: "1px solid #ddd" }}
+                    />
+                    <button type="button" className="btn sm danger" onClick={clearImage}>
+                      Quitar imagen
+                    </button>
+                  </>
+                )}
+              </div>
               {errors.imagen && <span className="err">{errors.imagen}</span>}
             </div>
 
@@ -422,17 +544,23 @@ function ProductosSection() {
 
             {form.usarPorciones && form.porciones.length > 0 && (
               <div className="field field-span">
-                <label>Precio por porción</label>
+                <div className="row" style={{justifyContent:"space-between", alignItems:"center"}}>
+                  <label>Precio por porción</label>
+                  <button type="button" className="btn sm" onClick={aplicarSugerencias}>
+                    Autocompletar según rango
+                  </button>
+                </div>
+
                 <div className="list" style={{marginTop: 6}}>
                   {form.porciones.map(p => {
-                    const cap = caps[p];
+                    const sug = suggestions[p];
                     const val = form.porcionPrecios[p] ?? "";
                     return (
                       <div key={p} className="client" style={{alignItems:"center"}}>
                         <div>
                           <strong>{p} personas</strong>
                           <div style={{fontSize:12, color:"#555"}}>
-                            Máximo permitido: ${cap ? cap.toLocaleString("es-CL") : "—"}
+                            sugerido: {sug ? `$${sug.toLocaleString("es-CL")}` : "—"}
                           </div>
                           {errors[`por_${p}`] && <div className="err">{errors[`por_${p}`]}</div>}
                         </div>
@@ -444,7 +572,7 @@ function ProductosSection() {
                             step="1"
                             value={val}
                             onChange={(e)=>onChangePrecioPorcion(p, e.target.value)}
-                            placeholder={cap ? String(cap) : ""}
+                            placeholder={sug ? String(sug) : ""}
                             style={{width:160}}
                           />
                         </div>
@@ -454,16 +582,6 @@ function ProductosSection() {
                 </div>
               </div>
             )}
-
-            <div className="field">
-              <label>SKU (opcional)</label>
-              <input
-                name="sku"
-                value={form.sku}
-                onChange={onChange}
-                placeholder="SKU interno"
-              />
-            </div>
 
             <div className="field check">
               <label><input type="checkbox" name="activo" checked={form.activo} onChange={onChange} /> Activo</label>
@@ -483,40 +601,76 @@ function ProductosSection() {
             <p>No hay productos agregados aún.</p>
           </div>
         )}
-        {items.map((p) => (
-          <div key={p.id} className="product">
-            {p.imagen && (
-              <img
-                src={safeThumb(p.imagen)}
-                alt={p.nombre}
-                loading="lazy"
-                onError={(e)=>{ e.currentTarget.src="/placeholder.jpg"; }}
-                style={{ width: "100%", maxHeight: 140, objectFit: "cover", borderRadius: 8, marginBottom: 8 }}
-              />
-            )}
-            <h4>{p.nombre}</h4>
-            <p>Categoría: {p.categoria}</p>
-            {(p.precioMin && p.precioMax) && (
-              <p>Precio: ${p.precioMin.toLocaleString("es-CL")} - ${p.precioMax.toLocaleString("es-CL")}</p>
-            )}
-            {p.variantes?.length > 0 && (
-              <p>
-                Porciones:{" "}
-                {p.variantes
-                  .slice()
-                  .sort((a,b)=>a.personas-b.personas)
-                  .map(v => `${v.personas}p $${Number(v.precio||0).toLocaleString("es-CL")}`)
-                  .join(" · ")}
-              </p>
-            )}
-            {p.sku && <p>SKU: {p.sku}</p>}
-            <div className="row">
-              <button className="btn sm" onClick={() => startEdit(p)}>Modificar</button>
-              <button className="btn sm danger" onClick={() => removeItem(p.id)}>Eliminar</button>
-            </div>
-          </div>
-        ))}
+
+        {items.map((p) => {
+          const variantes = (p.variantes || [])
+            .slice()
+            .sort((a, b) => a.personas - b.personas);
+
+          return (
+            <article key={p.id} className="product modern">
+              <div className="thumb">
+                <img
+                  src={safeThumb(p.imagen)}
+                  alt={p.nombre}
+                  loading="lazy"
+                  onError={(e)=>{ e.currentTarget.src="/placeholder.jpg"; }}
+                  onClick={() => openPreview(safeThumb(p.imagen), p.nombre)}
+                  style={{ cursor: "zoom-in" }}
+                  title="Ver imagen"
+                />
+              </div>
+
+              <div className="body">
+                <div className="title-row">
+                  <h4 className="title">{p.nombre}</h4>
+                  <span className="badge">{p.categoria}</span>
+                </div>
+
+                {p.descripcion && <p className="desc">{p.descripcion}</p>}
+
+                {(p.precioMin && p.precioMax) && (
+                  <div className="price-range">
+                    <span>Desde ${p.precioMin.toLocaleString("es-CL")}</span>
+                    <span>Hasta ${p.precioMax.toLocaleString("es-CL")}</span>
+                  </div>
+                )}
+
+                {variantes.length > 0 && (
+                  <div className="variants">
+                    {variantes.map(v => (
+                      <div key={v.personas} className="pill">
+                        <span>{v.personas}p</span>
+                        <strong>${Number(v.precio||0).toLocaleString("es-CL")}</strong>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="card-actions">
+                <button className="btn sm" onClick={() => startEdit(p)}>Modificar</button>
+                <button className="btn sm danger" onClick={() => removeItem(p.id)}>Eliminar</button>
+              </div>
+            </article>
+          );
+        })}
       </div>
+
+      {preview.open && (
+        <div style={overlayStyle} onClick={closePreview} role="dialog" aria-modal="true">
+          <div style={viewportStyle} onClick={(e)=>e.stopPropagation()}>
+            <img
+              src={preview.src}
+              alt={preview.alt}
+              onDoubleClick={toggleZoom}
+              style={imgStyle}
+            />
+            <button style={closeBtn} onClick={closePreview} aria-label="Cerrar">×</button>
+            <div style={hintStyle}>Doble clic para {zoom === 1 ? "acercar" : "alejar"}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -744,7 +898,8 @@ function DescuentosSection() {
               </p>
               {c.minSpend != null && <p><strong>Mínimo:</strong> ${Number(c.minSpend).toLocaleString("es-CL")}</p>}
               {(c.start || c.end) && (
-                <p><strong>Vigencia:</strong> {c.start || "—"} {c.end ? `→ ${c.end}` : ""}</p>
+                <p><strong>Vigencia:</strong> {c.start || "—"} {c.end ? `→ ${c.end}` : ""}
+                </p>
               )}
               <p><strong>Estado:</strong> {c.active ? "Activo" : "Inactivo"}</p>
             </div>
@@ -759,7 +914,7 @@ function DescuentosSection() {
   );
 }
 
-const UserNormal = () => {
+const UserAdmin = () => {
   const [active, setActive] = useState("inicio");
   const mainRef = useRef(null);
 
@@ -909,7 +1064,7 @@ const UserNormal = () => {
 
   return (
     <div>
-      <Header />
+      <HeaderAdmin />
       <div className="user-container">
         <aside className="sidebar" aria-label="Menú de administración">
           <ul>
@@ -945,4 +1100,4 @@ const UserNormal = () => {
   );
 };
 
-export default UserNormal;
+export default UserAdmin;
