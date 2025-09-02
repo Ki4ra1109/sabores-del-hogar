@@ -1,6 +1,8 @@
 import "./Login.css";
 import { useState, useEffect, useRef } from "react";
 import { FcGoogle } from "react-icons/fc";
+import { Header } from "../../componentes/Header";
+import { Footer } from "../../componentes/Footer";
 
 function Modal({ isOpen, title, onClose, children }) {
   const firstFocusable = useRef(null);
@@ -34,90 +36,101 @@ export default function AuthLanding() {
   const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
 
+  const openLogin = () => { setShowSignup(false); setShowLogin(true); };
+  const openSignup = () => { setShowLogin(false); setShowSignup(true); };
+  const closeAll = () => { setShowLogin(false); setShowSignup(false); };
 
   return (
-    <div className="al-landing">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 230" style={{ display: "block", transform: "scaleY(-1)" }}>
-        <path
-          stroke="none"
-          fill="#F8D7DA"
-          fillOpacity="1"
-          d="M0,192 C60,240 120,160 180,200 
-              C240,240 300,120 360,180 
-              C420,240 480,80 540,160 
-              C600,240 660,100 720,180 
-              C780,260 840,140 900,200 
-              C960,260 1020,100 1080,160 
-              C1140,220 1200,140 1260,200 
-              C1320,260 1380,120 1440,180 
-              L1440,320 L0,320 Z"
-        />
-      </svg>
+    <div className="login-page">
+      <Header />
 
-      <div className="al-grid">
-        <div className="al-left">
-          <div className="al-x-mark">
-            <img src="/logoFondoBlanco.svg" alt="Sabores del Hogar" className="x-mark-img" />
-          </div>
-        </div>
+      <main className="al-middle">
+        <svg
+          className="al-wave al-wave--top"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 1440 230"
+          preserveAspectRatio="none"
+        >
+          <path
+            stroke="none" fill="#F8D7DA" fillOpacity="1"
+            d="M0,192 C60,240 120,160 180,200 
+               C240,240 300,120 360,180 
+               C420,240 480,80 540,160 
+               C600,240 660,100 720,180 
+               C780,260 840,140 900,200 
+               C960,260 1020,100 1080,160 
+               C1140,220 1200,140 1260,200 
+               C1320,260 1380,120 1440,180 
+               L1440,320 L0,320 Z"
+          />
+        </svg>
 
-        <div className="al-right">
-          <h1 className="al-title">
-            ¡Sabores únicos!
-            <br />
-            ¿Qué esperas para ser parte?
-          </h1>
-
-          <h2 className="al-subtitle">Únete hoy</h2>
-
-          <button
-            className="al-btn al-btn-pill al-btn-light"
-            onClick={handleGoogle}
-            aria-label="Inicia sesión con Google"
-            disabled={googleLoading}
-          >
-            <FcGoogle className="al-icon" />
-            {googleLoading ? "Conectando..." : "Inicia sesión con Google"}
-          </button>
-
-          <div className="al-divider">
-            <span>o</span>
+        <section className="al-grid al-hero">
+          <div className="al-left">
+            <div className="al-x-mark">
+              <img src="/logoFondoBlanco.svg" alt="Sabores del Hogar" className="x-mark-img" />
+            </div>
           </div>
 
-          <button className="al-btn al-btn-pill al-btn-primary" onClick={openSignup}>
-            Crear cuenta
-          </button>
+          <div className="al-right">
+            <h1 className="al-title">
+              ¡Sabores únicos!
+              <br />
+              ¿Qué esperas para ser parte?
+            </h1>
 
-          <div className="al-have-account">
-            <span>¿Ya tienes una cuenta?</span>
-            <button className="al-btn al-btn-outline" onClick={openLogin}>
-              Iniciar sesión
-            </button>
+            <h2 className="al-subtitle">Únete hoy</h2>
+
+            <div className="al-cta">
+              <button className="al-btn al-btn-pill al-btn-light" onClick={() => {}} aria-label="Inicia sesión con Google">
+                <FcGoogle className="al-icon" />
+                Inicia sesión con Google
+              </button>
+
+              <div className="al-divider"><span>o</span></div>
+
+              <button className="al-btn al-btn-pill al-btn-primary" onClick={() => setShowSignup(true)}>
+                Crear cuenta
+              </button>
+
+              <div className="al-have-account">
+                <span>¿Ya tienes una cuenta?</span>
+                <button className="al-btn al-btn-outline" onClick={() => setShowLogin(true)}>
+                  Iniciar sesión
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </section>
 
+        <svg
+          className="al-wave al-wave--bottom"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 1440 230"
+          preserveAspectRatio="none"
+        >
+          <path
+            stroke="none" fill="#F8D7DA" fillOpacity="1"
+            d="M0,192 C60,240 120,160 180,200 
+               C240,240 300,120 360,180 
+               C420,240 480,80 540,160 
+               C600,240 660,100 720,180 
+               C780,260 840,140 900,200 
+               C960,260 1020,100 1080,160 
+               C1140,220 1200,140 1260,200 
+               C1320,260 1380,120 1440,180 
+               L1440,320 L0,320 Z"
+          />
+        </svg>
+      </main>
 
-        <path
-          stroke="none"
-          fill="#F8D7DA"
-          fillOpacity="1"
-          d="M0,192 C60,240 120,160 180,200 
-              C240,240 300,120 360,180 
-              C420,240 480,80 540,160 
-              C600,240 660,100 720,180 
-              C780,260 840,140 900,200 
-              C960,260 1020,100 1080,160 
-              C1140,220 1200,140 1260,200 
-              C1320,260 1380,120 1440,180 
-              L1440,320 L0,320 Z"
-        />
-      </svg>
+      <Footer />
+
+      <LoginModal isOpen={showLogin} onClose={closeAll} onSwap={() => { setShowLogin(false); setShowSignup(true); }} />
+      <SignupModal isOpen={showSignup} onClose={closeAll} onSwap={() => { setShowSignup(false); setShowLogin(true); }} />
     </div>
   );
 }
-
-/* ---------- Subcomponentes ---------- */
 
 function LoginModal({ isOpen, onClose, onSwap }) {
   const [showPass, setShowPass] = useState(false);
@@ -154,13 +167,8 @@ function LoginModal({ isOpen, onClose, onSwap }) {
         <div className="al-field">
           <label htmlFor="login-email">Correo electrónico</label>
           <input
-            id="login-email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            placeholder="correo@ejemplo.com"
-            value={form.email}
-            onChange={onChange}
+            id="login-email" name="email" type="email" autoComplete="email"
+            placeholder="correo@ejemplo.com" value={form.email} onChange={onChange}
             aria-invalid={!!errors.email}
           />
           {errors.email && <span className="al-error">{errors.email}</span>}
@@ -170,21 +178,13 @@ function LoginModal({ isOpen, onClose, onSwap }) {
           <label htmlFor="login-pass">Contraseña</label>
           <div className="al-input-group">
             <input
-              id="login-pass"
-              name="password"
-              type={showPass ? "text" : "password"}
-              autoComplete="current-password"
-              placeholder="Tu contraseña"
-              value={form.password}
-              onChange={onChange}
-              aria-invalid={!!errors.password}
+              id="login-pass" name="password" type={showPass ? "text" : "password"}
+              autoComplete="current-password" placeholder="Tu contraseña"
+              value={form.password} onChange={onChange} aria-invalid={!!errors.password}
             />
             <button
-              type="button"
-              className="al-eye"
-              aria-pressed={showPass}
-              onClick={() => setShowPass((v) => !v)}
-              title={showPass ? "Ocultar contraseña" : "Mostrar contraseña"}
+              type="button" className="al-eye" aria-pressed={showPass}
+              onClick={() => setShowPass((v) => !v)} title={showPass ? "Ocultar contraseña" : "Mostrar contraseña"}
             >
               {showPass ? "🙈" : "👁️"}
             </button>
@@ -208,9 +208,7 @@ function LoginModal({ isOpen, onClose, onSwap }) {
 
       <p className="al-switch">
         ¿No tienes cuenta?{" "}
-        <button className="al-link" onClick={onSwap}>
-          Regístrate
-        </button>
+        <button className="al-link" onClick={onSwap}>Regístrate</button>
       </p>
     </Modal>
   );
@@ -220,15 +218,8 @@ function SignupModal({ isOpen, onClose, onSwap }) {
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [form, setForm] = useState({
-    nombre: "",
-    apellido: "",
-    rut: "",
-    correo: "",
-    password: "",
-    telefono: "",
-    fechaNacimiento: "",
-    direccion: "",
-    accept: false,
+    nombre: "", apellido: "", rut: "", correo: "", password: "",
+    telefono: "", fechaNacimiento: "", direccion: "", accept: false,
   });
   const [errors, setErrors] = useState({});
 
@@ -279,12 +270,8 @@ function SignupModal({ isOpen, onClose, onSwap }) {
         <div className="al-field">
           <label htmlFor="reg-rut">RUT</label>
           <input
-            id="reg-rut"
-            name="rut"
-            value={form.rut}
-            onChange={onChange}
-            placeholder="12.345.678-9"
-            pattern="^(\d{1,2}\.\d{3}\.\d{3}-[\dkK])$"
+            id="reg-rut" name="rut" value={form.rut} onChange={onChange}
+            placeholder="12.345.678-9" pattern="^(\d{1,2}\.\d{3}\.\d{3}-[\dkK])$"
           />
           {errors.rut && <span className="al-error">{errors.rut}</span>}
         </div>
@@ -299,19 +286,13 @@ function SignupModal({ isOpen, onClose, onSwap }) {
           <label htmlFor="reg-pass">Contraseña</label>
           <div className="al-input-group">
             <input
-              id="reg-pass"
-              name="password"
-              type={showPass ? "text" : "password"}
-              value={form.password}
-              onChange={onChange}
-              placeholder="Mínimo 9, letras y números"
-              minLength={9}
+              id="reg-pass" name="password" type={showPass ? "text" : "password"}
+              value={form.password} onChange={onChange}
+              placeholder="Mínimo 9, letras y números" minLength={9}
               pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{9,}$"
             />
             <button
-              type="button"
-              className="al-eye"
-              aria-pressed={showPass}
+              type="button" className="al-eye" aria-pressed={showPass}
               onClick={() => setShowPass((v) => !v)}
               title={showPass ? "Ocultar contraseña" : "Mostrar contraseña"}
             >
@@ -339,8 +320,7 @@ function SignupModal({ isOpen, onClose, onSwap }) {
         </div>
 
         <label className="al-check">
-          <input type="checkbox" name="accept" checked={form.accept} onChange={onChange} /> Acepto los Términos y la Política de
-          Privacidad
+          <input type="checkbox" name="accept" checked={form.accept} onChange={onChange} /> Acepto los Términos y la Política de Privacidad
         </label>
         {errors.accept && <span className="al-error">{errors.accept}</span>}
 
@@ -351,9 +331,7 @@ function SignupModal({ isOpen, onClose, onSwap }) {
 
       <p className="al-switch">
         ¿Ya tienes cuenta?{" "}
-        <button className="al-link" onClick={onSwap}>
-          Inicia sesión
-        </button>
+        <button className="al-link" onClick={onSwap}>Inicia sesión</button>
       </p>
     </Modal>
   );

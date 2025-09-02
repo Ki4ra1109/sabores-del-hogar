@@ -3,7 +3,7 @@ import "./Header.css";
 import { FaSearch, FaShoppingCart, FaUser, FaEye, FaEyeSlash } from "react-icons/fa";
 import Carrito from './Carrito';
 import productos from '../data/productos';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 
 export const Header = () => {
   const [abrirCarrito, setAbrirCarrito] = useState(false);
@@ -13,7 +13,7 @@ export const Header = () => {
 
   const [authOpen, setAuthOpen] = useState(false);
   const [email, setEmail] = useState("");
-  const [pwd, setPwd] = useState("");
+  const [pwd, setPwd] = useState("");               // ← string
   const [showPwd, setShowPwd] = useState(false);
 
   const [user, setUser] = useState(() => {
@@ -25,7 +25,6 @@ export const Header = () => {
     }
   });
 
-
   const [menuOpen, setMenuOpen] = useState(false);
 
   const buscadorRef = useRef(null);
@@ -33,6 +32,17 @@ export const Header = () => {
   const submenuRef = useRef(null);
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // ⬅️ Redirige automáticamente tras login según rol
+  useEffect(() => {
+    if (!user) return;
+    const role = String(user.rol || "").toLowerCase();
+    const target = role === "admin" ? "/UserAdmin" : "/UserNormal";
+    if (location.pathname !== target) {
+      navigate(target, { replace: true });
+    }
+  }, [user, location.pathname, navigate]);
 
   const resultados = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -42,21 +52,12 @@ export const Header = () => {
 
   useEffect(() => {
     const onDocClick = (e) => {
-      if (buscadorRef.current && !buscadorRef.current.contains(e.target)) {
-        setShowResults(false);
-      }
-      if (authRef.current && !authRef.current.contains(e.target)) {
-        setAuthOpen(false);
-      }
-      if (submenuRef.current && !submenuRef.current.contains(e.target)) {
-        setMenuOpen(false);
-      }
+      if (buscadorRef.current && !buscadorRef.current.contains(e.target)) setShowResults(false);
+      if (authRef.current && !authRef.current.contains(e.target)) setAuthOpen(false);
+      if (submenuRef.current && !submenuRef.current.contains(e.target)) setMenuOpen(false);
     };
     const onEsc = (e) => {
-      if (e.key === 'Escape') {
-        setAuthOpen(false);
-        setMenuOpen(false);
-      }
+      if (e.key === 'Escape') { setAuthOpen(false); setMenuOpen(false); }
     };
     document.addEventListener("mousedown", onDocClick);
     document.addEventListener("keydown", onEsc);
@@ -77,31 +78,32 @@ export const Header = () => {
     if (resultados.length > 0) irADetalle(resultados[0].id);
   };
 
+  // Baseline: login guarda sesión; el useEffect de arriba hace la redirección
   const onLoginSubmit = async (e) => {
-    e.preventDefault(); // evita que la página se recargue
-
+    e.preventDefault();
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", { // URL del backend
+      const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
+      const res = await fetch(`${baseUrl}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password: pwd })
+        body: JSON.stringify({ email, password: pwd }),
       });
-
       const data = await res.json();
 
       if (res.ok) {
-        // login exitoso: guardar info del usuario y redirigir
-        setUser(data.user); // 'user' es tu estado global o local
         localStorage.setItem("sdh_user", JSON.stringify(data.user));
+        setUser(data.user);        // ← dispara el redirect automático
+        setAuthOpen(false);
+        setEmail("");
+        setPwd("");
       } else {
-        alert(data.message); // mostrar error
+        alert(data.message || "Email o contraseña incorrecta");
       }
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       alert("Error en la conexión con el servidor");
     }
   };
-
 
   const onLogout = () => {
     setUser(null);
@@ -234,10 +236,10 @@ export const Header = () => {
                   <button
                     className="auth-primary"
                     onClick={() => {
-                      if (user.rol === "admin") {
-                        navigate("/Useradmin"); // Ruta para admins
+                      if (String(user.rol || "").toLowerCase() === "admin") {
+                        navigate("/UserAdmin");     // rutas con mayúsculas
                       } else {
-                        navigate("/Usernormal"); // Ruta para usuarios normales
+                        navigate("/UserNormal");
                       }
                     }}
                   >
@@ -247,14 +249,13 @@ export const Header = () => {
                   <button
                     className="auth-primary"
                     onClick={() => {
-                      onLogout();           // Limpiar sesión
-                      navigate("/");    // Redirigir a home
+                      onLogout();
+                      navigate("/");
                     }}
                   >
                     Cerrar sesión
                   </button>
                 </>
-
               )}
             </div>
           </div>
@@ -285,18 +286,12 @@ export const Header = () => {
 
             <ul className="submenu">
               <li>
-                <Link
-                  to="/Catalogo?cat=tortas"
-                  onClick={() => setMenuOpen(false)}
-                >
+                <Link to="/Catalogo?cat=tortas" onClick={() => setMenuOpen(false)}>
                   Tortas
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/Catalogo?cat=dulces"
-                  onClick={() => setMenuOpen(false)}
-                >
+                <Link to="/Catalogo?cat=dulces" onClick={() => setMenuOpen(false)}>
                   Dulces
                 </Link>
               </li>
