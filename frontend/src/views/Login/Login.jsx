@@ -2,6 +2,7 @@ import "./Login.css";
 import { useState, useEffect, useRef } from "react";
 import { FcGoogle } from "react-icons/fc";
 
+/* =============== Modal genérico =============== */
 function Modal({ isOpen, title, onClose, children }) {
   const firstFocusable = useRef(null);
 
@@ -17,10 +18,16 @@ function Modal({ isOpen, title, onClose, children }) {
   }, [isOpen]);
 
   if (!isOpen) return null;
+
   return (
     <div className="al-modal-overlay" onClick={onClose} aria-modal="true" role="dialog">
       <div className="al-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="al-modal-close" onClick={onClose} aria-label="Cerrar" ref={firstFocusable}>
+        <button
+          className="al-modal-close"
+          onClick={onClose}
+          aria-label="Cerrar"
+          ref={firstFocusable}
+        >
           ✕
         </button>
         {title && <h3 className="al-modal-title">{title}</h3>}
@@ -30,14 +37,29 @@ function Modal({ isOpen, title, onClose, children }) {
   );
 }
 
-export default function AuthLanding() {
+/* =============== Página Login =============== */
+export default function Login() {
   const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
+  const handleGoogle = () => {
+    setGoogleLoading(true);
+    // Simulación de auth con Google
+    setTimeout(() => setGoogleLoading(false), 1500);
+  };
+
+  const openSignup = () => setShowSignup(true);
+  const openLogin = () => setShowLogin(true);
 
   return (
     <div className="al-landing">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 230" style={{ display: "block", transform: "scaleY(-1)" }}>
+      {/* Ola superior (invertida) */}
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 1440 230"
+        style={{ display: "block", transform: "scaleY(-1)" }}
+      >
         <path
           stroke="none"
           fill="#F8D7DA"
@@ -54,10 +76,15 @@ export default function AuthLanding() {
         />
       </svg>
 
+      {/* Grid principal */}
       <div className="al-grid">
         <div className="al-left">
           <div className="al-x-mark">
-            <img src="/logoFondoBlanco.svg" alt="Sabores del Hogar" className="x-mark-img" />
+            <img
+              src="/logoFondoBlanco.svg"
+              alt="Sabores del Hogar"
+              className="x-mark-img"
+            />
           </div>
         </div>
 
@@ -97,7 +124,8 @@ export default function AuthLanding() {
         </div>
       </div>
 
-
+      {/* Ola inferior (normal) */}
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 230" style={{ display: "block" }}>
         <path
           stroke="none"
           fill="#F8D7DA"
@@ -113,12 +141,29 @@ export default function AuthLanding() {
               L1440,320 L0,320 Z"
         />
       </svg>
+
+      {/* Modales */}
+      <LoginModal
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+        onSwap={() => {
+          setShowLogin(false);
+          setShowSignup(true);
+        }}
+      />
+      <SignupModal
+        isOpen={showSignup}
+        onClose={() => setShowSignup(false)}
+        onSwap={() => {
+          setShowSignup(false);
+          setShowLogin(true);
+        }}
+      />
     </div>
   );
 }
 
-/* ---------- Subcomponentes ---------- */
-
+/* =============== Modal: Iniciar sesión =============== */
 function LoginModal({ isOpen, onClose, onSwap }) {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -133,7 +178,7 @@ function LoginModal({ isOpen, onClose, onSwap }) {
   const validate = () => {
     const e = {};
     if (!/\S+@\S+\.\S+/.test(form.email)) e.email = "Ingresa un email válido";
-    if (form.password.length < 6) e.password = "Ingresa tu contraseña";
+    if (!form.password) e.password = "Ingresa tu contraseña";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -142,6 +187,7 @@ function LoginModal({ isOpen, onClose, onSwap }) {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
+    // Simular login
     setTimeout(() => {
       setLoading(false);
       onClose();
@@ -194,9 +240,19 @@ function LoginModal({ isOpen, onClose, onSwap }) {
 
         <div className="al-row-split">
           <label className="al-check">
-            <input type="checkbox" name="remember" checked={form.remember} onChange={onChange} /> Recuérdame
+            <input
+              type="checkbox"
+              name="remember"
+              checked={form.remember}
+              onChange={onChange}
+            />{" "}
+            Recuérdame
           </label>
-          <button type="button" className="al-link" onClick={() => alert("Recuperar contraseña (por implementar)")}>
+          <button
+            type="button"
+            className="al-link"
+            onClick={() => alert("Recuperar contraseña (por implementar)")}
+          >
             ¿Olvidaste tu contraseña?
           </button>
         </div>
@@ -216,6 +272,7 @@ function LoginModal({ isOpen, onClose, onSwap }) {
   );
 }
 
+/* =============== Modal: Crear cuenta =============== */
 function SignupModal({ isOpen, onClose, onSwap }) {
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
@@ -237,16 +294,29 @@ function SignupModal({ isOpen, onClose, onSwap }) {
     setForm((p) => ({ ...p, [name]: type === "checkbox" ? checked : value }));
   };
 
+  // Validaciones básicas
   const validate = () => {
     const e = {};
     if (!form.nombre.trim()) e.nombre = "Ingresa tu nombre";
     if (!form.apellido.trim()) e.apellido = "Ingresa tu apellido";
-    if (!/^(\d{1,2}\.\d{3}\.\d{3}-[\dkK])$/.test(form.rut)) e.rut = "RUT inválido";
+
+    // RUT: 12.345.678-9 (sin usar \d para evitar escapes en JSX)
+    const rutRegex = /^([0-9]{1,2}\.[0-9]{3}\.[0-9]{3}-[0-9kK])$/;
+    if (!rutRegex.test(form.rut)) e.rut = "RUT inválido";
+
     if (!/\S+@\S+\.\S+/.test(form.correo)) e.correo = "Correo inválido";
-    if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{9,}$/.test(form.password)) e.password = "Mín. 9, letras y números";
-    if (!/^\+56\d{8,9}$/.test(form.telefono)) e.telefono = "Formato +56XXXXXXXX";
+
+    // Password: mínimo 9, al menos 1 letra y 1 número
+    const passRegex = /^(?=.*[A-Za-z])(?=.*[0-9]).{9,}$/;
+    if (!passRegex.test(form.password)) e.password = "Mín. 9, letras y números";
+
+    // Teléfono: +56 y 8-9 dígitos
+    const telRegex = /^[+]{1}56[0-9]{8,9}$/;
+    if (!telRegex.test(form.telefono)) e.telefono = "Formato +56XXXXXXXX";
+
     if (!form.fechaNacimiento) e.fechaNacimiento = "Selecciona tu fecha";
     if (!form.accept) e.accept = "Debes aceptar los términos";
+
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -255,6 +325,7 @@ function SignupModal({ isOpen, onClose, onSwap }) {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
+    // Simular registro
     setTimeout(() => {
       setLoading(false);
       onClose();
@@ -266,13 +337,27 @@ function SignupModal({ isOpen, onClose, onSwap }) {
       <form className="al-form" onSubmit={onSubmit} noValidate>
         <div className="al-field">
           <label htmlFor="reg-nombre">Nombre</label>
-          <input id="reg-nombre" name="nombre" value={form.nombre} onChange={onChange} placeholder="Nombre" />
+          <input
+            id="reg-nombre"
+            name="nombre"
+            autoComplete="given-name"
+            value={form.nombre}
+            onChange={onChange}
+            placeholder="Nombre"
+          />
           {errors.nombre && <span className="al-error">{errors.nombre}</span>}
         </div>
 
         <div className="al-field">
           <label htmlFor="reg-apellido">Apellido</label>
-          <input id="reg-apellido" name="apellido" value={form.apellido} onChange={onChange} placeholder="Apellido" />
+          <input
+            id="reg-apellido"
+            name="apellido"
+            autoComplete="family-name"
+            value={form.apellido}
+            onChange={onChange}
+            placeholder="Apellido"
+          />
           {errors.apellido && <span className="al-error">{errors.apellido}</span>}
         </div>
 
@@ -284,14 +369,23 @@ function SignupModal({ isOpen, onClose, onSwap }) {
             value={form.rut}
             onChange={onChange}
             placeholder="12.345.678-9"
-            pattern="^(\d{1,2}\.\d{3}\.\d{3}-[\dkK])$"
+            // Usamos un patrón sin backslashes (\d) para evitar escapes de JSX
+            pattern="^([0-9]{1,2}\.[0-9]{3}\.[0-9]{3}-[0-9kK])$"
           />
           {errors.rut && <span className="al-error">{errors.rut}</span>}
         </div>
 
         <div className="al-field">
           <label htmlFor="reg-correo">Correo electrónico</label>
-          <input id="reg-correo" type="email" name="correo" value={form.correo} onChange={onChange} placeholder="correo@ejemplo.com" />
+          <input
+            id="reg-correo"
+            type="email"
+            name="correo"
+            autoComplete="email"
+            value={form.correo}
+            onChange={onChange}
+            placeholder="correo@ejemplo.com"
+          />
           {errors.correo && <span className="al-error">{errors.correo}</span>}
         </div>
 
@@ -305,8 +399,9 @@ function SignupModal({ isOpen, onClose, onSwap }) {
               value={form.password}
               onChange={onChange}
               placeholder="Mínimo 9, letras y números"
+              autoComplete="new-password"
               minLength={9}
-              pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{9,}$"
+              pattern="^(?=.*[A-Za-z])(?=.*[0-9]).{9,}$"
             />
             <button
               type="button"
@@ -323,24 +418,53 @@ function SignupModal({ isOpen, onClose, onSwap }) {
 
         <div className="al-field">
           <label htmlFor="reg-tel">Teléfono</label>
-          <input id="reg-tel" name="telefono" value={form.telefono} onChange={onChange} placeholder="+56XXXXXXXX" />
+          <input
+            id="reg-tel"
+            name="telefono"
+            autoComplete="tel"
+            value={form.telefono}
+            onChange={onChange}
+            placeholder="+56XXXXXXXX"
+            pattern="^[+]{1}56[0-9]{8,9}$"
+          />
           {errors.telefono && <span className="al-error">{errors.telefono}</span>}
         </div>
 
         <div className="al-field">
           <label htmlFor="reg-fecha">Fecha de nacimiento</label>
-          <input id="reg-fecha" type="date" name="fechaNacimiento" value={form.fechaNacimiento} onChange={onChange} />
-          {errors.fechaNacimiento && <span className="al-error">{errors.fechaNacimiento}</span>}
+          <input
+            id="reg-fecha"
+            type="date"
+            name="fechaNacimiento"
+            autoComplete="bday"
+            value={form.fechaNacimiento}
+            onChange={onChange}
+          />
+          {errors.fechaNacimiento && (
+            <span className="al-error">{errors.fechaNacimiento}</span>
+          )}
         </div>
 
         <div className="al-field">
           <label htmlFor="reg-dir">Dirección (opcional)</label>
-          <input id="reg-dir" name="direccion" value={form.direccion} onChange={onChange} placeholder="Dirección" />
+          <input
+            id="reg-dir"
+            name="direccion"
+            autoComplete="street-address"
+            value={form.direccion}
+            onChange={onChange}
+            placeholder="Dirección"
+          />
         </div>
 
         <label className="al-check">
-          <input type="checkbox" name="accept" checked={form.accept} onChange={onChange} /> Acepto los Términos y la Política de
-          Privacidad
+          <input
+            type="checkbox"
+            name="accept"
+            checked={form.accept}
+            onChange={onChange}
+          />{" "}
+          Acepto los Términos y la Política de Privacidad
         </label>
         {errors.accept && <span className="al-error">{errors.accept}</span>}
 

@@ -176,7 +176,7 @@
 /* Inputs, selects y textarea */
 .al-form input:not([type="checkbox"]),
 .al-form select,
-.al-form textarea {
+.al-form textarea {}
 
 .al-check {
   display: inline-flex;
