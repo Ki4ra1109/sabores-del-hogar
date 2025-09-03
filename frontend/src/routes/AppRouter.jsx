@@ -9,6 +9,7 @@ import Nosotros from "../views/Nosotros/Nosotros";
 import Postre from "../views/Postre/Postre";
 import PoliticaPrivacidad from "../views/Legales/PoliticaPrivacidad";
 import TerminosCondiciones from "../views/Legales/TerminosCondiciones";
+import Contacto from "../views/Legales/Contacto";
 
 
 export default function AppRouter() {
@@ -26,7 +27,7 @@ export default function AppRouter() {
           <Route path="/postre" element={<Postre />} />
           <Route path="/politica-privacidad" element={<PoliticaPrivacidad />} />
           <Route path="/terminos-condiciones" element={<TerminosCondiciones />} />
-
+          <Route path="/contacto" element={<Contacto />} />
         </Routes>
       </main>
     </Router>
