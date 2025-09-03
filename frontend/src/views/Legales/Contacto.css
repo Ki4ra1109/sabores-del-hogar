@@ -1,0 +1,111 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap");
+
+:root{
+  --coffee-900:#431b17;
+  --coffee-800:#5a2620;
+  --ink:#2b1f1d;
+  --muted:#6b5f5d;
+  --paper:#ffffff;
+  --bg:#fff7f3;
+  --ok:#1f8f5b;
+  --err:#b44343;
+}
+
+.route-contacto .auth-panel{ z-index: 900; } /* asegura superposición correcta al abrir login */
+
+.contacto{ background: linear-gradient(180deg,#fff,var(--bg)); color:var(--ink); font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif; }
+.contacto-hero{ padding: 28px 16px 12px; background:
+  radial-gradient(1000px 120px at 50% -50px, rgba(180,90,68,.07), transparent 60%),
+  linear-gradient(180deg,#fff,#fff);
+}
+.contacto-hero-inner{ max-width:1100px; margin:0 auto; padding:0 8px; }
+.contacto-hero h1{ font-family:"Playfair Display",serif; font-size:clamp(28px,4vw,40px); line-height:1.1; color:var(--coffee-800); margin:0 0 6px; }
+.contacto-sub{ margin:0; color:var(--muted); font-size:clamp(14px,1.8vw,16px); }
+
+.contacto-wrap{ max-width:1100px; margin:16px auto 32px; padding:0 8px; display:grid; grid-template-columns: 320px 1fr; gap:16px; }
+
+.card{ background:var(--paper); border:1px solid rgba(0,0,0,.06); border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.08); }
+.info-card{ padding:16px; }
+.info-card h2,
+.info-card h3{ font-family:"Playfair Display",serif; color:var(--coffee-900); margin:4px 0 12px; }
+.info-card .lbl{ font-weight:600; color:var(--coffee-800); }
+.info-card ul{ padding-left:16px; }
+.info-card li{ margin:6px 0; }
+.info-card .rrss{ list-style: disc; }
+.small-note{ margin-top:10px; font-size:13px; color:var(--muted); }
+
+.contacto-aside{ position: sticky; top: 16px; height:max-content; }
+
+.contacto-card{ padding: clamp(16px,3vw,28px); }
+.contacto-card h2{ font-family:"Playfair Display",serif; color:var(--coffee-900); font-size:clamp(20px,2.6vw,28px); margin:0 0 12px; }
+
+.alert{ border-radius:12px; padding:10px 12px; margin-bottom:12px; font-weight:600; }
+.alert.ok{ background: rgba(31,143,91,.08); color: var(--ok); border:1px solid rgba(31,143,91,.25); }
+.alert.err{ background: rgba(180,67,67,.08); color: var(--err); border:1px solid rgba(180,67,67,.25); }
+
+.contacto-card form{ display:grid; gap:12px; }
+.contacto-card .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+
+.contacto-card label{ display:flex; flex-direction:column; gap:8px; }
+.contacto-card label span{ font-weight:700; font-size:13px; color:#333; }
+.contacto-card input,
+.contacto-card textarea{
+  width:100%;
+  min-height:44px;
+  background:#fff;
+  border:1px solid #e6e6e6;
+  border-radius:10px;
+  padding:10px 12px;
+  color:#222;
+  outline:none;
+  transition: border .15s ease, box-shadow .15s ease;
+}
+.contacto-card textarea{ min-height:120px; resize:vertical; }
+.contacto-card input:focus,
+.contacto-card textarea:focus{
+  border-color: var(--coffee-800);
+  box-shadow: 0 0 0 3px rgba(87,36,32,.12);
+}
+
+.fld-error{ color: var(--err); font-size:12px; margin-top:-4px; }
+
+/* botón primario */
+.btn-primary{
+  justify-self: start;
+  min-height:44px;
+  border:0;
+  border-radius:10px;
+  background: var(--coffee-800);
+  color:#fff;
+  font-weight:800;
+  cursor:pointer;
+  text-align:center;
+  padding:12px 16px;
+  transition: transform .1s ease, background .15s ease, box-shadow .15s ease;
+}
+.btn-primary:hover{ background:#6d352e; box-shadow:0 6px 18px rgba(0,0,0,.12); transform: translateY(-1px); }
+.btn-primary:disabled{ opacity:.7; cursor:not-allowed; transform:none; box-shadow:none; }
+
+/* honeypot oculto */
+.hp-field{
+  position:absolute !important;
+  left:-99999px !important;
+  top:auto !important;
+  width:1px !important;
+  height:1px !important;
+  overflow:hidden !important;
+  border:0 !important;
+  padding:0 !important;
+  margin:0 !important;
+}
+
+@media (max-width: 900px){
+  .contacto-wrap{ grid-template-columns: 1fr; }
+  .contacto-aside{ position: static; }
+  .contacto-card .grid{ grid-template-columns: 1fr; }
+}
+@media print{
+  .contacto-hero, .contacto-aside{ display:none !important; }
+  .contacto-wrap{ grid-template-columns: 1fr; }
+  .card{ border:none; box-shadow:none; }
+}
