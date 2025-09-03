@@ -1,13 +1,11 @@
 import { useEffect } from "react";
 import { Header } from "../../componentes/Header";
 import { Footer } from "../../componentes/Footer";
-// Reutilizamos el mismo CSS de la política (misma UI .ppg)
 import "./PoliticaPrivacidad.css";
 
 const SCROLL_OFFSET = 140;
 
 export default function TerminosCondiciones() {
-  // aplica compensación del header solo en esta vista
   useEffect(() => {
     document.body.classList.add("route-privacidad");
 
