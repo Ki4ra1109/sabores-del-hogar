@@ -685,10 +685,13 @@ function DescuentosSection() {
 
   const [form, setForm] = useState({
     codigo: "",
-    porcentaje: "",
+    tipo: "percent",         
+    valor: "",               
+    minimo_compra: "",      
     fecha_inicio: "",
     fecha_fin: "",
     uso_unico: false,
+    activo: true
   });
   const [errors, setErrors] = useState({});
 
@@ -697,20 +700,24 @@ function DescuentosSection() {
       const r = await fetch(`${API_BASE}/api/cupones`);
       const j = await r.json();
       setCoupons(Array.isArray(j.items) ? j.items : []);
-    } catch {
-      alert("No se pudo cargar la lista de cupones");
-    }
+    } catch { alert("No se pudo cargar la lista de cupones"); }
   };
-
-  useEffect(() => {
-    load();
-  }, []);
+  useEffect(()=>{ load(); }, []);
 
   const toggleForm = () => setShowForm(v => !v);
 
   const onChange = (e) => {
     const { name, value, type, checked } = e.target;
     setForm(prev => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+  };
+  const onChangeTipo = (t) => {
+    setForm(prev => ({
+      ...prev,
+      tipo: t,
+      valor: t === "free_shipping" ? "" : (prev.valor || (t === "percent" ? 10 : 1000)),
+      minimo_compra: (t === "percent") ? "" : (prev.minimo_compra || 0)
+    }));
+    setErrors({});
   };
 
   const validate = () => {
@@ -719,11 +726,28 @@ function DescuentosSection() {
     if (!code) e.codigo = "Ingresa un código";
     const exists = coupons.some(c => c.codigo === code && c.id_descuento !== editingId);
     if (code && exists) e.codigo = "El código ya existe";
-    const n = Number(form.porcentaje);
-    if (!form.porcentaje || Number.isNaN(n) || n < 1 || n > 60) e.porcentaje = "Porcentaje entre 1 y 60";
+
     if (form.fecha_inicio && form.fecha_fin && new Date(form.fecha_inicio) > new Date(form.fecha_fin)) {
       e.fecha_fin = "La fecha fin debe ser mayor o igual a inicio";
     }
+
+    if (form.tipo === "percent") {
+      const n = Number(form.valor);
+      if (!form.valor || Number.isNaN(n) || n < 1 || n > 60) e.valor = "Porcentaje entre 1 y 60";
+    }
+
+    if (form.tipo === "free_shipping") {
+      const min = Number(form.minimo_compra);
+      if (Number.isNaN(min) || min <= 0) e.minimo_compra = "Define un mínimo de compra (> 0)";
+    }
+
+    if (form.tipo === "amount") {
+      const n = Number(form.valor);
+      const min = Number(form.minimo_compra);
+      if (!form.valor || Number.isNaN(n) || n <= 0) e.valor = "Monto del descuento (> 0)";
+      if (Number.isNaN(min) || min <= 0) e.minimo_compra = "Mínimo de compra (> 0)";
+    }
+
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -731,13 +755,15 @@ function DescuentosSection() {
   const reset = () => {
     setForm({
       codigo: "",
-      porcentaje: "",
+      tipo: "percent",
+      valor: "",
+      minimo_compra: "",
       fecha_inicio: "",
       fecha_fin: "",
       uso_unico: false,
+      activo: true
     });
-    setErrors({});
-    setEditingId(null);
+    setErrors({}); setEditingId(null);
   };
 
   const onSubmit = async (e) => {
@@ -747,32 +773,26 @@ function DescuentosSection() {
 
     const payload = {
       codigo: form.codigo.trim().toUpperCase(),
-      porcentaje: Number(form.porcentaje),
+      tipo: form.tipo,
+      valor: form.tipo === "free_shipping" ? null : Number(form.valor),
+      minimo_compra: (form.tipo === "percent") ? null : Number(form.minimo_compra),
       fecha_inicio: form.fecha_inicio || null,
       fecha_fin: form.fecha_fin || null,
       uso_unico: !!form.uso_unico,
+      activo: !!form.activo
     };
 
     try {
-      let r, j;
-      if (editingId) {
-        r = await fetch(`${API_BASE}/api/cupones/${editingId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      } else {
-        r = await fetch(`${API_BASE}/api/cupones`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      }
-      j = await r.json();
+      const url = editingId ? `${API_BASE}/api/cupones/${editingId}` : `${API_BASE}/api/cupones`;
+      const method = editingId ? "PUT" : "POST";
+      const r = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const j = await r.json();
       if (!j.ok) { alert(j.message || "Error al guardar"); return; }
-      await load();
-      reset();
-      setShowForm(false);
+      await load(); reset(); setShowForm(false);
     } catch {
       alert("No se pudo guardar el cupón");
     } finally {
@@ -781,15 +801,21 @@ function DescuentosSection() {
   };
 
   const startEdit = (c) => {
+    const tipo = c.tipo || (c.porcentaje != null ? "percent" : (c.valor != null ? "amount" : "free_shipping"));
+    const valor = c.valor ?? (c.porcentaje != null ? Number(c.porcentaje) : "");
     setEditingId(c.id_descuento);
     setForm({
       codigo: c.codigo,
-      porcentaje: String(c.porcentaje ?? ""),
+      tipo,
+      valor: tipo === "free_shipping" ? "" : String(valor ?? ""),
+      minimo_compra: c.minimo_compra ?? "",
       fecha_inicio: c.fecha_inicio || "",
       fecha_fin: c.fecha_fin || "",
-      uso_unico: !!c.uso_unico,
+      uso_unico: !!c.uso_unico || (c.limite_uso === 1),
+      activo: c.activo !== false
     });
     setShowForm(true);
+    setErrors({});
   };
 
   const removeCoupon = async (id) => {
@@ -798,11 +824,8 @@ function DescuentosSection() {
       const r = await fetch(`${API_BASE}/api/cupones/${id}`, { method: "DELETE" });
       const j = await r.json();
       if (!j.ok) { alert(j.message || "Error al eliminar"); return; }
-      await load();
-      if (editingId === id) reset();
-    } catch {
-      alert("No se pudo eliminar");
-    }
+      await load(); if (editingId === id) reset();
+    } catch { alert("No se pudo eliminar"); }
   };
 
   return (
@@ -819,53 +842,99 @@ function DescuentosSection() {
           <div className="form-grid">
             <div className="field">
               <label>Código</label>
-              <input
-                name="codigo"
-                value={form.codigo}
-                onChange={onChange}
-                placeholder="Ej: CUMP2025"
-              />
+              <input name="codigo" value={form.codigo} onChange={onChange} placeholder="Ej: CUMP2025" />
               {errors.codigo && <span className="err">{errors.codigo}</span>}
             </div>
 
             <div className="field">
-              <label>Porcentaje (%)</label>
-              <input
-                name="porcentaje"
-                type="number"
-                min="1"
-                max="60"
-                step="1"
-                value={form.porcentaje}
-                onChange={onChange}
-                placeholder="Ej: 10 = 10%"
-              />
-              {errors.porcentaje && <span className="err">{errors.porcentaje}</span>}
+              <label>Tipo de descuento</label>
+              <select name="tipo" value={form.tipo} onChange={e=>onChangeTipo(e.target.value)}>
+                <option value="percent">% Porcentaje</option>
+                <option value="amount">Monto fijo (CLP)</option>
+                <option value="free_shipping">Envío gratis</option>
+              </select>
             </div>
+
+            {form.tipo === "percent" && (
+              <div className="field">
+                <label>Porcentaje (%)</label>
+                <input
+                  name="valor"
+                  type="number"
+                  min="1"
+                  max="60"
+                  step="1"
+                  value={form.valor}
+                  onChange={onChange}
+                  placeholder="Ej: 10 = 10%"
+                />
+                {errors.valor && <span className="err">{errors.valor}</span>}
+              </div>
+            )}
+
+            {form.tipo === "free_shipping" && (
+              <div className="field">
+                <label>Mínimo de compra para envío gratis (CLP)</label>
+                <input
+                  name="minimo_compra"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={form.minimo_compra}
+                  onChange={onChange}
+                  placeholder="Ej: 20000"
+                />
+                {errors.minimo_compra && <span className="err">{errors.minimo_compra}</span>}
+              </div>
+            )}
+            {form.tipo === "amount" && (
+              <>
+                <div className="field">
+                  <label>Monto del descuento (CLP)</label>
+                  <input
+                    name="valor"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={form.valor}
+                    onChange={onChange}
+                    placeholder="Ej: 5000"
+                  />
+                  {errors.valor && <span className="err">{errors.valor}</span>}
+                </div>
+                <div className="field">
+                  <label>Mínimo de compra (CLP)</label>
+                  <input
+                    name="minimo_compra"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={form.minimo_compra}
+                    onChange={onChange}
+                    placeholder="Ej: 15000"
+                  />
+                  {errors.minimo_compra && <span className="err">{errors.minimo_compra}</span>}
+                </div>
+              </>
+            )}
 
             <div className="field">
               <label>Vigencia desde</label>
-              <input
-                name="fecha_inicio"
-                type="date"
-                value={form.fecha_inicio}
-                onChange={onChange}
-              />
+              <input name="fecha_inicio" type="date" value={form.fecha_inicio} onChange={onChange} />
             </div>
 
             <div className="field">
               <label>Vigencia hasta</label>
-              <input
-                name="fecha_fin"
-                type="date"
-                value={form.fecha_fin}
-                onChange={onChange}
-              />
+              <input name="fecha_fin" type="date" value={form.fecha_fin} onChange={onChange} />
               {errors.fecha_fin && <span className="err">{errors.fecha_fin}</span>}
             </div>
 
             <div className="field check">
-              <label><input type="checkbox" name="uso_unico" checked={form.uso_unico} onChange={onChange} /> Uso único</label>
+              <label><input type="checkbox" name="uso_unico" checked={form.uso_unico} onChange={onChange}/> Uso único</label>
+            </div>
+
+            <div className="field check">
+              <label><input type="checkbox" name="activo" checked={form.activo} onChange={onChange}/> Activo</label>
             </div>
           </div>
 
@@ -887,11 +956,16 @@ function DescuentosSection() {
           <div key={c.id_descuento} className="discount">
             <div>
               <p><strong>Código:</strong> {c.codigo}</p>
-              <p><strong>Tipo:</strong> Descuento {Number(c.porcentaje).toLocaleString("es-CL")}%</p>
+              <p><strong>Tipo:</strong> {c.tipo === "percent"
+                ? `${c.valor ?? c.porcentaje}%`
+                : c.tipo === "amount"
+                  ? `$${Number(c.valor||0).toLocaleString("es-CL")} sobre $${Number(c.minimo_compra||0).toLocaleString("es-CL")}`
+                  : `Envío gratis sobre $${Number(c.minimo_compra||0).toLocaleString("es-CL")}`}</p>
               {(c.fecha_inicio || c.fecha_fin) && (
                 <p><strong>Vigencia:</strong> {c.fecha_inicio || "—"} {c.fecha_fin ? `→ ${c.fecha_fin}` : ""}</p>
               )}
-              <p><strong>Uso único:</strong> {c.uso_unico ? "Sí" : "No"}</p>
+              <p><strong>Uso único:</strong> {c.uso_unico || c.limite_uso === 1 ? "Sí" : "No"}</p>
+              {c.activo === false && <p style={{color:"#b00"}}><strong>Inactivo</strong></p>}
             </div>
             <div className="row">
               <button className="btn sm" onClick={() => startEdit(c)}>Modificar</button>
@@ -903,6 +977,7 @@ function DescuentosSection() {
     </div>
   );
 }
+
 
 
 const UserAdmin = () => {
