@@ -679,18 +679,32 @@ function DescuentosSection() {
   const [showForm, setShowForm] = useState(false);
   const [coupons, setCoupons] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const API_BASE = import.meta.env?.VITE_API_URL || "http://localhost:5000";
 
   const [form, setForm] = useState({
-    code: "",
-    description: "",
-    type: "percent",
-    value: "",
-    minSpend: "",
-    start: "",
-    end: "",
-    active: true,
+    codigo: "",
+    porcentaje: "",
+    fecha_inicio: "",
+    fecha_fin: "",
+    uso_unico: false,
   });
   const [errors, setErrors] = useState({});
+
+  const load = async () => {
+    try {
+      const r = await fetch(`${API_BASE}/api/cupones`);
+      const j = await r.json();
+      setCoupons(Array.isArray(j.items) ? j.items : []);
+    } catch {
+      alert("No se pudo cargar la lista de cupones");
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
 
   const toggleForm = () => setShowForm(v => !v);
 
@@ -701,16 +715,14 @@ function DescuentosSection() {
 
   const validate = () => {
     const e = {};
-    const code = form.code.trim().toUpperCase();
-    if (!code) e.code = "Ingresa un código";
-    const exists = coupons.some(c => c.code === code && c.id !== editingId);
-    if (code && exists) e.code = "El código ya existe";
-    if (form.type !== "free_shipping") {
-      const n = Number(form.value);
-      if (!form.value || Number.isNaN(n) || n <= 0) e.value = "Valor inválido";
-    }
-    if (form.start && form.end && new Date(form.start) > new Date(form.end)) {
-      e.end = "La fecha fin debe ser mayor o igual a inicio";
+    const code = form.codigo.trim().toUpperCase();
+    if (!code) e.codigo = "Ingresa un código";
+    const exists = coupons.some(c => c.codigo === code && c.id_descuento !== editingId);
+    if (code && exists) e.codigo = "El código ya existe";
+    const n = Number(form.porcentaje);
+    if (!form.porcentaje || Number.isNaN(n) || n < 1 || n > 60) e.porcentaje = "Porcentaje entre 1 y 60";
+    if (form.fecha_inicio && form.fecha_fin && new Date(form.fecha_inicio) > new Date(form.fecha_fin)) {
+      e.fecha_fin = "La fecha fin debe ser mayor o igual a inicio";
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -718,61 +730,79 @@ function DescuentosSection() {
 
   const reset = () => {
     setForm({
-      code: "",
-      description: "",
-      type: "percent",
-      value: "",
-      minSpend: "",
-      start: "",
-      end: "",
-      active: true,
+      codigo: "",
+      porcentaje: "",
+      fecha_inicio: "",
+      fecha_fin: "",
+      uso_unico: false,
     });
     setErrors({});
     setEditingId(null);
   };
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate() || submitting) return;
+    setSubmitting(true);
 
     const payload = {
-      id: editingId ?? Date.now(),
-      code: form.code.trim().toUpperCase(),
-      description: form.description.trim(),
-      type: form.type,
-      value: form.type === "free_shipping" ? null : Number(form.value),
-      minSpend: form.minSpend ? Number(form.minSpend) : null,
-      start: form.start || null,
-      end: form.end || null,
-      active: !!form.active,
+      codigo: form.codigo.trim().toUpperCase(),
+      porcentaje: Number(form.porcentaje),
+      fecha_inicio: form.fecha_inicio || null,
+      fecha_fin: form.fecha_fin || null,
+      uso_unico: !!form.uso_unico,
     };
 
-    setCoupons(prev =>
-      editingId ? prev.map(c => (c.id === editingId ? payload : c)) : [payload, ...prev]
-    );
-
-    reset();
-    setShowForm(false);
+    try {
+      let r, j;
+      if (editingId) {
+        r = await fetch(`${API_BASE}/api/cupones/${editingId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        r = await fetch(`${API_BASE}/api/cupones`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+      j = await r.json();
+      if (!j.ok) { alert(j.message || "Error al guardar"); return; }
+      await load();
+      reset();
+      setShowForm(false);
+    } catch {
+      alert("No se pudo guardar el cupón");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const startEdit = (c) => {
-    setEditingId(c.id);
+    setEditingId(c.id_descuento);
     setForm({
-      code: c.code,
-      description: c.description || "",
-      type: c.type,
-      value: c.value ?? "",
-      minSpend: c.minSpend ?? "",
-      start: c.start ?? "",
-      end: c.end ?? "",
-      active: !!c.active,
+      codigo: c.codigo,
+      porcentaje: String(c.porcentaje ?? ""),
+      fecha_inicio: c.fecha_inicio || "",
+      fecha_fin: c.fecha_fin || "",
+      uso_unico: !!c.uso_unico,
     });
     setShowForm(true);
   };
 
-  const removeCoupon = (id) => {
-    setCoupons(prev => prev.filter(c => c.id !== id));
-    if (editingId === id) reset();
+  const removeCoupon = async (id) => {
+    if (!window.confirm("¿Eliminar el cupón?")) return;
+    try {
+      const r = await fetch(`${API_BASE}/api/cupones/${id}`, { method: "DELETE" });
+      const j = await r.json();
+      if (!j.ok) { alert(j.message || "Error al eliminar"); return; }
+      await load();
+      if (editingId === id) reset();
+    } catch {
+      alert("No se pudo eliminar");
+    }
   };
 
   return (
@@ -790,58 +820,35 @@ function DescuentosSection() {
             <div className="field">
               <label>Código</label>
               <input
-                name="code"
-                value={form.code}
+                name="codigo"
+                value={form.codigo}
                 onChange={onChange}
                 placeholder="Ej: CUMP2025"
               />
-              {errors.code && <span className="err">{errors.code}</span>}
+              {errors.codigo && <span className="err">{errors.codigo}</span>}
             </div>
 
             <div className="field">
-              <label>Tipo</label>
-              <select name="type" value={form.type} onChange={onChange}>
-                <option value="percent">Porcentaje (%)</option>
-                <option value="amount">Monto fijo</option>
-                <option value="free_shipping">Envío gratis</option>
-              </select>
-            </div>
-
-            {form.type !== "free_shipping" && (
-              <div className="field">
-                <label>Valor</label>
-                <input
-                  name="value"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.value}
-                  onChange={onChange}
-                  placeholder={form.type === "percent" ? "Ej: 10 = 10%" : "Ej: 5000"}
-                />
-                {errors.value && <span className="err">{errors.value}</span>}
-              </div>
-            )}
-
-            <div className="field">
-              <label>Mínimo a gastar (opcional)</label>
+              <label>Porcentaje (%)</label>
               <input
-                name="minSpend"
+                name="porcentaje"
                 type="number"
-                min="0"
-                step="0.01"
-                value={form.minSpend}
+                min="1"
+                max="60"
+                step="1"
+                value={form.porcentaje}
                 onChange={onChange}
-                placeholder="Ej: 20000"
+                placeholder="Ej: 10 = 10%"
               />
+              {errors.porcentaje && <span className="err">{errors.porcentaje}</span>}
             </div>
 
             <div className="field">
               <label>Vigencia desde</label>
               <input
-                name="start"
+                name="fecha_inicio"
                 type="date"
-                value={form.start}
+                value={form.fecha_inicio}
                 onChange={onChange}
               />
             </div>
@@ -849,33 +856,24 @@ function DescuentosSection() {
             <div className="field">
               <label>Vigencia hasta</label>
               <input
-                name="end"
+                name="fecha_fin"
                 type="date"
-                value={form.end}
+                value={form.fecha_fin}
                 onChange={onChange}
               />
-              {errors.end && <span className="err">{errors.end}</span>}
-            </div>
-
-            <div className="field field-span">
-              <label>Descripción</label>
-              <textarea
-                name="description"
-                rows={2}
-                value={form.description}
-                onChange={onChange}
-                placeholder="Texto visible para el cliente"
-              />
+              {errors.fecha_fin && <span className="err">{errors.fecha_fin}</span>}
             </div>
 
             <div className="field check">
-              <label><input type="checkbox" name="active" checked={form.active} onChange={onChange} /> Activo</label>
+              <label><input type="checkbox" name="uso_unico" checked={form.uso_unico} onChange={onChange} /> Uso único</label>
             </div>
           </div>
 
           <div className="row mt form-actions">
-            <button type="submit" className="btn primary">{editingId ? "Guardar cambios" : "Crear código"}</button>
-            <button type="button" className="btn" onClick={reset}>Limpiar</button>
+            <button type="submit" className="btn primary" disabled={submitting}>
+              {submitting ? "Guardando..." : editingId ? "Guardar cambios" : "Crear código"}
+            </button>
+            <button type="button" className="btn" onClick={reset} disabled={submitting}>Limpiar</button>
           </div>
         </form>
       )}
@@ -886,26 +884,18 @@ function DescuentosSection() {
         )}
 
         {coupons.map(c => (
-          <div key={c.id} className="discount">
+          <div key={c.id_descuento} className="discount">
             <div>
-              <p><strong>Código:</strong> {c.code}</p>
-              {c.description && <p><strong>Descripción:</strong> {c.description}</p>}
-              <p>
-                <strong>Tipo:</strong>{" "}
-                {c.type === "percent" ? `Descuento ${c.value}%`
-                  : c.type === "amount" ? `Descuento $${c.value?.toLocaleString("es-CL")}`
-                  : "Envío gratis"}
-              </p>
-              {c.minSpend != null && <p><strong>Mínimo:</strong> ${Number(c.minSpend).toLocaleString("es-CL")}</p>}
-              {(c.start || c.end) && (
-                <p><strong>Vigencia:</strong> {c.start || "—"} {c.end ? `→ ${c.end}` : ""}
-                </p>
+              <p><strong>Código:</strong> {c.codigo}</p>
+              <p><strong>Tipo:</strong> Descuento {Number(c.porcentaje).toLocaleString("es-CL")}%</p>
+              {(c.fecha_inicio || c.fecha_fin) && (
+                <p><strong>Vigencia:</strong> {c.fecha_inicio || "—"} {c.fecha_fin ? `→ ${c.fecha_fin}` : ""}</p>
               )}
-              <p><strong>Estado:</strong> {c.active ? "Activo" : "Inactivo"}</p>
+              <p><strong>Uso único:</strong> {c.uso_unico ? "Sí" : "No"}</p>
             </div>
             <div className="row">
               <button className="btn sm" onClick={() => startEdit(c)}>Modificar</button>
-              <button className="btn sm danger" onClick={() => removeCoupon(c.id)}>Eliminar</button>
+              <button className="btn sm danger" onClick={() => removeCoupon(c.id_descuento)}>Eliminar</button>
             </div>
           </div>
         ))}
@@ -913,6 +903,7 @@ function DescuentosSection() {
     </div>
   );
 }
+
 
 const UserAdmin = () => {
   const [active, setActive] = useState("inicio");
