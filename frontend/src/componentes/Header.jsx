@@ -216,9 +216,10 @@ export const Header = () => {
 
                     <button type="submit" className="auth-primary">Iniciar Sesión</button>
                   </form>
-
+                  
                   <Link className="auth-link" to="/forgot">Olvidé mi contraseña</Link>
                   <div className="auth-divider" />
+                  <p>Si no tienes una cuenta registrate aca</p>
                   <Link
                     className="auth-secondary"
                     to="/Login"
