@@ -1,4 +1,4 @@
-// server.js  
+const usersRoutes = require("./Routes/usersRoutes");
 const express = require("express");  
 const dotenv = require("dotenv");  
 const cors = require("cors");  
@@ -16,7 +16,7 @@ const app = express();
 app.use(express.json());  
   
 app.use(cors());  
-  
+app.use("/api/usuarios", usersRoutes);  
 // Rutas principales  
 app.use("/api/auth", authRoutes);  
 app.use("/api/cupones", cuponRoutes);  
