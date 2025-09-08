@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Footer } from "../../../componentes/Footer";
-import { HeaderAdmin } from "./HeaderAdmin";import "./UserAdmin.css";
+import { HeaderAdmin } from "./HeaderAdmin";
+import "./UserAdmin.css";
 
 function PedidosSection() {
   const [q, setQ] = useState("");
   const pedidos = [];
-  const list = pedidos.filter(p =>
+  const list = pedidos.filter((p) =>
     q.trim() ? String(p.id).includes(q.trim()) : true
   );
 
@@ -26,7 +27,9 @@ function PedidosSection() {
         <h2>Gestión de pedidos</h2>
         <div className="orders">
           {list.length === 0 && (
-            <div className="empty"><p>No hay pedidos registrados todavía.</p></div>
+            <div className="empty">
+              <p>No hay pedidos registrados todavía.</p>
+            </div>
           )}
         </div>
       </div>
@@ -37,35 +40,66 @@ function PedidosSection() {
 function GananciasSection() {
   const periodos = {
     day: [
-      { l: "Lun", v: 45600 }, { l: "Mar", v: 70000 }, { l: "Mié", v: 55090 },
-      { l: "Jue", v: 84900 }, { l: "Vie", v: 60500 }, { l: "Sáb", v: 95000 }, { l: "Dom", v: 54500 },
+      { l: "Lun", v: 45600 },
+      { l: "Mar", v: 70000 },
+      { l: "Mié", v: 55090 },
+      { l: "Jue", v: 84900 },
+      { l: "Vie", v: 60500 },
+      { l: "Sáb", v: 95000 },
+      { l: "Dom", v: 54500 },
     ],
     week: [
-      { l: "Sem 1", v: 28000 }, { l: "Sem 2", v: 35000 }, { l: "Sem 3", v: 30000 }, { l: "Sem 4", v: 40000 },
+      { l: "Sem 1", v: 28000 },
+      { l: "Sem 2", v: 35000 },
+      { l: "Sem 3", v: 30000 },
+      { l: "Sem 4", v: 40000 },
     ],
     month: [
-      { l: "Ene", v: 120000 }, { l: "Feb", v: 110000 }, { l: "Mar", v: 140000 },
-      { l: "Abr", v: 130000 }, { l: "May", v: 150000 }, { l: "Jun", v: 160000 },
+      { l: "Ene", v: 120000 },
+      { l: "Feb", v: 110000 },
+      { l: "Mar", v: 140000 },
+      { l: "Abr", v: 130000 },
+      { l: "May", v: 150000 },
+      { l: "Jun", v: 160000 },
     ],
   };
   const [period, setPeriod] = useState("day");
   const data = periodos[period];
-  const max = Math.max(...data.map(d => d.v));
+  const max = Math.max(...data.map((d) => d.v));
 
   return (
     <div className="card">
       <div className="card-head">
         <h2>Ganancias</h2>
         <div className="tabs">
-          <button className={`tab ${period==="day"?"on":""}`} onClick={()=>setPeriod("day")}>Día</button>
-          <button className={`tab ${period==="week"?"on":""}`} onClick={()=>setPeriod("week")}>Semana</button>
-          <button className={`tab ${period==="month"?"on":""}`} onClick={()=>setPeriod("month")}>Mes</button>
+          <button
+            className={`tab ${period === "day" ? "on" : ""}`}
+            onClick={() => setPeriod("day")}
+          >
+            Día
+          </button>
+          <button
+            className={`tab ${period === "week" ? "on" : ""}`}
+            onClick={() => setPeriod("week")}
+          >
+            Semana
+          </button>
+          <button
+            className={`tab ${period === "month" ? "on" : ""}`}
+            onClick={() => setPeriod("month")}
+          >
+            Mes
+          </button>
         </div>
       </div>
       <div className="chart">
-        {data.map((d,i)=>(
+        {data.map((d, i) => (
           <div key={i} className="col">
-            <div className="bar" style={{height:`${(d.v/max)*100}%`}} title={`$${d.v.toLocaleString()}`}/>
+            <div
+              className="bar"
+              style={{ height: `${(d.v / max) * 100}%` }}
+              title={`$${d.v.toLocaleString()}`}
+            />
             <span className="lbl">{d.l}</span>
           </div>
         ))}
@@ -82,9 +116,12 @@ function ProductosSection() {
   const [preview, setPreview] = useState({ open: false, src: "", alt: "" });
   const [zoom, setZoom] = useState(1);
 
-  const openPreview = (src, alt) => { setPreview({ open: true, src, alt }); setZoom(1); };
+  const openPreview = (src, alt) => {
+    setPreview({ open: true, src, alt });
+    setZoom(1);
+  };
   const closePreview = () => setPreview({ open: false, src: "", alt: "" });
-  const toggleZoom = () => setZoom(z => (z === 1 ? 2.25 : 1));
+  const toggleZoom = () => setZoom((z) => (z === 1 ? 2.25 : 1));
 
   useEffect(() => {
     if (!preview.open) return;
@@ -112,11 +149,11 @@ function ProductosSection() {
     porciones: [],
     activo: true,
     usarPorciones: true,
-    porcionPrecios: {}
+    porcionPrecios: {},
   });
   const [errors, setErrors] = useState({});
 
-  const toggleForm = () => setShowForm(v => !v);
+  const toggleForm = () => setShowForm((v) => !v);
 
   const PORCIONES = [12, 18, 24, 30, 50];
 
@@ -130,45 +167,47 @@ function ProductosSection() {
 
     if (name === "categoria") {
       const usar = value === "tortas";
-      setForm(prev => ({
+      setForm((prev) => ({
         ...prev,
         categoria: value,
         usarPorciones: usar,
         porciones: usar ? prev.porciones : [],
-        porcionPrecios: usar ? prev.porcionPrecios : {}
+        porcionPrecios: usar ? prev.porcionPrecios : {},
       }));
       return;
     }
 
     if (name === "usarPorciones") {
-      setForm(prev => ({
+      setForm((prev) => ({
         ...prev,
         usarPorciones: checked,
         porciones: checked ? prev.porciones : [],
-        porcionPrecios: checked ? prev.porcionPrecios : {}
+        porcionPrecios: checked ? prev.porcionPrecios : {},
       }));
       return;
     }
 
     if (name.startsWith("precioMin") || name.startsWith("precioMax")) {
-      setForm(prev => ({
+      setForm((prev) => ({
         ...prev,
-        [name]: value.replace(/[^\d]/g, "")
+        [name]: value.replace(/[^\d]/g, ""),
       }));
       return;
     }
 
-    setForm(prev => ({
+    setForm((prev) => ({
       ...prev,
-      [name]: type === "checkbox" && name !== "porciones" ? checked : value
+      [name]: type === "checkbox" && name !== "porciones" ? checked : value,
     }));
   };
 
   const onTogglePorcion = (p) => {
     if (!form.usarPorciones) return;
-    setForm(prev => {
+    setForm((prev) => {
       const exists = prev.porciones.includes(p);
-      const next = exists ? prev.porciones.filter(x => x !== p) : [...prev.porciones, p].sort((a,b)=>a-b);
+      const next = exists
+        ? prev.porciones.filter((x) => x !== p)
+        : [...prev.porciones, p].sort((a, b) => a - b);
       const nextPrecios = { ...prev.porcionPrecios };
       if (exists) delete nextPrecios[p];
       return { ...prev, porciones: next, porcionPrecios: nextPrecios };
@@ -177,24 +216,34 @@ function ProductosSection() {
 
   const isValidUrl = (u) => {
     if (!u) return true;
-    if (u.startsWith("data:") || u.startsWith("blob:") || u.startsWith("/")) return true;
+    if (u.startsWith("data:") || u.startsWith("blob:") || u.startsWith("/"))
+      return true;
     try {
       const url = new URL(u);
       return url.protocol === "http:" || url.protocol === "https:";
-    } catch { return false; }
+    } catch {
+      return false;
+    }
   };
 
   const getSuggested = () => {
     const min = num(form.precioMin);
     const max = num(form.precioMax);
-    const ps = form.porciones.slice().sort((a,b)=>a-b);
-    if (!ps.length || !Number.isFinite(min) || !Number.isFinite(max) || min <= 0 || max <= 0 || min > max) {
+    const ps = form.porciones.slice().sort((a, b) => a - b);
+    if (
+      !ps.length ||
+      !Number.isFinite(min) ||
+      !Number.isFinite(max) ||
+      min <= 0 ||
+      max <= 0 ||
+      min > max
+    ) {
       return {};
     }
     const pMin = ps[0];
     const pMax = ps[ps.length - 1];
     const map = {};
-    ps.forEach(p => {
+    ps.forEach((p) => {
       if (pMin === pMax) {
         map[p] = max;
       } else {
@@ -209,19 +258,20 @@ function ProductosSection() {
 
   const onChangePrecioPorcion = (p, v) => {
     const limpio = v.replace(/[^\d]/g, "");
-    setForm(prev => ({
+    setForm((prev) => ({
       ...prev,
-      porcionPrecios: { ...prev.porcionPrecios, [p]: limpio }
+      porcionPrecios: { ...prev.porcionPrecios, [p]: limpio },
     }));
   };
 
   const aplicarSugerencias = () => {
     if (!Object.keys(suggestions).length) return;
-    setForm(prev => ({
+    setForm((prev) => ({
       ...prev,
-      porcionPrecios: { ...prev.porcionPrecios, ...Object.fromEntries(
-        prev.porciones.map(p => [p, String(suggestions[p] ?? "")])
-      ) }
+      porcionPrecios: {
+        ...prev.porcionPrecios,
+        ...Object.fromEntries(prev.porciones.map((p) => [p, String(suggestions[p] ?? "")])),
+      },
     }));
   };
 
@@ -230,12 +280,12 @@ function ProductosSection() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      setForm(prev => ({ ...prev, imagen: String(reader.result || "") }));
+      setForm((prev) => ({ ...prev, imagen: String(reader.result || "") }));
     };
     reader.readAsDataURL(file);
   };
 
-  const clearImage = () => setForm(prev => ({ ...prev, imagen: "" }));
+  const clearImage = () => setForm((prev) => ({ ...prev, imagen: "" }));
 
   const validate = () => {
     const e = {};
@@ -246,12 +296,13 @@ function ProductosSection() {
     const max = num(form.precioMax);
     if (!Number.isFinite(min) || min <= 0) e.precioMin = "Ingresa un mínimo válido";
     if (!Number.isFinite(max) || max <= 0) e.precioMax = "Ingresa un máximo válido";
-    if (Number.isFinite(min) && Number.isFinite(max) && min >= max) e.precioMax = "El máximo debe ser mayor al mínimo";
+    if (Number.isFinite(min) && Number.isFinite(max) && min >= max)
+      e.precioMax = "El máximo debe ser mayor al mínimo";
 
     if (!isValidUrl(form.imagen)) e.imagen = "URL de imagen no válida";
 
     if (form.usarPorciones && form.porciones.length > 0) {
-      const ps = form.porciones.slice().sort((a,b)=>a-b);
+      const ps = form.porciones.slice().sort((a, b) => a - b);
       let prevPrice = null;
       ps.forEach((p, idx) => {
         const val = num(form.porcionPrecios[p]);
@@ -263,7 +314,9 @@ function ProductosSection() {
             e[`por_${p}`] = `No debe superar $${cap.toLocaleString("es-CL")} (sugerido)`;
           }
           if (prevPrice != null && val < prevPrice) {
-            e[`por_${p}`] = `Debe ser ≥ al precio de ${ps[idx-1]} personas ($${prevPrice.toLocaleString("es-CL")})`;
+            e[`por_${p}`] = `Debe ser ≥ al precio de ${ps[idx - 1]} personas ($${prevPrice.toLocaleString(
+              "es-CL"
+            )})`;
           }
           prevPrice = Number.isFinite(val) ? val : prevPrice;
         }
@@ -285,7 +338,7 @@ function ProductosSection() {
       porciones: [],
       activo: true,
       usarPorciones: true,
-      porcionPrecios: {}
+      porcionPrecios: {},
     });
     setErrors({});
     setEditingId(null);
@@ -307,16 +360,16 @@ function ProductosSection() {
       imagen: form.imagen.trim(),
       descripcion: form.descripcion.trim(),
       variantes: form.usarPorciones
-        ? form.porciones.map(p => ({
+        ? form.porciones.map((p) => ({
             personas: p,
-            precio: num(form.porcionPrecios[p]) || suggestions[p] || min
+            precio: num(form.porcionPrecios[p]) || suggestions[p] || min,
           }))
         : [],
-      activo: form.activo
+      activo: form.activo,
     };
 
-    setItems(prev =>
-      editingId ? prev.map(it => (it.id === editingId ? payload : it)) : [payload, ...prev]
+    setItems((prev) =>
+      editingId ? prev.map((it) => (it.id === editingId ? payload : it)) : [payload, ...prev]
     );
 
     reset();
@@ -326,7 +379,9 @@ function ProductosSection() {
   const startEdit = (item) => {
     setEditingId(item.id);
     const porcionPrecios = {};
-    (item.variantes || []).forEach(v => { porcionPrecios[v.personas] = String(v.precio || ""); });
+    (item.variantes || []).forEach((v) => {
+      porcionPrecios[v.personas] = String(v.precio || "");
+    });
     setForm({
       nombre: item.nombre || "",
       categoria: item.categoria || "tortas",
@@ -334,16 +389,16 @@ function ProductosSection() {
       precioMax: item.precioMax ? String(item.precioMax) : "",
       imagen: item.imagen || "",
       descripcion: item.descripcion || "",
-      porciones: (item.variantes || []).map(v => v.personas).sort((a,b)=>a-b),
+      porciones: (item.variantes || []).map((v) => v.personas).sort((a, b) => a - b),
       activo: !!item.activo,
-      usarPorciones: (item.variantes || []).length > 0 || (item.categoria === "tortas"),
-      porcionPrecios
+      usarPorciones: (item.variantes || []).length > 0 || item.categoria === "tortas",
+      porcionPrecios,
     });
     setShowForm(true);
   };
 
   const removeItem = (id) => {
-    setItems(prev => prev.filter(p => p.id !== id));
+    setItems((prev) => prev.filter((p) => p.id !== id));
     if (editingId === id) reset();
   };
 
@@ -356,7 +411,8 @@ function ProductosSection() {
       url.startsWith("/") ||
       url.startsWith("data:") ||
       url.startsWith("blob:")
-    ) return url;
+    )
+      return url;
     return "/placeholder.jpg";
   };
 
@@ -368,7 +424,7 @@ function ProductosSection() {
     alignItems: "center",
     justifyContent: "center",
     zIndex: 9999,
-    padding: 24
+    padding: 24,
   };
   const viewportStyle = {
     position: "relative",
@@ -378,14 +434,14 @@ function ProductosSection() {
     background: "#fff",
     borderRadius: 10,
     boxShadow: "0 10px 30px rgba(0,0,0,.25)",
-    padding: 8
+    padding: 8,
   };
   const imgStyle = {
     display: "block",
     width: `${zoom * 100}%`,
     height: "auto",
     maxWidth: "none",
-    cursor: zoom === 1 ? "zoom-in" : "zoom-out"
+    cursor: zoom === 1 ? "zoom-in" : "zoom-out",
   };
   const closeBtn = {
     position: "absolute",
@@ -400,7 +456,7 @@ function ProductosSection() {
     fontSize: 22,
     lineHeight: 1,
     cursor: "pointer",
-    boxShadow: "0 6px 18px rgba(0,0,0,.2)"
+    boxShadow: "0 6px 18px rgba(0,0,0,.2)",
   };
   const hintStyle = {
     position: "absolute",
@@ -410,7 +466,7 @@ function ProductosSection() {
     color: "#666",
     background: "rgba(255,255,255,.85)",
     padding: "2px 8px",
-    borderRadius: 6
+    borderRadius: 6,
   };
 
   return (
@@ -483,16 +539,29 @@ function ProductosSection() {
                 onChange={onChange}
                 placeholder="Pega una URL (https://...)"
               />
-              <div className="row" style={{ gap: 8, marginTop: 8, alignItems: "center" }}>
+              <div
+                className="row"
+                style={{ gap: 8, marginTop: 8, alignItems: "center" }}
+              >
                 <input type="file" accept="image/*" onChange={onUploadImage} />
                 {form.imagen && (
                   <>
                     <img
                       src={safeThumb(form.imagen)}
                       alt="preview"
-                      style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 6, border: "1px solid #ddd" }}
+                      style={{
+                        width: 56,
+                        height: 56,
+                        objectFit: "cover",
+                        borderRadius: 6,
+                        border: "1px solid #ddd",
+                      }}
                     />
-                    <button type="button" className="btn sm danger" onClick={clearImage}>
+                    <button
+                      type="button"
+                      className="btn sm danger"
+                      onClick={clearImage}
+                    >
                       Quitar imagen
                     </button>
                   </>
@@ -522,12 +591,13 @@ function ProductosSection() {
                       name="usarPorciones"
                       checked={form.usarPorciones}
                       onChange={onChange}
-                    /> Habilitar porciones para este producto
+                    />{" "}
+                    Habilitar porciones para este producto
                   </label>
                 </div>
               )}
               <div className="chips">
-                {PORCIONES.map(p => (
+                {PORCIONES.map((p) => (
                   <button
                     type="button"
                     key={p}
@@ -544,25 +614,30 @@ function ProductosSection() {
 
             {form.usarPorciones && form.porciones.length > 0 && (
               <div className="field field-span">
-                <div className="row" style={{justifyContent:"space-between", alignItems:"center"}}>
+                <div
+                  className="row"
+                  style={{ justifyContent: "space-between", alignItems: "center" }}
+                >
                   <label>Precio por porción</label>
                   <button type="button" className="btn sm" onClick={aplicarSugerencias}>
                     Autocompletar según rango
                   </button>
                 </div>
 
-                <div className="list" style={{marginTop: 6}}>
-                  {form.porciones.map(p => {
+                <div className="list" style={{ marginTop: 6 }}>
+                  {form.porciones.map((p) => {
                     const sug = suggestions[p];
                     const val = form.porcionPrecios[p] ?? "";
                     return (
-                      <div key={p} className="client" style={{alignItems:"center"}}>
+                      <div key={p} className="client" style={{ alignItems: "center" }}>
                         <div>
                           <strong>{p} personas</strong>
-                          <div style={{fontSize:12, color:"#555"}}>
+                          <div style={{ fontSize: 12, color: "#555" }}>
                             sugerido: {sug ? `$${sug.toLocaleString("es-CL")}` : "—"}
                           </div>
-                          {errors[`por_${p}`] && <div className="err">{errors[`por_${p}`]}</div>}
+                          {errors[`por_${p}`] && (
+                            <div className="err">{errors[`por_${p}`]}</div>
+                          )}
                         </div>
                         <div className="row">
                           <input
@@ -571,9 +646,9 @@ function ProductosSection() {
                             min="0"
                             step="1"
                             value={val}
-                            onChange={(e)=>onChangePrecioPorcion(p, e.target.value)}
+                            onChange={(e) => onChangePrecioPorcion(p, e.target.value)}
                             placeholder={sug ? String(sug) : ""}
-                            style={{width:160}}
+                            style={{ width: 160 }}
                           />
                         </div>
                       </div>
@@ -584,13 +659,25 @@ function ProductosSection() {
             )}
 
             <div className="field check">
-              <label><input type="checkbox" name="activo" checked={form.activo} onChange={onChange} /> Activo</label>
+              <label>
+                <input
+                  type="checkbox"
+                  name="activo"
+                  checked={form.activo}
+                  onChange={onChange}
+                />{" "}
+                Activo
+              </label>
             </div>
           </div>
 
           <div className="row mt form-actions">
-            <button type="submit" className="btn primary">{editingId ? "Guardar cambios" : "Guardar producto"}</button>
-            <button type="button" className="btn" onClick={reset}>Limpiar</button>
+            <button type="submit" className="btn primary">
+              {editingId ? "Guardar cambios" : "Guardar producto"}
+            </button>
+            <button type="button" className="btn" onClick={reset}>
+              Limpiar
+            </button>
           </div>
         </form>
       )}
@@ -614,7 +701,9 @@ function ProductosSection() {
                   src={safeThumb(p.imagen)}
                   alt={p.nombre}
                   loading="lazy"
-                  onError={(e)=>{ e.currentTarget.src="/placeholder.jpg"; }}
+                  onError={(e) => {
+                    e.currentTarget.src = "/placeholder.jpg";
+                  }}
                   onClick={() => openPreview(safeThumb(p.imagen), p.nombre)}
                   style={{ cursor: "zoom-in" }}
                   title="Ver imagen"
@@ -629,7 +718,7 @@ function ProductosSection() {
 
                 {p.descripcion && <p className="desc">{p.descripcion}</p>}
 
-                {(p.precioMin && p.precioMax) && (
+                {p.precioMin && p.precioMax && (
                   <div className="price-range">
                     <span>Desde ${p.precioMin.toLocaleString("es-CL")}</span>
                     <span>Hasta ${p.precioMax.toLocaleString("es-CL")}</span>
@@ -638,10 +727,10 @@ function ProductosSection() {
 
                 {variantes.length > 0 && (
                   <div className="variants">
-                    {variantes.map(v => (
+                    {variantes.map((v) => (
                       <div key={v.personas} className="pill">
                         <span>{v.personas}p</span>
-                        <strong>${Number(v.precio||0).toLocaleString("es-CL")}</strong>
+                        <strong>${Number(v.precio || 0).toLocaleString("es-CL")}</strong>
                       </div>
                     ))}
                   </div>
@@ -649,8 +738,12 @@ function ProductosSection() {
               </div>
 
               <div className="card-actions">
-                <button className="btn sm" onClick={() => startEdit(p)}>Modificar</button>
-                <button className="btn sm danger" onClick={() => removeItem(p.id)}>Eliminar</button>
+                <button className="btn sm" onClick={() => startEdit(p)}>
+                  Modificar
+                </button>
+                <button className="btn sm danger" onClick={() => removeItem(p.id)}>
+                  Eliminar
+                </button>
               </div>
             </article>
           );
@@ -658,16 +751,20 @@ function ProductosSection() {
       </div>
 
       {preview.open && (
-        <div style={overlayStyle} onClick={closePreview} role="dialog" aria-modal="true">
-          <div style={viewportStyle} onClick={(e)=>e.stopPropagation()}>
-            <img
-              src={preview.src}
-              alt={preview.alt}
-              onDoubleClick={toggleZoom}
-              style={imgStyle}
-            />
-            <button style={closeBtn} onClick={closePreview} aria-label="Cerrar">×</button>
-            <div style={hintStyle}>Doble clic para {zoom === 1 ? "acercar" : "alejar"}</div>
+        <div
+          style={overlayStyle}
+          onClick={closePreview}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div style={viewportStyle} onClick={(e) => e.stopPropagation()}>
+            <img src={preview.src} alt={preview.alt} onDoubleClick={toggleZoom} style={imgStyle} />
+            <button style={closeBtn} onClick={closePreview} aria-label="Cerrar">
+              ×
+            </button>
+            <div style={hintStyle}>
+              Doble clic para {zoom === 1 ? "acercar" : "alejar"}
+            </div>
           </div>
         </div>
       )}
@@ -680,42 +777,48 @@ function DescuentosSection() {
   const [coupons, setCoupons] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-
+  const [loading, setLoading] = useState(false); 
   const API_BASE = import.meta.env?.VITE_API_URL || "http://localhost:5000";
 
   const [form, setForm] = useState({
     codigo: "",
-    tipo: "percent",         
-    valor: "",               
-    minimo_compra: "",      
+    tipo: "percent",
+    valor: "",
+    minimo_compra: "",
     fecha_inicio: "",
     fecha_fin: "",
     uso_unico: false,
-    activo: true
+    activo: true,
   });
   const [errors, setErrors] = useState({});
 
   const load = async () => {
+    setLoading(true); // ← NEW
     try {
       const r = await fetch(`${API_BASE}/api/cupones`);
       const j = await r.json();
       setCoupons(Array.isArray(j.items) ? j.items : []);
-    } catch { alert("No se pudo cargar la lista de cupones"); }
+    } catch {
+      alert("No se pudo cargar la lista de cupones");
+    }
+    setLoading(false); 
   };
-  useEffect(()=>{ load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
-  const toggleForm = () => setShowForm(v => !v);
+  const toggleForm = () => setShowForm((v) => !v);
 
   const onChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setForm(prev => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+    setForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
   };
   const onChangeTipo = (t) => {
-    setForm(prev => ({
+    setForm((prev) => ({
       ...prev,
       tipo: t,
-      valor: t === "free_shipping" ? "" : (prev.valor || (t === "percent" ? 10 : 1000)),
-      minimo_compra: (t === "percent") ? "" : (prev.minimo_compra || 0)
+      valor: t === "free_shipping" ? "" : prev.valor || (t === "percent" ? 10 : 1000),
+      minimo_compra: t === "percent" ? "" : prev.minimo_compra || 0,
     }));
     setErrors({});
   };
@@ -724,7 +827,7 @@ function DescuentosSection() {
     const e = {};
     const code = form.codigo.trim().toUpperCase();
     if (!code) e.codigo = "Ingresa un código";
-    const exists = coupons.some(c => c.codigo === code && c.id_descuento !== editingId);
+    const exists = coupons.some((c) => c.codigo === code && c.id_descuento !== editingId);
     if (code && exists) e.codigo = "El código ya existe";
 
     if (form.fecha_inicio && form.fecha_fin && new Date(form.fecha_inicio) > new Date(form.fecha_fin)) {
@@ -761,9 +864,10 @@ function DescuentosSection() {
       fecha_inicio: "",
       fecha_fin: "",
       uso_unico: false,
-      activo: true
+      activo: true,
     });
-    setErrors({}); setEditingId(null);
+    setErrors({});
+    setEditingId(null);
   };
 
   const onSubmit = async (e) => {
@@ -775,15 +879,17 @@ function DescuentosSection() {
       codigo: form.codigo.trim().toUpperCase(),
       tipo: form.tipo,
       valor: form.tipo === "free_shipping" ? null : Number(form.valor),
-      minimo_compra: (form.tipo === "percent") ? null : Number(form.minimo_compra),
+      minimo_compra: form.tipo === "percent" ? null : Number(form.minimo_compra),
       fecha_inicio: form.fecha_inicio || null,
       fecha_fin: form.fecha_fin || null,
       uso_unico: !!form.uso_unico,
-      activo: !!form.activo
+      activo: !!form.activo,
     };
 
     try {
-      const url = editingId ? `${API_BASE}/api/cupones/${editingId}` : `${API_BASE}/api/cupones`;
+      const url = editingId
+        ? `${API_BASE}/api/cupones/${editingId}`
+        : `${API_BASE}/api/cupones`;
       const method = editingId ? "PUT" : "POST";
       const r = await fetch(url, {
         method,
@@ -791,8 +897,13 @@ function DescuentosSection() {
         body: JSON.stringify(payload),
       });
       const j = await r.json();
-      if (!j.ok) { alert(j.message || "Error al guardar"); return; }
-      await load(); reset(); setShowForm(false);
+      if (!j.ok) {
+        alert(j.message || "Error al guardar");
+        return;
+      }
+      await load();
+      reset();
+      setShowForm(false);
     } catch {
       alert("No se pudo guardar el cupón");
     } finally {
@@ -801,7 +912,8 @@ function DescuentosSection() {
   };
 
   const startEdit = (c) => {
-    const tipo = c.tipo || (c.porcentaje != null ? "percent" : (c.valor != null ? "amount" : "free_shipping"));
+    const tipo =
+      c.tipo || (c.porcentaje != null ? "percent" : c.valor != null ? "amount" : "free_shipping");
     const valor = c.valor ?? (c.porcentaje != null ? Number(c.porcentaje) : "");
     setEditingId(c.id_descuento);
     setForm({
@@ -811,8 +923,8 @@ function DescuentosSection() {
       minimo_compra: c.minimo_compra ?? "",
       fecha_inicio: c.fecha_inicio || "",
       fecha_fin: c.fecha_fin || "",
-      uso_unico: !!c.uso_unico || (c.limite_uso === 1),
-      activo: c.activo !== false
+      uso_unico: !!c.uso_unico || c.limite_uso === 1,
+      activo: c.activo !== false,
     });
     setShowForm(true);
     setErrors({});
@@ -823,9 +935,22 @@ function DescuentosSection() {
     try {
       const r = await fetch(`${API_BASE}/api/cupones/${id}`, { method: "DELETE" });
       const j = await r.json();
-      if (!j.ok) { alert(j.message || "Error al eliminar"); return; }
-      await load(); if (editingId === id) reset();
-    } catch { alert("No se pudo eliminar"); }
+      if (!j.ok) {
+        alert(j.message || "Error al eliminar");
+        return;
+      }
+      await load();
+      if (editingId === id) reset();
+    } catch {
+      alert("No se pudo eliminar");
+    }
+  };
+
+  const skRow = {
+    height: 64,
+    borderRadius: 10,
+    marginBottom: 10,
+    background: "#eee",
   };
 
   return (
@@ -842,13 +967,18 @@ function DescuentosSection() {
           <div className="form-grid">
             <div className="field">
               <label>Código</label>
-              <input name="codigo" value={form.codigo} onChange={onChange} placeholder="Ej: CUMP2025" />
+              <input
+                name="codigo"
+                value={form.codigo}
+                onChange={onChange}
+                placeholder="Ej: CUMP2025"
+              />
               {errors.codigo && <span className="err">{errors.codigo}</span>}
             </div>
 
             <div className="field">
               <label>Tipo de descuento</label>
-              <select name="tipo" value={form.tipo} onChange={e=>onChangeTipo(e.target.value)}>
+              <select name="tipo" value={form.tipo} onChange={(e) => onChangeTipo(e.target.value)}>
                 <option value="percent">% Porcentaje</option>
                 <option value="amount">Monto fijo (CLP)</option>
                 <option value="free_shipping">Envío gratis</option>
@@ -920,7 +1050,12 @@ function DescuentosSection() {
 
             <div className="field">
               <label>Vigencia desde</label>
-              <input name="fecha_inicio" type="date" value={form.fecha_inicio} onChange={onChange} />
+              <input
+                name="fecha_inicio"
+                type="date"
+                value={form.fecha_inicio}
+                onChange={onChange}
+              />
             </div>
 
             <div className="field">
@@ -930,11 +1065,22 @@ function DescuentosSection() {
             </div>
 
             <div className="field check">
-              <label><input type="checkbox" name="uso_unico" checked={form.uso_unico} onChange={onChange}/> Uso único</label>
+              <label>
+                <input
+                  type="checkbox"
+                  name="uso_unico"
+                  checked={form.uso_unico}
+                  onChange={onChange}
+                />{" "}
+                Uso único
+              </label>
             </div>
 
             <div className="field check">
-              <label><input type="checkbox" name="activo" checked={form.activo} onChange={onChange}/> Activo</label>
+              <label>
+                <input type="checkbox" name="activo" checked={form.activo} onChange={onChange} />{" "}
+                Activo
+              </label>
             </div>
           </div>
 
@@ -942,43 +1088,73 @@ function DescuentosSection() {
             <button type="submit" className="btn primary" disabled={submitting}>
               {submitting ? "Guardando..." : editingId ? "Guardar cambios" : "Crear código"}
             </button>
-            <button type="button" className="btn" onClick={reset} disabled={submitting}>Limpiar</button>
+            <button type="button" className="btn" onClick={reset} disabled={submitting}>
+              Limpiar
+            </button>
           </div>
         </form>
       )}
 
       <div className="list">
-        {coupons.length === 0 && (
-          <div className="empty"><p>No hay códigos aún. Crea uno con “Agregar nuevo código”.</p></div>
+        {loading && coupons.length === 0 && (
+          <div className="skeleton">
+            <div style={skRow} />
+            <div style={skRow} />
+            <div style={skRow} />
+          </div>
+        )}
+        {!loading && coupons.length === 0 && (
+          <div className="empty">
+            <p>No hay códigos aún. Crea uno con “Agregar nuevo código”.</p>
+          </div>
         )}
 
-        {coupons.map(c => (
-          <div key={c.id_descuento} className="discount">
-            <div>
-              <p><strong>Código:</strong> {c.codigo}</p>
-              <p><strong>Tipo:</strong> {c.tipo === "percent"
-                ? `${c.valor ?? c.porcentaje}%`
-                : c.tipo === "amount"
-                  ? `$${Number(c.valor||0).toLocaleString("es-CL")} sobre $${Number(c.minimo_compra||0).toLocaleString("es-CL")}`
-                  : `Envío gratis sobre $${Number(c.minimo_compra||0).toLocaleString("es-CL")}`}</p>
-              {(c.fecha_inicio || c.fecha_fin) && (
-                <p><strong>Vigencia:</strong> {c.fecha_inicio || "—"} {c.fecha_fin ? `→ ${c.fecha_fin}` : ""}</p>
-              )}
-              <p><strong>Uso único:</strong> {c.uso_unico || c.limite_uso === 1 ? "Sí" : "No"}</p>
-              {c.activo === false && <p style={{color:"#b00"}}><strong>Inactivo</strong></p>}
+        {coupons.length > 0 &&
+          coupons.map((c) => (
+            <div key={c.id_descuento} className="discount">
+              <div>
+                <p>
+                  <strong>Código:</strong> {c.codigo}
+                </p>
+                <p>
+                  <strong>Tipo:</strong>{" "}
+                  {c.tipo === "percent"
+                    ? `${c.valor ?? c.porcentaje}%`
+                    : c.tipo === "amount"
+                    ? `$${Number(c.valor || 0).toLocaleString("es-CL")} sobre $${Number(
+                        c.minimo_compra || 0
+                      ).toLocaleString("es-CL")}`
+                    : `Envío gratis sobre $${Number(c.minimo_compra || 0).toLocaleString("es-CL")}`}
+                </p>
+                {(c.fecha_inicio || c.fecha_fin) && (
+                  <p>
+                    <strong>Vigencia:</strong> {c.fecha_inicio || "—"}{" "}
+                    {c.fecha_fin ? `→ ${c.fecha_fin}` : ""}
+                  </p>
+                )}
+                <p>
+                  <strong>Uso único:</strong> {c.uso_unico || c.limite_uso === 1 ? "Sí" : "No"}
+                </p>
+                {c.activo === false && (
+                  <p style={{ color: "#b00" }}>
+                    <strong>Inactivo</strong>
+                  </p>
+                )}
+              </div>
+              <div className="row">
+                <button className="btn sm" onClick={() => startEdit(c)}>
+                  Modificar
+                </button>
+                <button className="btn sm danger" onClick={() => removeCoupon(c.id_descuento)}>
+                  Eliminar
+                </button>
+              </div>
             </div>
-            <div className="row">
-              <button className="btn sm" onClick={() => startEdit(c)}>Modificar</button>
-              <button className="btn sm danger" onClick={() => removeCoupon(c.id_descuento)}>Eliminar</button>
-            </div>
-          </div>
-        ))}
+          ))}
       </div>
     </div>
   );
 }
-
-
 
 const UserAdmin = () => {
   const [active, setActive] = useState("inicio");
@@ -1027,10 +1203,22 @@ const UserAdmin = () => {
         </ul>
       </div>
       <div className="card kpis">
-        <div><strong>5</strong><span>Pedidos pendientes</span></div>
-        <div><strong>12</strong><span>Clientes nuevos</span></div>
-        <div><strong>3</strong><span>Sin stock</span></div>
-        <div><strong>2</strong><span>Alertas</span></div>
+        <div>
+          <strong>5</strong>
+          <span>Pedidos pendientes</span>
+        </div>
+        <div>
+          <strong>12</strong>
+          <span>Clientes nuevos</span>
+        </div>
+        <div>
+          <strong>3</strong>
+          <span>Sin stock</span>
+        </div>
+        <div>
+          <strong>2</strong>
+          <span>Alertas</span>
+        </div>
       </div>
     </div>
   );
@@ -1064,7 +1252,9 @@ const UserAdmin = () => {
   const renderInteractivo = () => (
     <div className="card">
       <h2>Dashboard interactivo</h2>
-      <p style={{color:"#555"}}>Cuando conectes tu base de datos, este panel mostrará KPIs reales.</p>
+      <p style={{ color: "#555" }}>
+        Cuando conectes tu base de datos, este panel mostrará KPIs reales.
+      </p>
     </div>
   );
 
@@ -1072,11 +1262,26 @@ const UserAdmin = () => {
     <div className="card">
       <h2>Cuenta</h2>
       <div className="grid2">
-        <div className="field"><label>Correo</label><input defaultValue="usuario.demo@example.com" /></div>
-        <div className="field"><label>Nombre</label><input defaultValue="Joaquín" /></div>
-        <div className="field"><label>Apellido</label><input defaultValue="Riveros" /></div>
-        <div className="field"><label>Teléfono</label><input defaultValue="+56 9 2345 6789" /></div>
-        <div className="field"><label>Dirección</label><input defaultValue="Av. Libertad 1234, Santiago" /></div>
+        <div className="field">
+          <label>Correo</label>
+          <input defaultValue="usuario.demo@example.com" />
+        </div>
+        <div className="field">
+          <label>Nombre</label>
+          <input defaultValue="Joaquín" />
+        </div>
+        <div className="field">
+          <label>Apellido</label>
+          <input defaultValue="Riveros" />
+        </div>
+        <div className="field">
+          <label>Teléfono</label>
+          <input defaultValue="+56 9 2345 6789" />
+        </div>
+        <div className="field">
+          <label>Dirección</label>
+          <input defaultValue="Av. Libertad 1234, Santiago" />
+        </div>
       </div>
       <div className="row mt">
         <button className="btn primary">Guardar</button>
@@ -1099,10 +1304,14 @@ const UserAdmin = () => {
           </select>
         </div>
         <div className="field check">
-          <label><input type="checkbox" /> Modo oscuro</label>
+          <label>
+            <input type="checkbox" /> Modo oscuro
+          </label>
         </div>
         <div className="field check">
-          <label><input type="checkbox" defaultChecked /> Notificaciones</label>
+          <label>
+            <input type="checkbox" defaultChecked /> Notificaciones
+          </label>
         </div>
         <div className="field">
           <label>Tamaño de fuente</label>
@@ -1121,7 +1330,9 @@ const UserAdmin = () => {
           </select>
         </div>
         <div className="field check">
-          <label><input type="checkbox" defaultChecked /> Mostrar foto de perfil</label>
+          <label>
+            <input type="checkbox" defaultChecked /> Mostrar foto de perfil
+          </label>
         </div>
       </div>
       <button className="btn danger mt">Cerrar sesión</button>
@@ -1134,14 +1345,14 @@ const UserAdmin = () => {
       <div className="user-container">
         <aside className="sidebar" aria-label="Menú de administración">
           <ul>
-            {sections.map(s => (
+            {sections.map((s) => (
               <li
                 key={s.id}
-                className={active===s.id ? "active" : ""}
+                className={active === s.id ? "active" : ""}
                 tabIndex={0}
-                onClick={()=>goSection(s.id)}
-                onKeyDown={(e)=> (e.key==="Enter" || e.key===" ") && goSection(s.id)}
-                aria-current={active===s.id ? "page" : undefined}
+                onClick={() => goSection(s.id)}
+                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && goSection(s.id)}
+                aria-current={active === s.id ? "page" : undefined}
               >
                 {s.label}
               </li>
@@ -1156,7 +1367,11 @@ const UserAdmin = () => {
           {active === "clientes" && renderClientes()}
           {active === "ganancias" && <GananciasSection />}
           {active === "interactivo" && renderInteractivo()}
-          {active === "descuentos" && <DescuentosSection />}
+
+          <section style={{ display: active === "descuentos" ? "block" : "none" }}>
+            <DescuentosSection />
+          </section>
+
           {active === "account" && renderAccount()}
           {active === "settings" && renderSettings()}
         </main>
