@@ -3,7 +3,7 @@ import "./Header.css";
 import { FaSearch, FaShoppingCart, FaUser, FaEye, FaEyeSlash } from "react-icons/fa";
 import Carrito from './Carrito';
 import productos from '../data/productos';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 
 export const Header = () => {
   const [abrirCarrito, setAbrirCarrito] = useState(false);
@@ -25,14 +25,32 @@ export const Header = () => {
     }
   });
 
-
   const [menuOpen, setMenuOpen] = useState(false);
 
   const buscadorRef = useRef(null);
   const authRef = useRef(null);
+  const authPanelRef = useRef(null);     // ← panel del popover
+  const emailInputRef = useRef(null);    // ← primer foco dentro del popover
   const submenuRef = useRef(null);
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Ocultar acceso rápido en la página de Login
+  const hideQuickAuth = useMemo(
+    () => location.pathname.toLowerCase() === "/login",
+    [location.pathname]
+  );
+
+  // Redirección tras login según rol
+  useEffect(() => {
+    if (!user) return;
+    const role = String(user.rol || "").toLowerCase();
+    const target = role === "admin" ? "/UserAdmin" : "/UserNormal";
+    if (location.pathname !== target) {
+      navigate(target, { replace: true });
+    }
+  }, [user, location.pathname, navigate]);
 
   const resultados = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -42,21 +60,12 @@ export const Header = () => {
 
   useEffect(() => {
     const onDocClick = (e) => {
-      if (buscadorRef.current && !buscadorRef.current.contains(e.target)) {
-        setShowResults(false);
-      }
-      if (authRef.current && !authRef.current.contains(e.target)) {
-        setAuthOpen(false);
-      }
-      if (submenuRef.current && !submenuRef.current.contains(e.target)) {
-        setMenuOpen(false);
-      }
+      if (buscadorRef.current && !buscadorRef.current.contains(e.target)) setShowResults(false);
+      if (authRef.current && !authRef.current.contains(e.target)) setAuthOpen(false);
+      if (submenuRef.current && !submenuRef.current.contains(e.target)) setMenuOpen(false);
     };
     const onEsc = (e) => {
-      if (e.key === 'Escape') {
-        setAuthOpen(false);
-        setMenuOpen(false);
-      }
+      if (e.key === 'Escape') { setAuthOpen(false); setMenuOpen(false); }
     };
     document.addEventListener("mousedown", onDocClick);
     document.addEventListener("keydown", onEsc);
@@ -65,6 +74,34 @@ export const Header = () => {
       document.removeEventListener("keydown", onEsc);
     };
   }, []);
+
+  // Foco inicial al abrir el popover
+  useEffect(() => {
+    if (authOpen) {
+      setTimeout(() => emailInputRef.current?.focus(), 0);
+    }
+  }, [authOpen]);
+
+  // Focus trap dentro del popover
+  const onAuthPanelKeyDown = (e) => {
+    if (e.key !== "Tab" || !authPanelRef.current) return;
+    const selectors =
+      'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
+    const nodes = Array.from(authPanelRef.current.querySelectorAll(selectors))
+      .filter(el => el.offsetParent !== null);
+    if (!nodes.length) return;
+
+    const first = nodes[0];
+    const last = nodes[nodes.length - 1];
+
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
 
   const irADetalle = (id) => {
     setShowResults(false);
@@ -78,30 +115,30 @@ export const Header = () => {
   };
 
   const onLoginSubmit = async (e) => {
-    e.preventDefault(); // evita que la página se recargue
-
+    e.preventDefault();
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", { // URL del backend
+      const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
+      const res = await fetch(`${baseUrl}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password: pwd })
+        body: JSON.stringify({ email, password: pwd }),
       });
-
       const data = await res.json();
 
       if (res.ok) {
-        // login exitoso: guardar info del usuario y redirigir
-        setUser(data.user); // 'user' es tu estado global o local
         localStorage.setItem("sdh_user", JSON.stringify(data.user));
+        setUser(data.user);
+        setAuthOpen(false);
+        setEmail("");
+        setPwd("");
       } else {
-        alert(data.message); // mostrar error
+        alert(data.message || "Email o contraseña incorrecta");
       }
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       alert("Error en la conexión con el servidor");
     }
   };
-
 
   const onLogout = () => {
     setUser(null);
@@ -162,102 +199,115 @@ export const Header = () => {
             <FaShoppingCart size={30} color="#fff" />
           </button>
 
-          <div className={`auth-popover ${authOpen ? 'open' : ''}`} ref={authRef}>
-            <button
-              className="Header-login-trigger"
-              onClick={() => setAuthOpen(v => !v)}
-              aria-haspopup="true"
-              aria-expanded={authOpen}
-              title={user ? "Cuenta" : "Iniciar sesión"}
-            >
-              <FaUser className="Header-login-icon" size={26} color="#fff" />
-              <div className="auth-mini-text">
-                <span>Hola{user ? `, ${user.nombre}` : "!"}</span>
-                <strong>{user ? user.nombre : "Inicia sesión"}</strong>
-              </div>
-            </button>
+          {!hideQuickAuth && (
+            <div className={`auth-popover ${authOpen ? 'open' : ''}`} ref={authRef}>
+              <button
+                type="button"
+                className="Header-login-trigger"
+                onClick={() => setAuthOpen(v => !v)}
+                aria-haspopup="dialog"
+                aria-expanded={authOpen}
+                aria-controls="auth-popover-panel"
+                title={user ? "Cuenta" : "Iniciar sesión"}
+              >
+                <FaUser className="Header-login-icon" size={26} color="#fff" />
+                <div className="auth-mini-text">
+                  <span>Hola{user ? `, ${user.nombre}` : "!"}</span>
+                  <strong>{user ? user.nombre : "Inicia sesión"}</strong>
+                </div>
+              </button>
 
-            <div className="auth-panel" role="dialog" aria-label="Cuenta">
-              {!user ? (
-                <>
-                  <form className="auth-form" onSubmit={onLoginSubmit}>
-                    <label>
-                      <span>Email</span>
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </label>
-
-                    <label>
-                      <span>Contraseña</span>
-                      <div className="pwd-wrap">
+              <div
+                id="auth-popover-panel"
+                className="auth-panel"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Cuenta"
+                ref={authPanelRef}
+                onKeyDown={onAuthPanelKeyDown}
+              >
+                {!user ? (
+                  <>
+                    <form className="auth-form" onSubmit={onLoginSubmit}>
+                      <label>
+                        <span>Email</span>
                         <input
-                          type={showPwd ? "text" : "password"}
-                          minLength={8}
-                          value={pwd}
-                          onChange={(e) => setPwd(e.target.value)}
+                          ref={emailInputRef}
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
                           required
                         />
-                        <button
-                          type="button"
-                          className="pwd-toggle"
-                          onClick={() => setShowPwd(s => !s)}
-                          aria-label="Mostrar/ocultar contraseña"
-                        >
-                          {showPwd ? <FaEyeSlash /> : <FaEye />}
-                        </button>
-                      </div>
-                    </label>
+                      </label>
 
-                    <button type="submit" className="auth-primary">Iniciar Sesión</button>
-                  </form>
+                      <label>
+                        <span>Contraseña</span>
+                        <div className="pwd-wrap">
+                          <input
+                            type={showPwd ? "text" : "password"}
+                            minLength={8}
+                            value={pwd}
+                            onChange={(e) => setPwd(e.target.value)}
+                            required
+                          />
+                          <button
+                            type="button"
+                            className="pwd-toggle"
+                            onClick={() => setShowPwd(s => !s)}
+                            aria-label="Mostrar/ocultar contraseña"
+                          >
+                            {showPwd ? <FaEyeSlash /> : <FaEye />}
+                          </button>
+                        </div>
+                      </label>
 
-                  <Link className="auth-link" to="/forgot">Olvidé mi contraseña</Link>
-                  <div className="auth-divider" />
-                  <Link
-                    className="auth-secondary"
-                    to="/Login"
-                    onClick={() => setAuthOpen(false)}
-                  >
-                    Registrarme
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <p style={{ color: "#fff", margin: "4px 0 10px" }}>
-                    Sesión iniciada como <strong>{user.nombre}</strong>
-                  </p>
+                      <button type="submit" className="auth-primary">Iniciar Sesión</button>
+                    </form>
+                    
+                    <Link className="auth-link" to="/forgot">Olvidé mi contraseña</Link>
+                    <div className="auth-divider" />
+                    <p>Si no tienes una cuenta registrate aca</p>
+                    <Link
+                      className="auth-secondary"
+                      to="/Login"
+                      onClick={() => setAuthOpen(false)}
+                    >
+                      Registrarme
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <p style={{ color: "#fff", margin: "4px 0 10px" }}>
+                      Sesión iniciada como <strong>{user.nombre}</strong>
+                    </p>
 
-                  <button
-                    className="auth-primary"
-                    onClick={() => {
-                      if (user.rol === "admin") {
-                        navigate("/Useradmin"); // Ruta para admins
-                      } else {
-                        navigate("/Usernormal"); // Ruta para usuarios normales
-                      }
-                    }}
-                  >
-                    Ir al perfil
-                  </button>
+                    <button
+                      className="auth-primary"
+                      onClick={() => {
+                        if (String(user.rol || "").toLowerCase() === "admin") {
+                          navigate("/UserAdmin");
+                        } else {
+                          navigate("/UserNormal");
+                        }
+                      }}
+                    >
+                      Ir al perfil
+                    </button>
 
-                  <button
-                    className="auth-primary"
-                    onClick={() => {
-                      onLogout();           // Limpiar sesión
-                      navigate("/");    // Redirigir a home
-                    }}
-                  >
-                    Cerrar sesión
-                  </button>
-                </>
-
-              )}
+                    <button
+                      className="auth-primary"
+                      onClick={() => {
+                        onLogout();
+                        navigate("/");
+                      }}
+                    >
+                      Cerrar sesión
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </nav>
 
@@ -285,18 +335,12 @@ export const Header = () => {
 
             <ul className="submenu">
               <li>
-                <Link
-                  to="/Catalogo?cat=tortas"
-                  onClick={() => setMenuOpen(false)}
-                >
+                <Link to="/Catalogo?cat=tortas" onClick={() => setMenuOpen(false)}>
                   Tortas
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/Catalogo?cat=dulces"
-                  onClick={() => setMenuOpen(false)}
-                >
+                <Link to="/Catalogo?cat=dulces" onClick={() => setMenuOpen(false)}>
                   Dulces
                 </Link>
               </li>
