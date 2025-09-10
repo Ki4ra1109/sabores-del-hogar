@@ -7,6 +7,10 @@ import UserNormal from "../views/Users/Normal/UserNormal";
 import UserAdmin from "../views/Users/Admin/UserAdmin";
 import Nosotros from "../views/Nosotros/Nosotros";
 import Postre from "../views/Postre/Postre";
+import PoliticaPrivacidad from "../views/Legales/PoliticaPrivacidad";
+import TerminosCondiciones from "../views/Legales/TerminosCondiciones";
+import Contacto from "../views/Legales/Contacto";
+
 
 export default function AppRouter() {
   return (
@@ -17,10 +21,13 @@ export default function AppRouter() {
           <Route path="/Catalogo" element={<Catalogo />} />
           <Route path="/catalogo/:id" element={<ProductoDetalle />} />
           <Route path="/Login" element={<Login />} />
-          <Route path="/UserNormal" element={<UserNormal />}/>
-          <Route path="/UserAdmin" element={<UserAdmin />}/>
+          <Route path="/UserNormal" element={<UserNormal />} />
+          <Route path="/UserAdmin" element={<UserAdmin />} />
           <Route path="/nosotros" element={<Nosotros />} />
           <Route path="/postre" element={<Postre />} />
+          <Route path="/politica-privacidad" element={<PoliticaPrivacidad />} />
+          <Route path="/terminos-condiciones" element={<TerminosCondiciones />} />
+          <Route path="/contacto" element={<Contacto />} />
         </Routes>
       </main>
     </Router>
