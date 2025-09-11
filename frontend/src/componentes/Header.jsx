@@ -2,7 +2,6 @@ import React, { useMemo, useState, useRef, useEffect } from 'react';
 import "./Header.css";
 import { FaSearch, FaShoppingCart, FaUser, FaEye, FaEyeSlash } from "react-icons/fa";
 import Carrito from './Carrito';
-import productos from '../data/productos';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 
 export const Header = () => {
