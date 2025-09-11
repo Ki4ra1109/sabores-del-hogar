@@ -1,24 +1,26 @@
-// backend/routes/productos.js
 const express = require("express");
 const router = express.Router();
-const Producto = require("../models/Producto");
+const sequelize = require("../config/db");
 
-// GET todos los productos
+// Todos los productos
 router.get("/", async (req, res) => {
   try {
-    const productos = await Producto.findAll();
+    const [productos] = await sequelize.query("SELECT * FROM producto WHERE estado = 'activo'");
     res.json(productos);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// GET producto por sku
+// Producto por SKU
 router.get("/:sku", async (req, res) => {
+  const { sku } = req.params;
   try {
-    const producto = await Producto.findOne({ where: { sku: req.params.sku } });
-    if (!producto) return res.status(404).json({ error: "Producto no encontrado" });
-    res.json(producto);
+    const [rows] = await sequelize.query("SELECT * FROM producto WHERE sku = :sku", {
+      replacements: { sku },
+    });
+    if (!rows.length) return res.status(404).json({ message: "Producto no encontrado" });
+    res.json(rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

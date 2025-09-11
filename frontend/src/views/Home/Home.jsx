@@ -1,19 +1,17 @@
 import { Footer } from '../../componentes/Footer';
 import { Header } from '../../componentes/Header';
-import productos from '../../data/productos';
 import './Home.css';
 import { useState, useEffect } from 'react';
 import { obtenerSiguienteIndice, obtenerAnteriorIndice } from './carrusel';
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
-// en caso de querer agregar más imagenes al carrusel tienen que importarlas acá primero y luego agregarlas en el const imagenes
-// imagenes del carrusel
+// carrusel
 import img1 from '../../assets/home/carrusel4.jpg';
 import img2 from '../../assets/home/carrusel5.jpg';
 import img3 from '../../assets/home/carrusel6.jpg';
 
-// Imagenes sobre nosotros y trayectoria
+// Sobre nosotros y trayectoria
 import img4 from '../../assets/nosotros/sobrenosotros.jpg';
 import img5 from '../../assets/nosotros/trayectoria.jpg';
 
@@ -24,22 +22,43 @@ export default function Home() {
   const [prev, setPrev] = useState(0);
   const [direccion, setDireccion] = useState('');
   const [animado, setAnimado] = useState(false);
+  const [productos, setProductos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const navigate = useNavigate();
 
-  // función para ir al producto específico
-  const irAlProducto = (id) => {
-    navigate(`/catalogo/${id}`);
-  };
-  const destacados = productos.slice(0, 4); // con esto seleccionamos los primeros 4 productos del catalogo definifidos en el data para que se muestren como productos destacados
+  const irAlProducto = (sku) => navigate(`/catalogo/${sku}`);
 
+  // fetch productos desde backend
+  useEffect(() => {
+    fetch("http://127.0.0.1:5000/api/productos")
+      .then(res => {
+        if (!res.ok) throw new Error("Error al cargar productos");
+        return res.json();
+      })
+      .then(data => {
+        setProductos(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
+
+  // destacados: los primeros 4
+  const destacados = productos.slice(0, 4);
+
+  // carrusel
   useEffect(() => {
     const temporizador = setInterval(() => {
       mover('derecha');
-    }, 3000); // en caso de querer cambiar en un futuro el intervalo de las fotos del carrusel cambiar esto, ahora está en 3s
+    }, 3000);
     return () => clearInterval(temporizador);
   }, [actual]);
 
-  // de preferencia no cambiar nada de acá para que no se rompa la animación del carrusel
   const mover = (dir) => {
     if (animado) return;
     setDireccion(dir);
@@ -63,66 +82,44 @@ export default function Home() {
   return (
     <div className="home-container">
       <Header />
+
+      {/* Carrusel */}
       <div className="home-carrusel">
         {!animado && (
           <>
-            <img
-              src={imagenes[idxIzquierda]}
-              alt="Imagen anterior en el carrusel"
-              className="home-carrusel-img side izquierda"
-            />
-            <img
-              src={imagenes[actual]}
-              alt="Imagen actual del carrusel"
-              className="home-carrusel-img principal"
-            />
-            <img
-              src={imagenes[idxDerecha]}
-              alt="Imagen siguiente en el carrusel"
-              className="home-carrusel-img side derecha"
-            />
+            <img src={imagenes[idxIzquierda]} alt="Anterior" className="home-carrusel-img side izquierda" />
+            <img src={imagenes[actual]} alt="Actual" className="home-carrusel-img principal" />
+            <img src={imagenes[idxDerecha]} alt="Siguiente" className="home-carrusel-img side derecha" />
           </>
         )}
-
         {animado && (
           <>
             <img
               src={imagenes[prev]}
-              alt="imagen previa animada"
+              alt="Previo animado"
               className={`home-carrusel-img principal ${direccion === 'izquierda' ? 'to-derecha' : 'to-izquierda'}`}
             />
             <img
               src={imagenes[direccion === 'izquierda' ? idxIzquierda : idxDerecha]}
-              alt="nueva imagen animada"
+              alt="Nuevo animado"
               className={`home-carrusel-img principal ${direccion === 'izquierda' ? 'from-izquierda' : 'from-derecha'}`}
             />
           </>
         )}
-
-        {/* estos son los botones del carrusel, los hice importando unos iconos del node.js asi que si los quieren reutilizar solo copienlo
-        y lo pegan en sus codigos, tambien el css hay que copiarlo*/}
-        <button
-          onClick={anterior}
-          className="home-carrusel-btn izquierda"
-          aria-label="anterior"
-        >
+        <button onClick={anterior} className="home-carrusel-btn izquierda" aria-label="anterior">
           <FaChevronLeft size={28} />
         </button>
-        <button
-          onClick={siguiente}
-          className="home-carrusel-btn derecha"
-          aria-label="siguiente"
-        >
+        <button onClick={siguiente} className="home-carrusel-btn derecha" aria-label="siguiente">
           <FaChevronRight size={28} />
         </button>
       </div>
 
+
+      {/* Bienvenida */}
       <div className="bienvenida">
         <h1>¡Bienvenido a Sabores del Hogar!</h1>
         <p>Repostería casera con amor de la Tía Sandra</p>
       </div>
-
-      {/* separador debajo del carrusel, efecto visual de "crema" para reutilizarlo*/}
       <div className="separador">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -170,23 +167,21 @@ export default function Home() {
           />
         </svg>
       </div>
-      {/* cards de "sobre nosotros" y "nuestra trayectoria" */}
+
+      {/* Sobre nosotros y trayectoria */}
       <div className="historia-card">
         <h2 className="historia-card-title">¿Cómo comenzó todo?</h2>
         <div className="historia-card-content">
           <div className="sobre-nosotros-card">
             <div className="sobre-nosotros-card-img">
-              <img src={img4} alt="Foto sobre nosotros" />
+              <img src={img4} alt="Sobre nosotros" />
             </div>
             <div className="sobre-nosotros-card-info">
               <h2>Sobre Nosotros</h2>
               <p>
                 ¿Sabías que detrás de cada postre hay una historia de esfuerzo y pasión? Sandra, nuestra fundadora, decidió transformar su emprendimiento de repostería casera en una experiencia digital para estar más cerca de sus clientes y hacer crecer su sueño. Descubre cómo la tecnología y el amor por los postres se unieron para crear Sabores de Hogar.
               </p>
-              <button
-                className="sobre-nosotros-btn"
-                onClick={() => navigate("/nosotros")}
-              >
+              <button className="sobre-nosotros-btn" onClick={() => navigate("/nosotros")}>
                 Saber más
               </button>
             </div>
@@ -194,7 +189,7 @@ export default function Home() {
 
           <div className="trayectoria-card">
             <div className="trayectoria-card-img">
-              <img src={img5} alt="Foto trayectoria" />
+              <img src={img5} alt="Trayectoria" />
             </div>
             <div className="trayectoria-card-info">
               <h2>Nuestra Trayectoria</h2>
@@ -205,6 +200,7 @@ export default function Home() {
           </div>
         </div>
       </div>
+
       <div className="separador">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -252,46 +248,44 @@ export default function Home() {
           />
         </svg>
       </div>
-      {/* productos destacados */}
+
+      {/* Productos destacados */}
       <div className="productos-destacados">
         <h2 className="productos-destacados-title">✨ Nuestros Productos Destacados ✨</h2>
+        {loading && <p>Cargando productos...</p>}
+        {error && <p>Error al cargar productos: {error}</p>}
         <div className="productos-grid">
           {destacados.map(producto => (
             <div
-              key={producto.id}
+              key={producto.sku}
               className="producto-card"
-              onClick={() => irAlProducto(producto.id)}
+              onClick={() => irAlProducto(producto.sku)}
             >
-              <img src={producto.imagen} alt={producto.nombre} />
+              <img src={producto.imagen_url} alt={producto.nombre} />
               <h3>{producto.nombre}</h3>
               <p className="precio">${producto.precio}</p>
             </div>
           ))}
         </div>
-        {/* boton catalogo*/}
+
         <div className="ver-catalogo-btn-container">
-          <button
-            className="ver-catalogo-btn"
-            onClick={() => navigate("/catalogo")}
-          >
+          <button className="ver-catalogo-btn" onClick={() => navigate("/catalogo")}>
             Ver Catálogo Completo
           </button>
         </div>
       </div>
-      {/* arma tu postre*/}
+      
+      {/* Arma tu postre */}
       <div className="arma-tu-postre-card">
         <div className="arma-tu-postre-content">
           <h2>Arma tu postre</h2>
-          <p>¿No te convencen los postres que ofrecemos? 
-            ¡Arma tu postre a gusto tuyo!</p>
-          <button
-                className="arma-tu-postre-btn"
-                onClick={() => navigate("/postre")}
-              >
-                Armar mi postre
+          <p>¿No te convencen los postres que ofrecemos? ¡Arma tu postre a gusto tuyo!</p>
+          <button className="arma-tu-postre-btn" onClick={() => navigate("/postre")}>
+            Armar mi postre
           </button>
         </div>
       </div>
+
       <Footer />
     </div>
   );

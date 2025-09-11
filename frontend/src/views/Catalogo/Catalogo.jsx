@@ -6,12 +6,11 @@ import './Catalogo.css';
 
 export default function Catalogo() {
   const [productos, setProductos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
 
   const irAlProducto = (sku) => navigate(`/catalogo/${sku}`);
+
   const cat = new URLSearchParams(location.search).get('cat'); // "tortas", "dulces"
 
   // Filtrar por categoría
@@ -23,24 +22,12 @@ export default function Catalogo() {
   // Traer productos desde el backend
   useEffect(() => {
     fetch("http://127.0.0.1:5000/api/productos")
-      .then(res => {
-        if (!res.ok) throw new Error("Error al cargar productos");
-        return res.json();
-      })
-      .then(data => {
-        setProductos(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setError(err.message);
-        setLoading(false);
-      });
+      .then(res => res.json())
+      .then(data => setProductos(data))
+      .catch(err => console.error("Error al cargar productos:", err));
   }, []);
 
-  if (loading) return <p>Cargando productos...</p>;
-  if (error) return <p>Error: {error}</p>;
-  if (!productos.length) return <p>No hay productos disponibles.</p>;
+  if (!productos.length) return <p>Cargando productos...</p>;
 
   return (
     <div className="productos-container">
