@@ -6,6 +6,7 @@ import { Footer } from "../../componentes/Footer";
 import { useNavigate } from "react-router-dom";
 
 
+/* =============== Modal genérico =============== */
 function Modal({ isOpen, title, onClose, children }) {
   const firstFocusable = useRef(null);
 
@@ -21,6 +22,7 @@ function Modal({ isOpen, title, onClose, children }) {
   }, [isOpen]);
 
   if (!isOpen) return null;
+
   return (
     <div className="al-modal-overlay" onClick={onClose} aria-modal="true" role="dialog">
       <div className="al-modal" onClick={(e) => e.stopPropagation()}>
@@ -32,7 +34,8 @@ function Modal({ isOpen, title, onClose, children }) {
   );
 }
 
-export default function AuthLanding() {
+/* =============== Página Login =============== */
+export default function Login() {
   const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
 
