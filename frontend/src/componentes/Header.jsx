@@ -28,25 +28,23 @@ export const Header = () => {
 
   const buscadorRef = useRef(null);
   const authRef = useRef(null);
-  const authPanelRef = useRef(null);     // ← panel del popover
-  const emailInputRef = useRef(null);    // ← primer foco dentro del popover
+  const authPanelRef = useRef(null);
+  const emailInputRef = useRef(null);
   const submenuRef = useRef(null);
 
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Ocultar acceso rápido en la página de Login
   const hideQuickAuth = useMemo(
     () => location.pathname.toLowerCase() === "/login",
     [location.pathname]
   );
 
-  // Redirección tras login según rol
   useEffect(() => {
     if (!user) return;
     const role = String(user.rol || "").toLowerCase();
-    const target = role === "admin" ? "/UserAdmin" : "/UserNormal";
-    if (location.pathname !== target) {
+    const target = role === "admin" ? "/UserAdmin" : "/perfil";
+    if (location.pathname.toLowerCase() === "/login") {
       navigate(target, { replace: true });
     }
   }, [user, location.pathname, navigate]);
@@ -74,14 +72,12 @@ export const Header = () => {
     };
   }, []);
 
-  // Foco inicial al abrir el popover
   useEffect(() => {
     if (authOpen) {
       setTimeout(() => emailInputRef.current?.focus(), 0);
     }
   }, [authOpen]);
 
-  // Focus trap dentro del popover
   const onAuthPanelKeyDown = (e) => {
     if (e.key !== "Tab" || !authPanelRef.current) return;
     const selectors =
@@ -286,7 +282,7 @@ export const Header = () => {
                         if (String(user.rol || "").toLowerCase() === "admin") {
                           navigate("/UserAdmin");
                         } else {
-                          navigate("/UserNormal");
+                          navigate("/perfil");
                         }
                       }}
                     >
@@ -323,7 +319,7 @@ export const Header = () => {
             onMouseLeave={() => setMenuOpen(false)}
           >
             <Link
-              to="/Catalogo"
+              to="/catalogo"
               onClick={(e) => {
                 e.preventDefault();
                 setMenuOpen((v) => !v);
@@ -334,12 +330,12 @@ export const Header = () => {
 
             <ul className="submenu">
               <li>
-                <Link to="/Catalogo?cat=tortas" onClick={() => setMenuOpen(false)}>
+                <Link to="/catalogo?cat=tortas" onClick={() => setMenuOpen(false)}>
                   Tortas
                 </Link>
               </li>
               <li>
-                <Link to="/Catalogo?cat=dulces" onClick={() => setMenuOpen(false)}>
+                <Link to="/catalogo?cat=dulces" onClick={() => setMenuOpen(false)}>
                   Dulces
                 </Link>
               </li>
