@@ -1,29 +1,31 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
 
+// Normaliza el RUT: quita puntos y guion
+function cleanRut(r) {
+  return String(r || "").replace(/[.\-]/g, "").toUpperCase();
+}
+
 // Login
 const login = async (req, res) => {
-  const { email, password } = req.body || {};
-  if (!email || !password) {
-    return res.status(400).json({ message: "Faltan credenciales" });
-  }
-
   try {
-    const emailNorm = String(email).toLowerCase().trim();
+    const { email, correo, password } = req.body || {};
+    const emailNorm = String(email || correo || "").toLowerCase().trim();
 
-    // Verificar si el usuario existe
+    if (!emailNorm || !password) {
+      return res.status(400).json({ message: "Faltan credenciales" });
+    }
+
     const user = await User.findOne({ where: { email: emailNorm } });
     if (!user) {
       return res.status(401).json({ message: "Email o contraseña incorrecta" });
     }
 
-    // Verificar la contraseña
-    const validPassword = await bcrypt.compare(password, user.password);
+    const validPassword = await bcrypt.compare(password, user.password || "");
     if (!validPassword) {
       return res.status(401).json({ message: "Email o contraseña incorrecta" });
     }
 
-    // Login exitoso (sin exponer password)
     return res.status(200).json({
       message: "Login exitoso",
       user: {
@@ -31,6 +33,10 @@ const login = async (req, res) => {
         nombre: user.nombre,
         apellido: user.apellido,
         email: user.email,
+        rut: user.rut,
+        telefono: user.telefono,
+        fecha_nacimiento: user.fecha_nacimiento,
+        direccion: user.direccion,
         rol: user.rol,
       },
     });
@@ -46,57 +52,70 @@ const registerUser = async (req, res) => {
     const {
       nombre,
       apellido,
-      rut,
-      correo,              
+      correo,
+      email,
       password,
-      telefono,
-      fechaNacimiento,
-      direccion,
+      rut,            // opcional
+      telefono,       // opcional
+      fechaNacimiento,// opcional
+      direccion,      // opcional
     } = req.body || {};
 
-    // Validaciones mínimas
-    if (!nombre || !apellido || !correo || !password) {
+    const emailNorm = String(email || correo || "").toLowerCase().trim();
+
+    // Datos mínimos
+    if (!nombre || !apellido || !emailNorm || !password) {
       return res.status(400).json({ message: "Faltan datos obligatorios" });
     }
 
-    const emailNorm = String(correo).toLowerCase().trim();
+    // Si viene, normaliza rut
+    const rutNorm = rut ? cleanRut(rut) : null;
 
-    // Validar si el correo ya existe
-    const existingUser = await User.findOne({ where: { email: emailNorm } });
-    if (existingUser) {
+    // Email único
+    const existingEmail = await User.findOne({ where: { email: emailNorm } });
+    if (existingEmail) {
       return res.status(400).json({ message: "El correo ya está registrado" });
     }
 
-    // Encriptar contraseña
+    // Rut único (solo si se envía)
+    if (rutNorm) {
+      const existingRut = await User.findOne({ where: { rut: rutNorm } });
+      if (existingRut) {
+        return res.status(400).json({ message: "El RUT ya está registrado" });
+      }
+    }
+
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Crear usuario
+    // Crear usuario con campos opcionales en null si no vienen
     const newUser = await User.create({
       nombre,
       apellido,
-      rut,
       email: emailNorm,
       password: hashedPassword,
-      telefono,
-      fecha_nacimiento: fechaNacimiento,
-      direccion,
-      rol: "user", 
+      rut: rutNorm || null,
+      telefono: telefono || null,
+      fecha_nacimiento: fechaNacimiento || null,
+      direccion: direccion || null,
+      rol: "user",
+      fecha_creacion: new Date(), // asegura valor para NOT NULL
     });
 
-    // Responde sin la contraseña
-    const safeUser = {
-      id: newUser.id,
-      nombre: newUser.nombre,
-      apellido: newUser.apellido,
-      rut: newUser.rut,
-      email: newUser.email,
-      telefono: newUser.telefono,
-      fecha_nacimiento: newUser.fecha_nacimiento,
-      direccion: newUser.direccion,
-      rol: newUser.rol,
-    };
-
-    return res.status(201).json({ message: "Usuario creado con éxito", user: safeUser });
+    return res.status(201).json({
+      message: "Usuario creado con éxito",
+      user: {
+        id: newUser.id,
+        nombre: newUser.nombre,
+        apellido: newUser.apellido,
+        rut: newUser.rut,
+        email: newUser.email,
+        telefono: newUser.telefono,
+        fecha_nacimiento: newUser.fecha_nacimiento,
+        direccion: newUser.direccion,
+        rol: newUser.rol,
+      },
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Ocurrió un error en el registro" });

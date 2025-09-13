@@ -6,18 +6,26 @@
   --ink:#2b1f1d;
   --muted:#6b5f5d;
   --paper:#ffffff;
-  --bg:#fff7f3;
+  --bg:#FFF1E6;            
   --ok:#1f8f5b;
   --err:#b44343;
 }
 
-.route-contacto .auth-panel{ z-index: 900; } /* asegura superposición correcta al abrir login */
+.route-contacto .auth-panel{ z-index: 900; }
 
-.contacto{ background: linear-gradient(180deg,#fff,var(--bg)); color:var(--ink); font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif; }
-.contacto-hero{ padding: 28px 16px 12px; background:
-  radial-gradient(1000px 120px at 50% -50px, rgba(180,90,68,.07), transparent 60%),
-  linear-gradient(180deg,#fff,#fff);
+.contacto{
+  background: var(--bg);
+  color:var(--ink);
+  font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
 }
+
+.contacto-hero{
+  padding: 28px 16px 12px;
+  background:
+    radial-gradient(1000px 120px at 50% -50px, rgba(180,90,68,.07), transparent 60%),
+    var(--bg);
+}
+
 .contacto-hero-inner{ max-width:1100px; margin:0 auto; padding:0 8px; }
 .contacto-hero h1{ font-family:"Playfair Display",serif; font-size:clamp(28px,4vw,40px); line-height:1.1; color:var(--coffee-800); margin:0 0 6px; }
 .contacto-sub{ margin:0; color:var(--muted); font-size:clamp(14px,1.8vw,16px); }
@@ -69,7 +77,6 @@
 
 .fld-error{ color: var(--err); font-size:12px; margin-top:-4px; }
 
-/* botón primario */
 .btn-primary{
   justify-self: start;
   min-height:44px;
@@ -86,7 +93,6 @@
 .btn-primary:hover{ background:#6d352e; box-shadow:0 6px 18px rgba(0,0,0,.12); transform: translateY(-1px); }
 .btn-primary:disabled{ opacity:.7; cursor:not-allowed; transform:none; box-shadow:none; }
 
-/* honeypot oculto */
 .hp-field{
   position:absolute !important;
   left:-99999px !important;
@@ -96,7 +102,6 @@
   overflow:hidden !important;
   border:0 !important;
   padding:0 !important;
-  margin:0 !important;
 }
 
 @media (max-width: 900px){
@@ -109,3 +114,8 @@
   .contacto-wrap{ grid-template-columns: 1fr; }
   .card{ border:none; box-shadow:none; }
 }
+.route-contacto header { position: relative; z-index: 3000; }
+.route-contacto .auth-popover { position: relative; z-index: 3100; }
+.route-contacto .auth-popover .auth-panel { position: absolute; z-index: 3200; }
+
+.route-contacto .contacto-hero { position: relative; z-index: 0; }
