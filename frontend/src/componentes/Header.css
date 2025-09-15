@@ -398,3 +398,11 @@ header {
 .NombreEmpresa:hover {
   color: #FFD166;
 }
+.auth-popover { 
+  position: relative; 
+  z-index: 2000; 
+}
+.auth-panel { 
+  position: absolute; 
+  z-index: 2100;   
+}
