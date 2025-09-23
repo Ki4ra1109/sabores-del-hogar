@@ -36,7 +36,7 @@ export default function AppRouter() {
           {/* Públicas */}
           <Route path="/" element={<Home />} />
           <Route path="/catalogo" element={<Catalogo />} />
-          <Route path="/catalogo/:id" element={<ProductoDetalle />} />
+          <Route path="/catalogo/:sku" element={<ProductoDetalle />} />
           <Route path="/login" element={<Login />} />
           <Route path="/nosotros" element={<Nosotros />} />
           <Route path="/postre" element={<Postre />} />
