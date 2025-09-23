@@ -5,21 +5,19 @@ import { Footer } from "../../componentes/Footer";
 import "./ProductoDetalle.css";
 
 export default function ProductoDetalle() {
-  const { id } = useParams();
+  const { sku } = useParams();
   const navigate = useNavigate();
 
   const [producto, setProducto] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // === Hooks que no dependen de condiciones ===
   const ALLOWED_PORCIONES = [12, 18, 24, 30, 50];
   const [porcion, setPorcion] = useState(ALLOWED_PORCIONES[0]);
 
-  // === Fetch al cargar ===
   useEffect(() => {
     setLoading(true);
-    fetch(`http://127.0.0.1:5000/api/productos/${id}`)
+    fetch(`http://127.0.0.1:5000/api/productos/${sku}`)
       .then((res) => {
         if (!res.ok) throw new Error("Producto no encontrado");
         return res.json();
@@ -33,9 +31,8 @@ export default function ProductoDetalle() {
         setError(err.message);
         setLoading(false);
       });
-  }, [id]);
+  }, [sku]);
 
-  // Calculamos opciones de porciones con seguridad
   const opcionesPorciones = useMemo(() => {
     if (producto && Array.isArray(producto.variantes) && producto.variantes.length > 0) {
       const delProducto = [...new Set(producto.variantes.map((v) => v.personas))];
@@ -45,12 +42,10 @@ export default function ProductoDetalle() {
     return ALLOWED_PORCIONES;
   }, [producto]);
 
-  // Ajustar porción si cambia el producto
   useEffect(() => {
     setPorcion(opcionesPorciones[0]);
   }, [opcionesPorciones]);
 
-  // === Returns condicionales ===
   if (loading) return <p style={{ padding: "2rem" }}>Cargando producto...</p>;
 
   if (error || !producto) {
@@ -68,7 +63,6 @@ export default function ProductoDetalle() {
     );
   }
 
-  // Imagen segura
   const safeSrc = (() => {
     const img = (producto.imagen_url || "").trim();
     if (img.startsWith("http://") || img.startsWith("https://")) return img;
