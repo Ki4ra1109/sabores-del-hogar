@@ -2,24 +2,28 @@
 const { Sequelize } = require("sequelize");
 require("dotenv").config();
 
+// Conexión usando DATABASE_URL de Supabase
 const sequelize = new Sequelize(
-  "sabores_del_hogar",       // nombre de la DB
-  "sabores_del_hogar_user",  // usuario
-  "9HJjwv17Sx5h6gRZnLRrmKla96UShfM0", // password
+  "postgresql://postgres.tptcvaxbjsnxmgwhmoup:9HJjwv17Sx5h6gRZnLRrmKla96UShfM0@aws-1-us-east-2.pooler.supabase.com:5432/postgres",
   {
-    host: "dpg-d2mbb7ur433s73acra1g-a.oregon-postgres.render.com",
     dialect: "postgres",
+    protocol: "postgres",
     dialectOptions: {
-      ssl: { rejectUnauthorized: false }
+      ssl: {
+        require: true,
+        rejectUnauthorized: false,
+      },
     },
-    logging: false
+    logging: false,
   }
 );
 
-sequelize.authenticate()
-  .then(() => console.log("Conectado a la DB con Sequelize ✅"))
-  .catch(err => console.error("Error al conectar con Sequelize:", err));
+// Probar conexión
+sequelize
+  .authenticate()
+  .then(() => console.log("✅ Conectado a Supabase con Sequelize"))
+  .catch((err) =>
+    console.error("❌ Error al conectar a Supabase con Sequelize:", err)
+  );
 
 module.exports = sequelize;
-
-
