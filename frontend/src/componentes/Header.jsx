@@ -40,6 +40,7 @@ export const Header = () => {
     [location.pathname]
   );
 
+
   useEffect(() => {
     if (!user) return;
     const role = String(user.rol || "").toLowerCase();
@@ -121,11 +122,20 @@ export const Header = () => {
       const data = await res.json();
 
       if (res.ok) {
+        // Guardar en localStorage y estado
         localStorage.setItem("sdh_user", JSON.stringify(data.user));
         setUser(data.user);
         setAuthOpen(false);
         setEmail("");
         setPwd("");
+
+        // Redirección según rol
+        const role = String(data.user.rol || "").toLowerCase();
+        if (role === "admin") {
+          navigate("/UserAdmin");   // admin → va al perfil admin
+        } else {
+          navigate("/");            // normal → se queda en home
+        }
       } else {
         alert(data.message || "Email o contraseña incorrecta");
       }
@@ -258,7 +268,7 @@ export const Header = () => {
 
                       <button type="submit" className="auth-primary">Iniciar Sesión</button>
                     </form>
-                    
+
                     <Link className="auth-link" to="/forgot">Olvidé mi contraseña</Link>
                     <div className="auth-divider" />
                     <p>Si no tienes una cuenta registrate aca</p>

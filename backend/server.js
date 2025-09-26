@@ -9,6 +9,7 @@ const usersRoutes = require("./Routes/usersRoutes");
 const authRoutes = require("./Routes/authRoutes");
 const cuponRoutes = require("./Routes/cuponRoutes");
 const productosRoutes = require("./Routes/productos");
+const clientesRoutes = require("./Routes/clientesRoutes");
 
 // Modelos
 const User = require("./models/User");
@@ -29,6 +30,7 @@ app.use(cors());
 app.use("/api/usuarios", usersRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/cupones", cuponRoutes);
+app.use("/api/clientes", clientesRoutes);
 
 // NUEVA RUTA: Productos
 app.use("/api/productos", productosRoutes);
