@@ -5,23 +5,23 @@ import "./UserAdmin.css";
 import CuentaPanel from "../../../componentes/CuentaPanel";
 
 const THEMES = {
-  cafe:  { brand: "#442918", btn: "#6d4a35" },
+  cafe: { brand: "#442918", btn: "#6d4a35" },
   claro: { brand: "#744c33", btn: "#9a6a4a" },
-  pastel:{ brand: "#7e5a4a", btn: "#a97c68" },
+  pastel: { brand: "#7e5a4a", btn: "#a97c68" },
   cacao: { brand: "#5a3422", btn: "#80513b" },
 };
 
 const DEFAULT_PREFS = {
-  theme: "cafe",     
-  scheme: "system", 
-  font: "md",        
-  lang: "es",        
+  theme: "cafe",
+  scheme: "system",
+  font: "md",
+  lang: "es",
   showAvatar: true,
   notifications: true,
 };
 
 const LS_PREFS = "sdh_prefs";
-const LS_LANG  = "sdh_lang";
+const LS_LANG = "sdh_lang";
 
 function applyPrefs(prefs) {
   const root = document.documentElement;
@@ -45,9 +45,10 @@ function applyPrefs(prefs) {
   root.setAttribute("data-font", prefs.font);
 
   // Idioma persistido 
-  try { localStorage.setItem(LS_LANG, prefs.lang); } catch {}
+  try { localStorage.setItem(LS_LANG, prefs.lang); } catch { }
 }
 
+//SECCION DE PEDIDOS
 function PedidosSection() {
   const [q, setQ] = useState("");
   const pedidos = [];
@@ -82,6 +83,7 @@ function PedidosSection() {
   );
 }
 
+//SECCION DE GANACIAS
 function GananciasSection() {
   const periodos = {
     day: [
@@ -153,6 +155,7 @@ function GananciasSection() {
   );
 }
 
+//SECCION DE PRODUCTOS 
 function ProductosSection() {
   const [showForm, setShowForm] = useState(false);
   const [items, setItems] = useState([]);
@@ -406,9 +409,9 @@ function ProductosSection() {
       descripcion: form.descripcion.trim(),
       variantes: form.usarPorciones
         ? form.porciones.map((p) => ({
-            personas: p,
-            precio: num(form.porcionPrecios[p]) || suggestions[p] || min,
-          }))
+          personas: p,
+          precio: num(form.porcionPrecios[p]) || suggestions[p] || min,
+        }))
         : [],
       activo: form.activo,
     };
@@ -817,6 +820,7 @@ function ProductosSection() {
   );
 }
 
+//SECCION DE DESCUENTOS
 function DescuentosSection() {
   const [showForm, setShowForm] = useState(false);
   const [coupons, setCoupons] = useState([]);
@@ -874,7 +878,7 @@ function DescuentosSection() {
 
   const getStatus = (c) => {
     if (c.activo === false) return "inactivos";
-    const today = new Date().toISOString().slice(0,10);
+    const today = new Date().toISOString().slice(0, 10);
     if (c.fecha_inicio && c.fecha_inicio > today) return "futuros";
     if (c.fecha_fin && c.fecha_fin < today) return "vencidos";
     return "activos";
@@ -982,7 +986,7 @@ function DescuentosSection() {
   };
 
   const copyCode = async (code) => {
-    try { await navigator.clipboard.writeText(code); } catch {}
+    try { await navigator.clipboard.writeText(code); } catch { }
   };
   const toggleActive = async (c) => {
     try {
@@ -999,39 +1003,39 @@ function DescuentosSection() {
     .filter(c => (estado === "todos" || c._status === estado))
     .filter(c => (tipoFiltro === "todos" || c._tipo === tipoFiltro))
     .filter(c => (q ? c.codigo.toUpperCase().includes(q.trim().toUpperCase()) : true))
-    .sort((a,b) => {
-      const rank = s => ({activos:0,futuros:1,vencidos:2,inactivos:3}[s] ?? 9);
+    .sort((a, b) => {
+      const rank = s => ({ activos: 0, futuros: 1, vencidos: 2, inactivos: 3 }[s] ?? 9);
       const r = rank(a._status) - rank(b._status);
       if (r !== 0) return r;
-      return String(b.fecha_fin||"")?.localeCompare(String(a.fecha_fin||""));
+      return String(b.fecha_fin || "")?.localeCompare(String(a.fecha_fin || ""));
     });
 
-  const StatusBadge = ({s}) => (
+  const StatusBadge = ({ s }) => (
     <span className={`badge ${s}`}>
       {s === "activos" ? "Activo"
         : s === "futuros" ? "Futuro"
-        : s === "vencidos" ? "Vencido" : "Inactivo"}
+          : s === "vencidos" ? "Vencido" : "Inactivo"}
     </span>
   );
 
   return (
     <div className="card">
-      <div className="card-head" style={{gap:12, alignItems:"center"}}>
-        <h2 style={{marginRight:"auto"}}>Códigos de descuento</h2>
+      <div className="card-head" style={{ gap: 12, alignItems: "center" }}>
+        <h2 style={{ marginRight: "auto" }}>Códigos de descuento</h2>
         <div className="tabs sm" role="tablist" aria-label="Filtros por estado">
-          {["todos","activos","futuros","vencidos","inactivos"].map(s => (
-            <button key={s} className={`tab ${estado===s?"on":""}`} onClick={()=>setEstado(s)} role="tab">
-              {s[0].toUpperCase()+s.slice(1)}
+          {["todos", "activos", "futuros", "vencidos", "inactivos"].map(s => (
+            <button key={s} className={`tab ${estado === s ? "on" : ""}`} onClick={() => setEstado(s)} role="tab">
+              {s[0].toUpperCase() + s.slice(1)}
             </button>
           ))}
         </div>
-        <select value={tipoFiltro} onChange={e=>setTipoFiltro(e.target.value)}>
+        <select value={tipoFiltro} onChange={e => setTipoFiltro(e.target.value)}>
           <option value="todos">Todos los tipos</option>
           <option value="percent">% Porcentaje</option>
           <option value="amount">Monto fijo</option>
           <option value="free_shipping">Envío gratis</option>
         </select>
-        <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Buscar código…" style={{minWidth:180}} />
+        <input value={q} onChange={e => setQ(e.target.value)} placeholder="Buscar código…" style={{ minWidth: 180 }} />
         <button className="btn" onClick={toggleForm}>
           {showForm ? "Cerrar formulario" : "Agregar nuevo código"}
         </button>
@@ -1047,7 +1051,7 @@ function DescuentosSection() {
             </div>
             <div className="field">
               <label>Tipo de descuento</label>
-              <select name="tipo" value={form.tipo} onChange={e=>onChangeTipo(e.target.value)}>
+              <select name="tipo" value={form.tipo} onChange={e => onChangeTipo(e.target.value)}>
                 <option value="percent">% Porcentaje</option>
                 <option value="amount">Monto fijo (CLP)</option>
                 <option value="free_shipping">Envío gratis</option>
@@ -1091,10 +1095,10 @@ function DescuentosSection() {
               {errors.fecha_fin && <span className="err">{errors.fecha_fin}</span>}
             </div>
             <div className="field check">
-              <label><input type="checkbox" name="uso_unico" checked={form.uso_unico} onChange={onChange}/> Uso único</label>
+              <label><input type="checkbox" name="uso_unico" checked={form.uso_unico} onChange={onChange} /> Uso único</label>
             </div>
             <div className="field check">
-              <label><input type="checkbox" name="activo" checked={form.activo} onChange={onChange}/> Activo</label>
+              <label><input type="checkbox" name="activo" checked={form.activo} onChange={onChange} /> Activo</label>
             </div>
           </div>
           <div className="row mt form-actions">
@@ -1119,10 +1123,10 @@ function DescuentosSection() {
         {!loading && data.map(c => (
           <div key={c.id_descuento} className="discount">
             <div>
-              <p style={{display:"flex", gap:8, alignItems:"center"}}>
+              <p style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <strong>Código:</strong> {c.codigo}
                 <StatusBadge s={c._status} />
-                <span className="badge outline">{c._tipo === "percent" ? "%": c._tipo === "amount" ? "Monto" : "Envío"}</span>
+                <span className="badge outline">{c._tipo === "percent" ? "%" : c._tipo === "amount" ? "Monto" : "Envío"}</span>
                 {c.uso_unico || c.limite_uso === 1 ? <span className="badge outline">Uso único</span> : null}
               </p>
               <p>
@@ -1130,15 +1134,15 @@ function DescuentosSection() {
                 {c._tipo === "percent"
                   ? `${c.valor ?? c.porcentaje}%`
                   : c._tipo === "amount"
-                    ? `$${Number(c.valor||0).toLocaleString("es-CL")} sobre $${Number(c.minimo_compra||0).toLocaleString("es-CL")}`
-                    : `Envío gratis sobre $${Number(c.minimo_compra||0).toLocaleString("es-CL")}`}
+                    ? `$${Number(c.valor || 0).toLocaleString("es-CL")} sobre $${Number(c.minimo_compra || 0).toLocaleString("es-CL")}`
+                    : `Envío gratis sobre $${Number(c.minimo_compra || 0).toLocaleString("es-CL")}`}
               </p>
               {(c.fecha_inicio || c.fecha_fin) && (
                 <p><strong>Vigencia:</strong> {c.fecha_inicio || "—"} {c.fecha_fin ? `→ ${c.fecha_fin}` : ""}</p>
               )}
             </div>
-            <div className="row" style={{gap:8}}>
-              <button className="btn sm" title="Copiar código" onClick={()=>copyCode(c.codigo)}>Copiar</button>
+            <div className="row" style={{ gap: 8 }}>
+              <button className="btn sm" title="Copiar código" onClick={() => copyCode(c.codigo)}>Copiar</button>
               <button className="btn sm" onClick={() => startEdit(c)}>Modificar</button>
               <button className="btn sm" onClick={() => toggleActive(c)}>
                 {c.activo === false ? "Activar" : "Desactivar"}
@@ -1152,7 +1156,7 @@ function DescuentosSection() {
   );
 }
 
-// userAdmin 
+//SECCION USER ADMIN
 const UserAdmin = () => {
   const [active, setActive] = useState("inicio");
   const mainRef = useRef(null);
@@ -1170,7 +1174,7 @@ const UserAdmin = () => {
 
   useEffect(() => {
     applyPrefs(prefs);
-  }, []); 
+  }, []);
 
   useEffect(() => {
     if (prefs.scheme !== "system") return;
@@ -1184,7 +1188,7 @@ const UserAdmin = () => {
     const { name, type, checked, value } = e.target;
     const next = { ...prefs, [name]: type === "checkbox" ? checked : value };
     setPrefs(next);
-    try { localStorage.setItem(LS_PREFS, JSON.stringify(next)); } catch {}
+    try { localStorage.setItem(LS_PREFS, JSON.stringify(next)); } catch { }
     applyPrefs(next);
     setOkPrefs("Preferencias aplicadas");
     clearTimeout(window.__prefs_to);
@@ -1193,7 +1197,7 @@ const UserAdmin = () => {
 
   const resetPrefs = () => {
     setPrefs(DEFAULT_PREFS);
-    try { localStorage.setItem(LS_PREFS, JSON.stringify(DEFAULT_PREFS)); } catch {}
+    try { localStorage.setItem(LS_PREFS, JSON.stringify(DEFAULT_PREFS)); } catch { }
     applyPrefs(DEFAULT_PREFS);
     setOkPrefs("Preferencias restablecidas");
     setTimeout(() => setOkPrefs(""), 1200);
@@ -1217,7 +1221,7 @@ const UserAdmin = () => {
   };
 
   const logout = () => {
-    try { localStorage.removeItem("sdh_user"); } catch {}
+    try { localStorage.removeItem("sdh_user"); } catch { }
     window.location.href = "/Login";
   };
 
@@ -1283,32 +1287,69 @@ const UserAdmin = () => {
       </div>
     </div>
   );
+  //SECCION GESTIOS DE CLIENTES
+  const RenderClientes = () => {
+    const [clientes, setClientes] = useState([]);
 
-  const renderClientes = () => (
-    <div className="card">
-      <h2>Gestión de clientes</h2>
-      <div className="list">
-        {[
-          { n: "Joaquín Riveros", e: "joaquin.riveros@example.com", t: "+56 9 2345 6789" },
-          { n: "Camila Fernández", e: "camila.fernandez@example.com", t: "+56 9 8765 4321" },
-          { n: "Sebastián Morales", e: "sebastian.morales@example.com", t: "+56 9 1122 3344" },
-          { n: "Valentina Rojas", e: "valentina.rojas@example.com", t: "+56 9 5566 7788" },
-        ].map((c, i) => (
-          <div key={i} className="client">
-            <div>
-              <h4>{c.n}</h4>
-              <p>{c.e}</p>
-              <p>{c.t}</p>
+    // Obtener clientes al cargar
+    useEffect(() => {
+      const fetchClientes = async () => {
+        try {
+          const res = await fetch("http://localhost:5000/api/clientes");
+          const data = await res.json();
+          setClientes(data);
+        } catch (err) {
+          console.error("Error al obtener clientes", err);
+        }
+      };
+      fetchClientes();
+    }, []);
+
+    // Eliminar cliente por correo
+    const eliminarCliente = async (correo) => {
+      if (!window.confirm("¿Seguro que deseas eliminar este cliente?")) return;
+
+      try {
+        const response = await fetch(`http://localhost:5000/api/clientes/correo/${correo}`, {
+          method: "DELETE",
+        });
+
+        if (!response.ok) throw new Error("Error al eliminar cliente");
+
+        // eliminar del frontend solo el cliente que fue borrado
+        setClientes(clientes.filter((c) => c.email !== correo));
+      } catch (err) {
+        console.error("Error al eliminar cliente", err);
+      }
+    };
+
+    return (
+      <div className="card">
+        <h2>Gestión de clientes</h2>
+        <div className="list">
+          {clientes.map((c, i) => (
+            <div key={c.id || i} className="client">
+              <div>
+                <h4>{c.nombre}</h4>
+                <p>{c.email}</p>
+                <p>{c.telefono}</p>
+              </div>
+              <div className="row">
+                <button className="btn sm">Modificar</button>
+                <button
+                  className="btn sm danger"
+                  onClick={() => eliminarCliente(c.email)}
+                >
+                  Eliminar
+                </button>
+              </div>
             </div>
-            <div className="row">
-              <button className="btn sm">Modificar</button>
-              <button className="btn sm danger">Eliminar</button>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
+
 
   const renderInteractivo = () => (
     <div className="card">
@@ -1326,8 +1367,8 @@ const UserAdmin = () => {
     <div className="card">
       <h2>Configuración</h2>
 
-      {okPrefs && <div className="profile-ok" style={{marginBottom:10}}>{okPrefs}</div>}
-      {errPrefs && <div className="profile-alert" style={{marginBottom:10}}>{errPrefs}</div>}
+      {okPrefs && <div className="profile-ok" style={{ marginBottom: 10 }}>{okPrefs}</div>}
+      {errPrefs && <div className="profile-alert" style={{ marginBottom: 10 }}>{errPrefs}</div>}
 
       <div className="grid2">
         <div className="field">
@@ -1417,7 +1458,7 @@ const UserAdmin = () => {
           {active === "inicio" && renderInicio()}
           {active === "pedidos" && <PedidosSection />}
           {active === "productos" && <ProductosSection />}
-          {active === "clientes" && renderClientes()}
+          {active === "clientes" && <RenderClientes />}
           {active === "ganancias" && <GananciasSection />}
           {active === "interactivo" && renderInteractivo()}
 
