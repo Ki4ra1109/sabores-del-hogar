@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const db = require("../config/db"); // Aquí importas la conexión que definiste en db.js
+const db = require("../config/db");
 
 const User = db.define("User", {
   id: {
@@ -8,49 +8,50 @@ const User = db.define("User", {
     autoIncrement: true,
   },
   email: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(150),
     allowNull: false,
     unique: true,
   },
   password: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(100),
     allowNull: false,
   },
   nombre: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(100),
     allowNull: false,
   },
   apellido: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(100),
     allowNull: false,
   },
   rut: {
-    type: DataTypes.STRING,
-    allowNull: false,
+    type: DataTypes.STRING(12),
+    allowNull: true,          
+    unique: true,
   },
   telefono: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(15),
     allowNull: true,
   },
   fecha_nacimiento: {
     type: DataTypes.DATEONLY,
-    allowNull: false,
+    allowNull: true,          
   },
   direccion: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(120),
     allowNull: true,
   },
   rol: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(20),
     allowNull: false,
-    defaultValue: "normal", // normal por defecto
+    defaultValue: "user",     
   },
 }, {
   tableName: "usuarios_detalle",
   schema: "public",
   timestamps: true,
   createdAt: "fecha_creacion",
-  updatedAt: false
+  updatedAt: false,
 });
 
 module.exports = User;
