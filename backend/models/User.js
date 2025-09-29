@@ -11,10 +11,12 @@ const User = db.define("User", {
     type: DataTypes.STRING(150),
     allowNull: false,
     unique: true,
+    field: "correo", // 👈 Mapeo: columna en la DB es "correo"
   },
   password: {
     type: DataTypes.STRING(100),
     allowNull: false,
+    field: "contrasena", // 👈 Mapeo: columna en la DB es "contrasena"
   },
   nombre: {
     type: DataTypes.STRING(100),
@@ -26,7 +28,7 @@ const User = db.define("User", {
   },
   rut: {
     type: DataTypes.STRING(12),
-    allowNull: true,          
+    allowNull: true,
     unique: true,
   },
   telefono: {
@@ -35,7 +37,7 @@ const User = db.define("User", {
   },
   fecha_nacimiento: {
     type: DataTypes.DATEONLY,
-    allowNull: true,          
+    allowNull: true,
   },
   direccion: {
     type: DataTypes.STRING(120),
@@ -44,14 +46,17 @@ const User = db.define("User", {
   rol: {
     type: DataTypes.STRING(20),
     allowNull: false,
-    defaultValue: "user",     
+    defaultValue: "user",
+  },
+  creado_en: {
+    type: DataTypes.DATE,
+    field: "creado_en", // 👈 columna real en la DB
   },
 }, {
-  tableName: "usuarios_detalle",
+  tableName: "usuarios",
   schema: "public",
-  timestamps: true,
-  createdAt: "fecha_creacion",
-  updatedAt: false,
+  timestamps: false, // 👈 ya que tu tabla no usa createdAt/updatedAt automáticos
 });
 
 module.exports = User;
+
