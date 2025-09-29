@@ -5,18 +5,18 @@ import { Footer } from "../../componentes/Footer";
 import "./ProductoDetalle.css";
 
 export default function ProductoDetalle() {
-  const { sku } = useParams(); // cambiamos a sku para que coincida con la ruta
+  const { sku } = useParams(); 
   const navigate = useNavigate();
 
   const [producto, setProducto] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [mensaje, setMensaje] = useState("");
 
-  // Porciones disponibles
   const ALLOWED_PORCIONES = [12, 18, 24, 30, 50];
   const [porcion, setPorcion] = useState(ALLOWED_PORCIONES[0]);
 
-  // Fetch al cargar producto
+
   useEffect(() => {
     setLoading(true);
     fetch(`http://127.0.0.1:5000/api/productos/${sku}`)
@@ -35,7 +35,6 @@ export default function ProductoDetalle() {
       });
   }, [sku]);
 
-  // Opciones de porciones dinámicas
   const opcionesPorciones = useMemo(() => {
     if (producto && Array.isArray(producto.variantes) && producto.variantes.length > 0) {
       const delProducto = [...new Set(producto.variantes.map((v) => v.personas))];
@@ -45,21 +44,42 @@ export default function ProductoDetalle() {
     return ALLOWED_PORCIONES;
   }, [producto]);
 
-  // Ajustar porción si cambia el producto
   useEffect(() => {
     setPorcion(opcionesPorciones[0]);
   }, [opcionesPorciones]);
 
-  // Cálculo del precio dinámico
   const precioCalculado = useMemo(() => {
     if (!porcion) return 0;
-    return porcion * 1000 + 7000; // fórmula: 1000 por persona + 7000 fijo
+    return porcion * 1000 + 7000;
   }, [porcion]);
 
-  // Loading
+  // Función para agregar al carrito
+  const handleAgregarCarrito = async () => {
+    try {
+      const res = await fetch("http://127.0.0.1:5000/api/carrito/agregar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id_cliente: idCliente,
+          sku: producto.sku,
+          cantidad: 1,
+          porciones: porcion,
+          precio_unitario: precioCalculado
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Error al agregar al carrito");
+
+      setMensaje("Producto agregado al carrito");
+    } catch (err) {
+      console.error(err);
+      setMensaje("No se pudo agregar al carrito");
+    }
+  };
+
   if (loading) return <p style={{ padding: "2rem" }}>Cargando producto...</p>;
 
-  // Error
   if (error || !producto) {
     return (
       <>
@@ -75,7 +95,6 @@ export default function ProductoDetalle() {
     );
   }
 
-  // Imagen segura
   const safeSrc = (() => {
     const img = (producto.imagen_url || "").trim();
     if (img.startsWith("http://") || img.startsWith("https://")) return img;
@@ -88,7 +107,6 @@ export default function ProductoDetalle() {
       <Header />
 
       <div className="detalle-wrap">
-        {/* Imagen */}
         <div className="detalle-img">
           <img
             src={safeSrc}
@@ -101,7 +119,6 @@ export default function ProductoDetalle() {
           />
         </div>
 
-        {/* Información */}
         <div className="detalle-info">
           <h1 className="detalle-title">{producto.nombre.toUpperCase()}</h1>
 
@@ -109,7 +126,6 @@ export default function ProductoDetalle() {
             {producto.descripcion || "Torta elaborada artesanalmente. Selecciona el tamaño al comprar."}
           </p>
 
-          {/* Selector de porciones */}
           <div className="selector-porciones">
             <label htmlFor="select-porciones" className="selector-label">
               Porciones
@@ -131,13 +147,19 @@ export default function ProductoDetalle() {
             </div>
           </div>
 
-          {/* Precios dinámicos */}
           <div className="detalle-precios">
             <p>
               <strong>Precio Normal:</strong>{" "}
               ${precioCalculado.toLocaleString("es-CL")}
             </p>
           </div>
+
+          {/* Botón de agregar al carrito */}
+          <button className="btn-comprar" onClick={handleAgregarCarrito}>
+            🛒 Agregar al Carrito
+          </button>
+
+          {mensaje && <p style={{ marginTop: "10px", color: "#663f13" }}>{mensaje}</p>}
 
           <p className="detalle-safe">Venta segura a través de la plataforma</p>
         </div>
