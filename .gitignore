@@ -1,0 +1,5 @@
+# Env files (no subir)
+.env
+*.env
+backend/.env
+frontend/.env
