@@ -33,7 +33,6 @@ const User = db.define(
       defaultValue: "usuario",
     },
 
-    // flags de contraseña
     must_set_password: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
