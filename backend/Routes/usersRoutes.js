@@ -1,8 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const { getUsuario, patchUsuario } = require("../controllers/usersController");
+const { getUsuario, patchUsuario, updateMyPassword, getMe } = require("../controllers/usersController");
+const { authJwt } = require("../middleware/authJwt");
 
-// Perfil propio 
+router.get("/me", authJwt, getMe);
+router.patch("/me/password", authJwt, updateMyPassword);
+
 router.get("/:id", getUsuario);
 router.patch("/:id", patchUsuario);
 
