@@ -1,20 +1,22 @@
-// config/db.js
 const { Sequelize } = require("sequelize");
 require("dotenv").config();
 
 const DATABASE_URL =
   process.env.DATABASE_URL ||
-  "postgresql://postgres:password@localhost:5432/postgres";
+  "postgres://postgres:password@localhost:5432/postgres";
 
 const sequelize = new Sequelize(DATABASE_URL, {
   dialect: "postgres",
   protocol: "postgres",
-  dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: false,
-    },
-  },
+  dialectOptions:
+    process.env.DATABASE_URL && process.env.DATABASE_URL.includes("render.com")
+      ? {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false,
+          },
+        }
+      : {},
   logging: false,
 });
 
