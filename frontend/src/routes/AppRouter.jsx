@@ -5,7 +5,7 @@ import ProductoDetalle from "../views/Catalogo/ProductoDetalle.jsx";
 import Login from "../views/Login/Login";
 import UserNormal from "../views/Users/Normal/UserNormal";
 import UserAdmin from "../views/Users/Admin/UserAdmin";
-import Perfil from "../views/Users/Normal/Perfil"; // NUEVO
+import Perfil from "../views/Users/Normal/Perfil";
 import Nosotros from "../views/Nosotros/Nosotros";
 import Postre from "../views/Postre/Postre";
 import PoliticaPrivacidad from "../views/Legales/PoliticaPrivacidad";
@@ -38,6 +38,8 @@ export default function AppRouter() {
           <Route path="/catalogo" element={<Catalogo />} />
           <Route path="/catalogo/:sku" element={<ProductoDetalle />} />
           <Route path="/login" element={<Login />} />
+          {/* Alias para evitar error con mayúsculas */}
+          <Route path="/Login" element={<Navigate to="/login" replace />} />
           <Route path="/nosotros" element={<Nosotros />} />
           <Route path="/postre" element={<Postre />} />
           <Route path="/politica-privacidad" element={<PoliticaPrivacidad />} />
@@ -70,7 +72,6 @@ export default function AppRouter() {
             }
           />
 
-          {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

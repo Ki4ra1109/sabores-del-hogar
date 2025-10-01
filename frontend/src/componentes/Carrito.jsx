@@ -1,11 +1,25 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { FaTimes, FaTrash } from "react-icons/fa";
 import "./Carrito.css";
 
-export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
+export default function Carrito({ abrir, setAbrir }) {
+  const [carrito, setCarrito] = useState([]);
+
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem("carrito") || "[]");
+    setCarrito(saved);
+    const handler = () => {
+      const nuevo = JSON.parse(localStorage.getItem("carrito") || "[]");
+      setCarrito(nuevo);
+    };
+    window.addEventListener("carrito:agregado", handler);
+    return () => window.removeEventListener("carrito:agregado", handler);
+  }, []);
+
   useEffect(() => {
     if (!abrir) return;
-    const onKey = (e) => { if (e.key === "Escape") setAbrir(false); };
+    const onKey = (e) => e.key === "Escape" && setAbrir(false);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     document.addEventListener("keydown", onKey);
@@ -15,14 +29,45 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
     };
   }, [abrir]);
 
-  const vaciarCarrito = () => setCarrito([]);
-  const cerrarCarrito = () => setAbrir(false);
-  const total = carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
+  const setAndPersist = (items) => {
+    setCarrito(items);
+    localStorage.setItem("carrito", JSON.stringify(items));
+  };
 
-  return (
+  const disminuirCantidad = (id) => {
+    const nuevo = carrito.map((x) =>
+      x.id === id ? { ...x, cantidad: Math.max(1, x.cantidad - 1) } : x
+    );
+    setAndPersist(nuevo);
+  };
+
+  const aumentarCantidad = (id) => {
+    const nuevo = carrito.map((x) =>
+      x.id === id ? { ...x, cantidad: x.cantidad + 1 } : x
+    );
+    setAndPersist(nuevo);
+  };
+
+  const vaciarCarrito = () => {
+    setAndPersist([]);
+  };
+
+  const cerrarCarrito = () => setAbrir(false);
+
+  const total = carrito.reduce((acc, it) => acc + it.precio * it.cantidad, 0);
+
+  const ui = (
     <>
-      <div className={`carrito-overlay ${abrir ? "activo" : ""}`} onClick={cerrarCarrito} />
-      <aside className={`carrito-sidebar ${abrir ? "activo" : ""}`} role="dialog" aria-modal="true" aria-label="Tu Carrito">
+      <div
+        className={`carrito-overlay ${abrir ? "activo" : ""}`}
+        onClick={cerrarCarrito}
+      />
+      <aside
+        className={`carrito-sidebar ${abrir ? "activo" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Tu Carrito"
+      >
         <div className="carrito-header">
           <h2>Tu Carrito</h2>
           <button className="cerrar-btn" onClick={cerrarCarrito}>
@@ -39,8 +84,31 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
                 <img src={item.imagen} alt={item.nombre} />
                 <div className="info-item">
                   <h3>{item.nombre}</h3>
-                  <p>Cantidad: {item.cantidad}</p>
-                  <p>Precio: ${item.precio * item.cantidad}</p>
+
+                  <div className="qty-row" aria-label="Cantidad">
+                    <button
+                      className="qty"
+                      aria-label="Disminuir cantidad"
+                      onClick={() => disminuirCantidad(item.id)}
+                    >
+                      −
+                    </button>
+                    <span className="qty-num" aria-live="polite">
+                      {item.cantidad}
+                    </span>
+                    <button
+                      className="qty"
+                      aria-label="Aumentar cantidad"
+                      onClick={() => aumentarCantidad(item.id)}
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <p>
+                    Precio: $
+                    {(item.precio * item.cantidad).toLocaleString("es-CL")}
+                  </p>
                 </div>
               </div>
             ))}
@@ -48,7 +116,7 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
         )}
 
         <div className="carrito-footer">
-          <p className="carrito-total">Total: ${total}</p>
+          <p className="carrito-total">Total: ${total.toLocaleString("es-CL")}</p>
           <button className="vaciar-btn" onClick={vaciarCarrito}>
             <FaTrash /> Vaciar Carrito
           </button>
@@ -57,4 +125,6 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
       </aside>
     </>
   );
+
+  return createPortal(ui, document.body);
 }

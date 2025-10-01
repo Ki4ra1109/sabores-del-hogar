@@ -2,7 +2,6 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
-const bcrypt = require("bcrypt");
 
 // Rutas
 const usersRoutes = require("./Routes/usersRoutes");
@@ -11,76 +10,67 @@ const cuponRoutes = require("./Routes/cuponRoutes");
 const productosRoutes = require("./Routes/productos");
 const clientesRoutes = require("./Routes/clientesRoutes");
 
-// Modelos
-const User = require("./models/User");
+// Modelos (registran definiciones)
+require("./models/User");
 require("./models/cupon");
 
-// DB
+// DB (si necesitas probar conexión en /api/ping)
 const db = require("./config/db");
 
 dotenv.config();
-
 const app = express();
 
-// Middleware
-app.use(express.json());
-app.use(cors());
+// CORS: permitimos localhost y 127.0.0.1 (5173/5174)
+const allow = [
+  process.env.FRONTEND_ORIGIN  || "http://localhost:5173",
+  process.env.FRONTEND_ORIGIN_2|| "http://localhost:5174",
+  process.env.FRONTEND_ORIGIN_3|| "http://127.0.0.1:5173",
+  process.env.FRONTEND_ORIGIN_4|| "http://127.0.0.1:5174",
+];
 
-// Rutas existentes
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin || allow.includes(origin)) return cb(null, true);
+    return cb(new Error("Not allowed by CORS"));
+  },
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+}));
+
+// habilitar preflight
+app.options("*", cors());
+
+// parsers
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true }));
+
+// rutas API
 app.use("/api/usuarios", usersRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/cupones", cuponRoutes);
 app.use("/api/clientes", clientesRoutes);
-
-// NUEVA RUTA: Productos
 app.use("/api/productos", productosRoutes);
 
-// Test DB
-app.get("/api/test", async (req, res) => {
-    try {
-        const [rows] = await db.query("SELECT NOW() AS server_time");
-        res.json({ success: true, serverTime: rows[0].server_time });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
+// health check (y prueba de DB)
+app.get("/api/ping", async (_req, res) => {
+  try {
+    const [rows] = await db.query("SELECT NOW() AS server_time");
+    res.json({ ok: true, serverTime: rows?.[0]?.server_time || null });
+  } catch {
+    res.json({ ok: true });
+  }
 });
 
-// Registro de usuarios (ya existente)
-app.post("/api/auth/register", async (req, res) => {
-    try {
-        const { nombre, apellido, rut, correo, password, telefono, fechaNacimiento, direccion } = req.body;
-
-        if (!nombre || !apellido || !rut || !correo || !password) {
-            return res.status(400).json({ message: "Faltan datos obligatorios" });
-        }
-
-        const existingUser = await User.findOne({ where: { correo } });
-        if (existingUser) {
-            return res.status(400).json({ message: "Correo ya registrado" });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const newUser = await User.create({
-            nombre,
-            apellido,
-            rut,
-            correo,
-            password: hashedPassword,
-            telefono,
-            fecha_nacimiento: fechaNacimiento,
-            direccion
-        });
-
-        return res.status(201).json({ message: "Usuario registrado", user: { id: newUser.id, nombre, correo } });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: "Error interno del servidor" });
-    }
+// manejador simple de errores CORS (útil en dev)
+app.use((err, _req, res, _next) => {
+  if (err && err.message === "Not allowed by CORS") {
+    return res.status(403).json({ message: "Origen no permitido por CORS" });
+  }
+  return res.status(500).json({ message: "Error interno" });
 });
 
-// Puerto
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`Servidor corriendo en puerto ${PORT}`);
+  console.log(`Servidor corriendo en puerto ${PORT}`);
 });

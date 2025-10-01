@@ -13,15 +13,46 @@ const precios = {
   extra: 1500,
 };
 
+function Chip({ checked, onChange, children }) {
+  return (
+    <label className={`chip ${checked ? "chip-on" : ""}`}>
+      <input type="checkbox" checked={checked} onChange={onChange} />
+      <span>{children}</span>
+    </label>
+  );
+}
+
+function Segmented({ value, onChange, options }) {
+  return (
+    <div className="segmented" role="tablist" aria-label="Categoría">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          className={`seg ${value === o.value ? "seg-on" : ""}`}
+          onClick={() => onChange(o.value)}
+          role="tab"
+          aria-selected={value === o.value}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+const fmtCLP = (n) =>
+  new Intl.NumberFormat("es-CL", {
+    style: "currency",
+    currency: "CLP",
+    minimumFractionDigits: 0,
+  }).format(Number(n || 0));
+
 const Postre = () => {
   let ctx;
-  try {
-    ctx = useCarrito();
-  } catch {
-    ctx = undefined;
-  }
+  try { ctx = useCarrito(); } catch { ctx = undefined; }
 
-  const [opcion, setOpcion] = useState("");
+  const [opcion, setOpcion] = useState("torta");
   const [personas, setPersonas] = useState(15);
   const [cantidad, setCantidad] = useState(6);
 
@@ -48,27 +79,22 @@ const Postre = () => {
 
   const total = useMemo(() => {
     if (!["torta", "cupcake", "tartaleta"].includes(opcion)) return 0;
-
     const base =
       opcion === "torta"
         ? personasOK * precios.basePersona
         : cantidadOK * precios.basePersona;
 
     let t = base + precios.gananciaFija;
-
     if (bizcocho) t += precios.bizcocho;
     if (crema) t += precios.crema;
-
     if (opcion === "torta" && relleno) t += precios.relleno;
     if (opcion === "cupcake" && cupcakeConRelleno && relleno) t += precios.relleno;
-
     if (extraChips) t += precios.extra;
     if (extraNueces) t += precios.extra;
     if (extraChispitas) t += precios.extra;
     if (extraFrutasConfitadas) t += precios.extra;
     if (extraFondant) t += precios.extra;
     if (extraCaramelo) t += precios.extra;
-
     return t;
   }, [
     opcion,
@@ -140,331 +166,265 @@ const Postre = () => {
         mensajeTorta: opcion === "torta" ? mensajeTorta || "Sin mensaje" : undefined,
         extras,
       },
-      precio: total,
+      precio: Number(total),
       cantidad: 1,
       imagen: "/assets/personalizado.png",
     };
 
-    if (ctx?.agregarAlCarrito) ctx.agregarAlCarrito(producto);
-    else {
-      try {
-        const current = JSON.parse(localStorage.getItem("carrito") || "[]");
-        current.push(producto);
-        localStorage.setItem("carrito", JSON.stringify(current));
-        window.dispatchEvent(
-          new CustomEvent("carrito:agregado", { detail: producto })
-        );
-      } catch {}
+    const keyFrom = (p) => `${p.nombre}|${JSON.stringify(p.detalle)}`;
+
+    const saveToStorageMerging = (nuevo) => {
+      const list = JSON.parse(localStorage.getItem("carrito") || "[]");
+      const k = keyFrom(nuevo);
+      const i = list.findIndex((x) => keyFrom(x) === k);
+      if (i >= 0) {
+        list[i].cantidad = Number(list[i].cantidad || 0) + Number(nuevo.cantidad || 1);
+      } else {
+        list.push(nuevo);
+      }
+      localStorage.setItem("carrito", JSON.stringify(list));
+      window.dispatchEvent(new CustomEvent("carrito:agregado", { detail: { open: true } }));
+    };
+
+    if (ctx?.agregarAlCarrito) {
+      try { ctx.agregarAlCarrito(producto, { merge: true }); }
+      catch { saveToStorageMerging(producto); }
+    } else {
+      saveToStorageMerging(producto);
     }
-
-    alert("¡Producto agregado al carrito!");
   };
-
-  /* --------- Construimos el grid en pares y con tamaño constante --------- */
-  const fields = [];
-
-  // Categoría (siempre)
-  fields.push(
-    <div className="campo" key="cat">
-      <label>Categoría</label>
-      <select
-        value={opcion}
-        onChange={(e) => {
-          setOpcion(e.target.value);
-          setRelleno("");
-          setCupcakeConRelleno(false);
-          setFruta1("");
-          setFruta2("");
-          setDecoracion("");
-          setMensajeTorta("");
-        }}
-      >
-        <option value="">Selecciona</option>
-        <option value="torta">Torta</option>
-        <option value="cupcake">Cupcakes</option>
-        <option value="tartaleta">Tartaleta</option>
-      </select>
-    </div>
-  );
-
-  // Cantidades / Mensaje / Bizcocho / Relleno / Crema según categoría
-  if (opcion === "torta") {
-    fields.push(
-      <div className="campo" key="per">
-        <label>Cantidad de personas (mín. 15)</label>
-        <input
-          type="number"
-          min={15}
-          value={personasOK}
-          onChange={onChangePersonas}
-        />
-      </div>
-    );
-    fields.push(
-      <div className="campo" key="msg">
-        <label>Mensaje (gratis)</label>
-        <input
-          type="text"
-          placeholder="Ej: ¡Feliz Cumpleaños!"
-          value={mensajeTorta}
-          onChange={(e) => setMensajeTorta(e.target.value)}
-        />
-      </div>
-    );
-    fields.push(
-      <div className="campo" key="biz">
-        <label>Tipo de Bizcocho</label>
-        <select value={bizcocho} onChange={(e) => setBizcocho(e.target.value)}>
-          <option value="">Selecciona</option>
-          <option value="vainilla">Vainilla</option>
-          <option value="chocolate">Chocolate</option>
-          <option value="redvelvet">Red Velvet</option>
-          <option value="zanahoria">Zanahoria</option>
-        </select>
-      </div>
-    );
-    fields.push(
-      <div className="campo" key="rel-torta">
-        <label>Tipo de Relleno</label>
-        <select
-          value={relleno}
-          onChange={(e) => setRelleno(e.target.value)}
-          disabled={opcion !== "torta"}
-        >
-          <option value="">Selecciona</option>
-          <option value="frutilla">Frutilla</option>
-          <option value="manjar">Manjar</option>
-          <option value="cremaPastelera">Crema Pastelera</option>
-          <option value="zanahoria">Crema de zanahoria</option>
-        </select>
-      </div>
-    );
-    fields.push(
-      <div className="campo" key="cre">
-        <label>Sabor de Crema</label>
-        <select value={crema} onChange={(e) => setCrema(e.target.value)}>
-          <option value="">Selecciona</option>
-          <option value="vainilla">Vainilla</option>
-          <option value="chocolate">Chocolate</option>
-          <option value="frutilla">Frutilla</option>
-          <option value="zanahoria">Zanahoria</option>
-        </select>
-      </div>
-    );
-  } else if (opcion === "cupcake") {
-    fields.push(
-      <div className="campo" key="cant-ck">
-        <label>Cantidad (mín. 6)</label>
-        <input
-          type="number"
-          min={6}
-          value={cantidadOK}
-          onChange={onChangeCantidad}
-        />
-      </div>
-    );
-    fields.push(
-      <div className="campo" key="biz-ck">
-        <label>Tipo de Bizcocho</label>
-        <select value={bizcocho} onChange={(e) => setBizcocho(e.target.value)}>
-          <option value="">Selecciona</option>
-          <option value="vainilla">Vainilla</option>
-          <option value="chocolate">Chocolate</option>
-          <option value="redvelvet">Red Velvet</option>
-          <option value="zanahoria">Zanahoria</option>
-        </select>
-      </div>
-    );
-    fields.push(
-      <div className="campo" key="rel-ck">
-        <label>Tipo de Relleno</label>
-        <label className="checkbox-inline">
-          <input
-            type="checkbox"
-            checked={cupcakeConRelleno}
-            onChange={() => {
-              setCupcakeConRelleno((v) => !v);
-              setRelleno("");
-            }}
-          />
-          ¿Con relleno?
-        </label>
-        <select
-          value={relleno}
-          onChange={(e) => setRelleno(e.target.value)}
-          disabled={!cupcakeConRelleno}
-        >
-          <option value="">Selecciona</option>
-          <option value="frambuesa">Frambuesa</option>
-          <option value="manjar">Manjar</option>
-          <option value="chocolate">Chocolate</option>
-          <option value="cremaVainilla">Crema de vainilla</option>
-          <option value="zanahoria">Crema de zanahoria</option>
-        </select>
-      </div>
-    );
-    fields.push(
-      <div className="campo" key="cre-ck">
-        <label>Sabor de Crema</label>
-        <select value={crema} onChange={(e) => setCrema(e.target.value)}>
-          <option value="">Selecciona</option>
-          <option value="vainilla">Vainilla</option>
-          <option value="chocolate">Chocolate</option>
-          <option value="frutilla">Frutilla</option>
-          <option value="zanahoria">Zanahoria</option>
-        </select>
-      </div>
-    );
-    // Campo extra para cuadrar filas (si quieres algo útil en vez de filler)
-    fields.push(
-      <div className="campo" key="presentacion">
-        <label>Presentación</label>
-        <select value={""} onChange={() => {}}>
-          <option value="">Caja estándar</option>
-          <option value="mini">Mini cupcakes</option>
-          <option value="mix">Mix sabores</option>
-        </select>
-      </div>
-    );
-  } else if (opcion === "tartaleta") {
-    fields.push(
-      <div className="campo" key="cant-ta">
-        <label>Cantidad (mín. 6)</label>
-        <input
-          type="number"
-          min={6}
-          value={cantidadOK}
-          onChange={onChangeCantidad}
-        />
-      </div>
-    );
-    fields.push(
-      <div className="campo" key="f1">
-        <label>Fruta 1</label>
-        <select value={fruta1} onChange={(e) => setFruta1(e.target.value)}>
-          <option value="">Selecciona</option>
-          <option value="frutilla">Frutilla</option>
-          <option value="kiwi">Kiwi</option>
-          <option value="mango">Mango</option>
-          <option value="arándano">Arándano</option>
-        </select>
-      </div>
-    );
-    fields.push(
-      <div className="campo" key="f2">
-        <label>Fruta 2 (opcional)</label>
-        <select value={fruta2} onChange={(e) => setFruta2(e.target.value)}>
-          <option value="">Selecciona</option>
-          <option value="frutilla">Frutilla</option>
-          <option value="kiwi">Kiwi</option>
-          <option value="mango">Mango</option>
-          <option value="arándano">Arándano</option>
-        </select>
-      </div>
-    );
-    fields.push(
-      <div className="campo" key="deco">
-        <label>Decoración (opcional)</label>
-        <input
-          type="text"
-          placeholder="Ej: flores comestibles"
-          value={decoracion}
-          onChange={(e) => setDecoracion(e.target.value)}
-        />
-      </div>
-    );
-    // Campo útil de relleno para cuadrar pares
-    fields.push(
-      <div className="campo" key="base-tartaleta">
-        <label>Base</label>
-        <select value={""} onChange={() => {}}>
-          <option value="">Masa dulce clásica</option>
-          <option value="integral">Masa integral</option>
-        </select>
-      </div>
-    );
-  }
-
-  // --- Normalización: mínimo 6 campos (3 filas) y que sea par ---
-  const MIN_FIELDS = 6;
-  while (fields.length < MIN_FIELDS) {
-    fields.push(<div className="campo filler" key={`filler-${fields.length}`} />);
-  }
-  if (fields.length % 2 !== 0) {
-    fields.push(<div className="campo filler" key={`filler-${fields.length}`} />);
-  }
-
-  // Extras (ocupan 2 columnas y van al final). Solo para torta/cupcake.
-  if (opcion === "torta" || opcion === "cupcake") {
-    fields.push(
-      <div className="campo campo-extras full" key="extras">
-        <label>Extras (opcionales)</label>
-        <div className="checkbox-group">
-          <label>
-            <input
-              type="checkbox"
-              checked={extraChips}
-              onChange={() => setExtraChips((v) => !v)}
-            />
-            Chips de chocolate
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={extraNueces}
-              onChange={() => setExtraNueces((v) => !v)}
-            />
-            Nueces
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={extraChispitas}
-              onChange={() => setExtraChispitas((v) => !v)}
-            />
-            Chispitas de colores
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={extraFrutasConfitadas}
-              onChange={() => setExtraFrutasConfitadas((v) => !v)}
-            />
-            Frutas confitadas
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={extraFondant}
-              onChange={() => setExtraFondant((v) => !v)}
-            />
-            Fondant decorativo
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={extraCaramelo}
-              onChange={() => setExtraCaramelo((v) => !v)}
-            />
-            Cobertura de caramelo
-          </label>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
       <Header />
       <div className="postre-container">
-        {/* LEFT: formulario */}
         <div className="postre-card">
           <h2 className="titulo-formulario">Arma tu Postre</h2>
-          <div className="postre-form-grid">{fields}</div>
+
+          <label className="lab">Categoría</label>
+          <Segmented
+            value={opcion}
+            onChange={(v) => {
+              setOpcion(v);
+              setRelleno("");
+              setCupcakeConRelleno(false);
+              setFruta1("");
+              setFruta2("");
+              setDecoracion("");
+              setMensajeTorta("");
+            }}
+            options={[
+              { value: "torta", label: "Torta" },
+              { value: "cupcake", label: "Cupcakes" },
+              { value: "tartaleta", label: "Tartaleta" },
+            ]}
+          />
+
+          <div className="postre-form-grid">
+            {opcion === "torta" && (
+              <>
+                <div className="campo">
+                  <label className="lab">Cantidad de personas</label>
+                  <div className="stepper">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onChangePersonas({ target: { value: personasOK - 1 } })
+                      }
+                      disabled={personasOK <= 15}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      min={15}
+                      value={personasOK}
+                      onChange={onChangePersonas}
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onChangePersonas({ target: { value: personasOK + 1 } })
+                      }
+                    >
+                      +
+                    </button>
+                  </div>
+                  <small className="help">Mínimo 15</small>
+                </div>
+
+                <div className="campo">
+                  <label className="lab">Mensaje en la torta</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: ¡Feliz Cumpleaños!"
+                    value={mensajeTorta}
+                    onChange={(e) => setMensajeTorta(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            {opcion !== "" && opcion !== "torta" && (
+              <>
+                <div className="campo">
+                  <label className="lab">Cantidad de unidades</label>
+                  <div className="stepper">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onChangeCantidad({ target: { value: cantidadOK - 1 } })
+                      }
+                      disabled={cantidadOK <= 6}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      min={6}
+                      value={cantidadOK}
+                      onChange={onChangeCantidad}
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onChangeCantidad({ target: { value: cantidadOK + 1 } })
+                      }
+                    >
+                      +
+                    </button>
+                  </div>
+                  <small className="help">Mínimo 6</small>
+                </div>
+                <div className="campo filler" />
+              </>
+            )}
+
+            {opcion && (
+              <>
+                <div className="campo">
+                  <label>Tipo de Bizcocho</label>
+                  <select
+                    value={bizcocho}
+                    onChange={(e) => setBizcocho(e.target.value)}
+                  >
+                    <option value="">Selecciona</option>
+                    <option value="vainilla">Vainilla</option>
+                    <option value="chocolate">Chocolate</option>
+                    <option value="redvelvet">Red Velvet</option>
+                    <option value="zanahoria">Zanahoria</option>
+                  </select>
+                </div>
+
+                <div className="campo">
+                  <label>Sabor de Crema</label>
+                  <select value={crema} onChange={(e) => setCrema(e.target.value)}>
+                    <option value="">Selecciona</option>
+                    <option value="vainilla">Vainilla</option>
+                    <option value="chocolate">Chocolate</option>
+                    <option value="frutilla">Frutilla</option>
+                    <option value="zanahoria">Zanahoria</option>
+                  </select>
+                </div>
+
+                {(opcion === "torta" || opcion === "cupcake") && (
+                  <div className="campo">
+                    <label>Tipo de Relleno</label>
+
+                    {opcion === "cupcake" && (
+                      <label className="checkbox-inline">
+                        <input
+                          type="checkbox"
+                          checked={cupcakeConRelleno}
+                          onChange={() => {
+                            setCupcakeConRelleno((v) => !v);
+                            setRelleno("");
+                          }}
+                        />
+                        ¿Con relleno?
+                      </label>
+                    )}
+
+                    <select
+                      value={relleno}
+                      onChange={(e) => setRelleno(e.target.value)}
+                      disabled={opcion === "cupcake" && !cupcakeConRelleno}
+                    >
+                      <option value="">Selecciona</option>
+                      <option value="frutilla">Frutilla</option>
+                      <option value="manjar">Manjar</option>
+                      <option value="chocolate">Chocolate</option>
+                      <option value="cremaPastelera">Crema Pastelera</option>
+                      <option value="zanahoria">Crema de zanahoria</option>
+                    </select>
+                  </div>
+                )}
+
+                {opcion === "tartaleta" && (
+                  <>
+                    <div className="campo">
+                      <label>Fruta 1</label>
+                      <select value={fruta1} onChange={(e) => setFruta1(e.target.value)}>
+                        <option value="">Selecciona</option>
+                        <option value="frutilla">Frutilla</option>
+                        <option value="kiwi">Kiwi</option>
+                        <option value="mango">Mango</option>
+                        <option value="arándano">Arándano</option>
+                      </select>
+                    </div>
+                    <div className="campo">
+                      <label>Fruta 2 (opcional)</label>
+                      <select value={fruta2} onChange={(e) => setFruta2(e.target.value)}>
+                        <option value="">Selecciona</option>
+                        <option value="frutilla">Frutilla</option>
+                        <option value="kiwi">Kiwi</option>
+                        <option value="mango">Mango</option>
+                        <option value="arándano">Arándano</option>
+                      </select>
+                    </div>
+                    <div className="campo">
+                      <label>Decoración (opcional)</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: flores comestibles"
+                        value={decoracion}
+                        onChange={(e) => setDecoracion(e.target.value)}
+                      />
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+
+            {(opcion === "torta" || opcion === "cupcake") && (
+              <div className="campo campo-extras full">
+                <label>Extras</label>
+                <div className="checkbox-group chips">
+                  <Chip checked={extraChips} onChange={() => setExtraChips(v => !v)}>
+                    Chips de chocolate
+                  </Chip>
+                  <Chip checked={extraNueces} onChange={() => setExtraNueces(v => !v)}>
+                    Nueces
+                  </Chip>
+                  <Chip checked={extraChispitas} onChange={() => setExtraChispitas(v => !v)}>
+                    Chispitas de colores
+                  </Chip>
+                  <Chip checked={extraFrutasConfitadas} onChange={() => setExtraFrutasConfitadas(v => !v)}>
+                    Frutas confitadas
+                  </Chip>
+                  <Chip checked={extraFondant} onChange={() => setExtraFondant(v => !v)}>
+                    Fondant decorativo
+                  </Chip>
+                  <Chip checked={extraCaramelo} onChange={() => setExtraCaramelo(v => !v)}>
+                    Cobertura de caramelo
+                  </Chip>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* RIGHT: resumen (sin cambios estructurales) */}
-        <aside className="resumen-card">
+        <aside className="resumen-card sticky">
           <h3>Resumen del Pedido</h3>
           <p><strong>Categoría:</strong> {opcion || "-"}</p>
           <p>
@@ -475,6 +435,7 @@ const Postre = () => {
               ? cantidadOK
               : "-"}
           </p>
+
           {opcion !== "tartaleta" && (
             <>
               <p><strong>Bizcocho:</strong> {bizcocho || "-"}</p>
@@ -493,18 +454,19 @@ const Postre = () => {
               <p>
                 <strong>Extras:</strong>{" "}
                 {[
-                  extraChips ? "Chips de chocolate" : null,
-                  extraNueces ? "Nueces" : null,
-                  extraChispitas ? "Chispitas de colores" : null,
-                  extraFrutasConfitadas ? "Frutas confitadas" : null,
-                  extraFondant ? "Fondant decorativo" : null,
-                  extraCaramelo ? "Cobertura de caramelo" : null,
+                  extraChips && "Chips de chocolate",
+                  extraNueces && "Nueces",
+                  extraChispitas && "Chispitas de colores",
+                  extraFrutasConfitadas && "Frutas confitadas",
+                  extraFondant && "Fondant decorativo",
+                  extraCaramelo && "Cobertura de caramelo",
                 ]
                   .filter(Boolean)
                   .join(", ") || "-"}
               </p>
             </>
           )}
+
           {opcion === "tartaleta" && (
             <>
               <p>
@@ -514,9 +476,10 @@ const Postre = () => {
               <p><strong>Decoración:</strong> {decoracion || "-"}</p>
             </>
           )}
+
           <div className="total-linia">
             <span>Total:</span>
-            <strong>${total.toLocaleString("es-CL")}</strong>
+            <strong>{fmtCLP(total)}</strong>
           </div>
           <button className="btn-agregar" onClick={handleAgregar}>
             Agregar al carrito
@@ -527,4 +490,5 @@ const Postre = () => {
     </>
   );
 };
+
 export default Postre;

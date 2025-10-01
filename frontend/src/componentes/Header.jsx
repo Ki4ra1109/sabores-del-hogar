@@ -7,6 +7,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 export const Header = () => {
   const [abrirCarrito, setAbrirCarrito] = useState(false);
   const [carrito, setCarrito] = useState([]);
+  const [cartCount, setCartCount] = useState(0);
   const [query, setQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
 
@@ -15,14 +16,24 @@ export const Header = () => {
   const [pwd, setPwd] = useState("");
   const [showPwd, setShowPwd] = useState(false);
 
+  // estados auth
   const [user, setUser] = useState(() => {
     try {
       const raw = localStorage.getItem("sdh_user");
       return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
+    } catch { return null; }
   });
+  // modo: login | forgot
+  const [authMode, setAuthMode] = useState("login");
+  // forgot steps (switch)
+  const [fgStep, setFgStep] = useState(0); // 0 enviar código, 1 ingresar código
+  const [fgEmail, setFgEmail] = useState("");
+  const [fgCode, setFgCode] = useState("");
+  const [fgP1, setFgP1] = useState("");
+  const [fgP2, setFgP2] = useState("");
+  const [fgErr, setFgErr] = useState("");
+  const [fgMsg, setFgMsg] = useState("");
+  const [fgBusy, setFgBusy] = useState(false);
 
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -40,6 +51,28 @@ export const Header = () => {
     [location.pathname]
   );
 
+  const loadCart = () => {
+    try {
+      const items = JSON.parse(localStorage.getItem("carrito") || "[]");
+      setCarrito(items);
+      const c = items.reduce((acc, it) => acc + Number(it.cantidad || 0), 0);
+      setCartCount(c);
+    } catch {
+      setCarrito([]); setCartCount(0);
+    }
+  };
+
+  useEffect(() => {
+    loadCart();
+    const onAdded = () => { loadCart(); setAbrirCarrito(true); };
+    const onStorage = (e) => { if (e.key === "carrito") loadCart(); };
+    window.addEventListener("carrito:agregado", onAdded);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener("carrito:agregado", onAdded);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -53,7 +86,7 @@ export const Header = () => {
   const resultados = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    return productos.filter(p => p.nombre.toLowerCase().includes(q)).slice(0, 6);
+    return (window.productos || []).filter(p => p.nombre.toLowerCase().includes(q)).slice(0, 6);
   }, [query]);
 
   useEffect(() => {
@@ -62,9 +95,7 @@ export const Header = () => {
       if (authRef.current && !authRef.current.contains(e.target)) setAuthOpen(false);
       if (submenuRef.current && !submenuRef.current.contains(e.target)) setMenuOpen(false);
     };
-    const onEsc = (e) => {
-      if (e.key === 'Escape') { setAuthOpen(false); setMenuOpen(false); }
-    };
+    const onEsc = (e) => { if (e.key === 'Escape') { setAuthOpen(false); setMenuOpen(false); } };
     document.addEventListener("mousedown", onDocClick);
     document.addEventListener("keydown", onEsc);
     return () => {
@@ -74,29 +105,17 @@ export const Header = () => {
   }, []);
 
   useEffect(() => {
-    if (authOpen) {
-      setTimeout(() => emailInputRef.current?.focus(), 0);
-    }
+    if (authOpen) setTimeout(() => emailInputRef.current?.focus(), 0);
   }, [authOpen]);
 
   const onAuthPanelKeyDown = (e) => {
     if (e.key !== "Tab" || !authPanelRef.current) return;
-    const selectors =
-      'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
-    const nodes = Array.from(authPanelRef.current.querySelectorAll(selectors))
-      .filter(el => el.offsetParent !== null);
+    const selectors = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
+    const nodes = Array.from(authPanelRef.current.querySelectorAll(selectors)).filter(el => el.offsetParent !== null);
     if (!nodes.length) return;
-
-    const first = nodes[0];
-    const last = nodes[nodes.length - 1];
-
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
+    const first = nodes[0]; const last = nodes[nodes.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   };
 
   const irADetalle = (id) => {
@@ -120,35 +139,72 @@ export const Header = () => {
         body: JSON.stringify({ email, password: pwd }),
       });
       const data = await res.json();
-
       if (res.ok) {
-        // Guardar en localStorage y estado
         localStorage.setItem("sdh_user", JSON.stringify(data.user));
-        setUser(data.user);
-        setAuthOpen(false);
-        setEmail("");
-        setPwd("");
-
-        // Redirección según rol
+        setUser(data.user); setAuthOpen(false); setEmail(""); setPwd("");
         const role = String(data.user.rol || "").toLowerCase();
-        if (role === "admin") {
-          navigate("/UserAdmin");   // admin → va al perfil admin
-        } else {
-          navigate("/");            // normal → se queda en home
-        }
+        if (role === "admin") navigate("/UserAdmin"); else navigate("/");
       } else {
         alert(data.message || "Email o contraseña incorrecta");
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
       alert("Error en la conexión con el servidor");
     }
   };
 
-  const onLogout = () => {
-    setUser(null);
-    localStorage.removeItem("sdh_user");
+  // forgot: enviar código
+  const sendCode = async () => {
+    setFgErr(""); setFgMsg("");
+    if (!/\S+@\S+\.\S+/.test(fgEmail)) { setFgErr("Ingresa un correo válido"); return; }
+    try {
+      setFgBusy(true);
+      const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
+      const r = await fetch(`${baseUrl}/api/auth/forgot`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: fgEmail })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d?.message || "No se pudo enviar el código");
+      setFgMsg("Código enviado. Revisa tu correo.");
+      setFgStep(1); // mueve el switch automáticamente
+    } catch (e) {
+      setFgErr(e.message || "Error al enviar código");
+    } finally {
+      setFgBusy(false);
+    }
   };
+
+  // forgot: reset
+  const doReset = async () => {
+    setFgErr(""); setFgMsg("");
+    if (!/^\d{6}$/.test(fgCode)) { setFgErr("Código de 6 dígitos"); return; }
+    if (fgP1 !== fgP2) { setFgErr("Las contraseñas no coinciden"); return; }
+    if (!(fgP1.length >= 9 && /[A-Za-z]/.test(fgP1) && /\d/.test(fgP1))) {
+      setFgErr("Mínimo 9, con letras y números"); return;
+    }
+    try {
+      setFgBusy(true);
+      const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
+      const r = await fetch(`${baseUrl}/api/auth/reset`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: fgEmail, code: fgCode, newPassword: fgP1 })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d?.message || "No se pudo actualizar");
+      setFgMsg("Contraseña actualizada. Inicia sesión.");
+      setAuthMode("login");
+      setFgStep(0);
+      setEmail(fgEmail); // prellena login
+    } catch (e) {
+      setFgErr(e.message || "Error al actualizar");
+    } finally {
+      setFgBusy(false);
+    }
+  };
+
+  const onLogout = () => { setUser(null); localStorage.removeItem("sdh_user"); };
 
   return (
     <header>
@@ -157,14 +213,7 @@ export const Header = () => {
       </div>
 
       <nav className="Header-nav">
-        <Link to="/">
-          <img
-            src="/logoFondoBlanco.svg"
-            className="Header-icon"
-            alt="Logo Sabores del Hogar"
-          />
-        </Link>
-
+        <Link to="/"><img src="/logoFondoBlanco.svg" className="Header-icon" alt="Logo Sabores del Hogar" /></Link>
         <h1 className="NombreEmpresa">Sabores del hogar</h1>
 
         <div className="header-actions">
@@ -177,9 +226,7 @@ export const Header = () => {
               onChange={(e) => { setQuery(e.target.value); setShowResults(true); }}
               onFocus={() => setShowResults(true)}
             />
-            <button className="buscar-submit" aria-label="buscar" type="submit">
-              <FaSearch />
-            </button>
+            <button className="buscar-submit" aria-label="buscar" type="submit"><FaSearch /></button>
 
             {showResults && resultados.length > 0 && (
               <ul className="buscar-dropdown">
@@ -200,8 +247,33 @@ export const Header = () => {
             className="Header-carrito-icon"
             onClick={(e) => { e.preventDefault(); setAbrirCarrito(true); }}
             title="Carrito"
+            style={{ position: "relative" }}
           >
             <FaShoppingCart size={30} color="#fff" />
+            {cartCount > 0 && (
+              <span
+                style={{
+                  position: "absolute",
+                  top: -6,
+                  right: -6,
+                  background: "#b12d2d",
+                  color: "#fff",
+                  borderRadius: "999px",
+                  fontSize: 12,
+                  lineHeight: "18px",
+                  minWidth: 18,
+                  height: 18,
+                  padding: "0 6px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 700,
+                }}
+                aria-label={`Productos en el carrito: ${cartCount}`}
+              >
+                {cartCount}
+              </span>
+            )}
           </button>
 
           {!hideQuickAuth && (
@@ -233,52 +305,149 @@ export const Header = () => {
               >
                 {!user ? (
                   <>
-                    <form className="auth-form" onSubmit={onLoginSubmit}>
-                      <label>
-                        <span>Email</span>
-                        <input
-                          ref={emailInputRef}
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          required
-                        />
-                      </label>
+                    {authMode === "login" && (
+                      <>
+                        <form className="auth-form" onSubmit={onLoginSubmit}>
+                          <label>
+                            <span>Email</span>
+                            <input
+                              ref={emailInputRef}
+                              type="email"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              required
+                            />
+                          </label>
 
-                      <label>
-                        <span>Contraseña</span>
-                        <div className="pwd-wrap">
-                          <input
-                            type={showPwd ? "text" : "password"}
-                            minLength={8}
-                            value={pwd}
-                            onChange={(e) => setPwd(e.target.value)}
-                            required
-                          />
+                          <label>
+                            <span>Contraseña</span>
+                            <div className="pwd-wrap">
+                              <input
+                                type={showPwd ? "text" : "password"}
+                                minLength={8}
+                                value={pwd}
+                                onChange={(e) => setPwd(e.target.value)}
+                                required
+                              />
+                              <button
+                                type="button"
+                                className="pwd-toggle"
+                                onClick={() => setShowPwd(s => !s)}
+                                aria-label="Mostrar/ocultar contraseña"
+                              >
+                                <FaEyeSlash style={{ display: showPwd ? "inline" : "none" }} />
+                                <FaEye style={{ display: showPwd ? "none" : "inline" }} />
+                              </button>
+                            </div>
+                          </label>
+
+                          <button type="submit" className="auth-primary">Iniciar Sesión</button>
+                        </form>
+
+                        <button className="auth-link" type="button" onClick={() => { setAuthMode("forgot"); setFgStep(0); setFgErr(""); setFgMsg(""); setFgEmail(email); }}>
+                          ¿Olvidaste tu contraseña?
+                        </button>
+                        <div className="auth-divider" />
+                        <p>Si no tienes una cuenta registrate aca</p>
+                        <Link className="auth-secondary" to="/login" onClick={() => setAuthOpen(false)}>
+                          Registrarme
+                        </Link>
+                      </>
+                    )}
+
+                    {authMode === "forgot" && (
+                      <div className="auth-form">
+                        <div className="seg">
                           <button
                             type="button"
-                            className="pwd-toggle"
-                            onClick={() => setShowPwd(s => !s)}
-                            aria-label="Mostrar/ocultar contraseña"
+                            className={`seg-btn ${fgStep === 0 ? "on" : ""}`}
+                            onClick={() => setFgStep(0)}
                           >
-                            {showPwd ? <FaEyeSlash /> : <FaEye />}
+                            Enviar código
                           </button>
+                          <button
+                            type="button"
+                            className={`seg-btn ${fgStep === 1 ? "on" : ""}`}
+                            onClick={() => fgEmail ? setFgStep(1) : setFgStep(0)}
+                            disabled={!fgEmail}
+                          >
+                            Ingresar código
+                          </button>
+                          <span className="seg-ind" style={{ transform: `translateX(${fgStep * 100}%)` }} />
                         </div>
-                      </label>
 
-                      <button type="submit" className="auth-primary">Iniciar Sesión</button>
-                    </form>
+                        {fgStep === 0 && (
+                          <>
+                            <label>
+                              <span>Correo</span>
+                              <input
+                                type="email"
+                                value={fgEmail}
+                                onChange={(e) => setFgEmail(e.target.value)}
+                                placeholder="tu@email.com"
+                              />
+                            </label>
+                            {fgErr && <div className="auth-err">{fgErr}</div>}
+                            {fgMsg && <div className="auth-ok">{fgMsg}</div>}
+                            <button type="button" className="auth-primary" onClick={sendCode} disabled={fgBusy}>
+                              {fgBusy ? "Enviando..." : "Enviar código"}
+                            </button>
+                          </>
+                        )}
 
-                    <Link className="auth-link" to="/forgot">Olvidé mi contraseña</Link>
-                    <div className="auth-divider" />
-                    <p>Si no tienes una cuenta registrate aca</p>
-                    <Link
-                      className="auth-secondary"
-                      to="/Login"
-                      onClick={() => setAuthOpen(false)}
-                    >
-                      Registrarme
-                    </Link>
+                        {fgStep === 1 && (
+                          <>
+                            <label>
+                              <span>Correo</span>
+                              <input
+                                type="email"
+                                value={fgEmail}
+                                onChange={(e) => setFgEmail(e.target.value)}
+                              />
+                            </label>
+                            <label>
+                              <span>Código</span>
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                maxLength={6}
+                                value={fgCode}
+                                onChange={(e) => setFgCode(e.target.value.replace(/\D/g, ""))}
+                                placeholder="6 dígitos"
+                              />
+                            </label>
+                            <label>
+                              <span>Nueva contraseña</span>
+                              <input
+                                type="password"
+                                value={fgP1}
+                                onChange={(e) => setFgP1(e.target.value)}
+                                minLength={9}
+                                placeholder="Mín. 9, letras y números"
+                              />
+                            </label>
+                            <label>
+                              <span>Confirmar contraseña</span>
+                              <input
+                                type="password"
+                                value={fgP2}
+                                onChange={(e) => setFgP2(e.target.value)}
+                                minLength={9}
+                              />
+                            </label>
+                            {fgErr && <div className="auth-err">{fgErr}</div>}
+                            {fgMsg && <div className="auth-ok">{fgMsg}</div>}
+                            <button type="button" className="auth-primary" onClick={doReset} disabled={fgBusy}>
+                              {fgBusy ? "Actualizando..." : "Actualizar contraseña"}
+                            </button>
+                          </>
+                        )}
+
+                        <button className="auth-link" type="button" onClick={() => setAuthMode("login")}>
+                          Volver a iniciar sesión
+                        </button>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <>
@@ -289,11 +458,8 @@ export const Header = () => {
                     <button
                       className="auth-primary"
                       onClick={() => {
-                        if (String(user.rol || "").toLowerCase() === "admin") {
-                          navigate("/UserAdmin");
-                        } else {
-                          navigate("/perfil");
-                        }
+                        if (String(user.rol || "").toLowerCase() === "admin") navigate("/UserAdmin");
+                        else navigate("/perfil");
                       }}
                     >
                       Ir al perfil
@@ -301,10 +467,7 @@ export const Header = () => {
 
                     <button
                       className="auth-primary"
-                      onClick={() => {
-                        onLogout();
-                        navigate("/");
-                      }}
+                      onClick={() => { onLogout(); navigate("/"); }}
                     >
                       Cerrar sesión
                     </button>
@@ -330,25 +493,14 @@ export const Header = () => {
           >
             <Link
               to="/catalogo"
-              onClick={(e) => {
-                e.preventDefault();
-                setMenuOpen((v) => !v);
-              }}
+              onClick={(e) => { e.preventDefault(); setMenuOpen((v) => !v); }}
             >
               Catálogo
             </Link>
 
             <ul className="submenu">
-              <li>
-                <Link to="/catalogo?cat=tortas" onClick={() => setMenuOpen(false)}>
-                  Tortas
-                </Link>
-              </li>
-              <li>
-                <Link to="/catalogo?cat=dulces" onClick={() => setMenuOpen(false)}>
-                  Dulces
-                </Link>
-              </li>
+              <li><Link to="/catalogo?cat=tortas" onClick={() => setMenuOpen(false)}>Tortas</Link></li>
+              <li><Link to="/catalogo?cat=dulces" onClick={() => setMenuOpen(false)}>Dulces</Link></li>
             </ul>
           </li>
 
@@ -365,4 +517,4 @@ export const Header = () => {
       />
     </header>
   );
-}
+};
