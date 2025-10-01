@@ -130,3 +130,29 @@
 }
 
 .auth-swap{ text-align:center; margin-top:12px; }
+/* Switch de recuperación */
+.seg { display:flex; justify-content:center; }
+.seg-inner{
+  position:relative; display:grid; grid-template-columns:1fr 1fr;
+  background:#f4ece8; border-radius:999px; padding:4px; gap:4px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.05);
+}
+.seg-pill{
+  position:absolute; inset:4px auto 4px 4px; width:calc(50% - 4px);
+  background:#fff; border-radius:999px; box-shadow:0 6px 16px rgba(0,0,0,.12);
+}
+.seg-btn{
+  position:relative; z-index:1; border:none; background:transparent;
+  padding:8px 14px; font-weight:600; border-radius:999px; cursor:pointer;
+  color:#6a5248;
+}
+.seg-btn.active{ color:#2e1b16; }
+
+/* Inputs y botones del modal para un look más limpio */
+.auth-form .af input{
+  border-radius:10px; border:1px solid #eadfda; background:#fff;
+}
+.auth-btn-primary{
+  background:#5b2c24; border-radius:999px;
+}
+.auth-help{ color:#6a5248; opacity:.8; font-size:.9rem; }
