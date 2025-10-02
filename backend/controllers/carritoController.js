@@ -4,26 +4,26 @@ const db = require("../config/db");
 // Crear un nuevo carrito (pedido) o agregar producto a un carrito existente
 exports.agregarAlCarrito = async (req, res) => {
   try {
-    const { id_cliente, sku, porciones, cantidad } = req.body;
+    const { id_usuario, sku, porcion, cantidad } = req.body;
 
-    if (!id_cliente || !sku || !porciones || !cantidad) {
+    if (!id_usuario || !sku || !porcion || !cantidad) {
       return res.status(400).json({ message: "Faltan datos obligatorios" });
     }
 
     // precio dinámico = porciones * 1000 + 7000
-    const precio_unitario = porciones * 1000 + 7000;
+    const precio_unitario = porcion * 1000 + 7000;
 
-    // 1. Crear pedido si no existe uno activo para el cliente
+    // 1. Buscar pedido pendiente del usuario
     let [pedido] = await db.query(
-      "SELECT * FROM pedido WHERE id_cliente = ? AND estado = 'pendiente' LIMIT 1",
-      [id_cliente]
+      "SELECT * FROM pedido WHERE id_usuario = ? AND estado = 'pendiente' LIMIT 1",
+      [id_usuario]
     );
 
     let id_pedido;
     if (pedido.length === 0) {
       const [result] = await db.query(
-        "INSERT INTO pedido (id_cliente, estado, fecha) VALUES (?, 'pendiente', NOW())",
-        [id_cliente]
+        "INSERT INTO pedido (id_usuario, estado, total, fecha_pedido) VALUES (?, 'pendiente', 0, NOW())",
+        [id_usuario]
       );
       id_pedido = result.insertId;
     } else {
@@ -32,8 +32,14 @@ exports.agregarAlCarrito = async (req, res) => {
 
     // 2. Insertar detalle del pedido
     await db.query(
-      "INSERT INTO detalle_pedido (id_pedido, sku, cantidad, precio_unitario, porciones) VALUES (?, ?, ?, ?, ?)",
-      [id_pedido, sku, cantidad, precio_unitario, porciones]
+      "INSERT INTO detalle_pedido (id_pedido, sku, cantidad, precio_unitario, porcion) VALUES (?, ?, ?, ?, ?)",
+      [id_pedido, sku, cantidad, precio_unitario, porcion]
+    );
+
+    // 3. Actualizar el total del pedido
+    await db.query(
+      "UPDATE pedido SET total = (SELECT SUM(cantidad * precio_unitario) FROM detalle_pedido WHERE id_pedido = ?) WHERE id_pedido = ?",
+      [id_pedido, id_pedido]
     );
 
     res.status(201).json({ message: "Producto agregado al carrito", id_pedido });
@@ -43,14 +49,14 @@ exports.agregarAlCarrito = async (req, res) => {
   }
 };
 
-// Obtener el carrito del cliente
+// Obtener el carrito del usuario
 exports.obtenerCarrito = async (req, res) => {
   try {
-    const { id_cliente } = req.params;
+    const { id_usuario } = req.params;
 
     const [pedido] = await db.query(
-      "SELECT * FROM pedido WHERE id_cliente = ? AND estado = 'pendiente' LIMIT 1",
-      [id_cliente]
+      "SELECT * FROM pedido WHERE id_usuario = ? AND estado = 'pendiente' LIMIT 1",
+      [id_usuario]
     );
 
     if (pedido.length === 0) {
@@ -60,7 +66,7 @@ exports.obtenerCarrito = async (req, res) => {
     const id_pedido = pedido[0].id_pedido;
 
     const [detalles] = await db.query(
-      `SELECT d.id_detalle, d.sku, p.nombre, d.porciones, d.cantidad, d.precio_unitario
+      `SELECT d.id_detalle, d.sku, p.nombre, d.porcion, d.cantidad, d.precio_unitario
        FROM detalle_pedido d
        JOIN producto p ON d.sku = p.sku
        WHERE d.id_pedido = ?`,

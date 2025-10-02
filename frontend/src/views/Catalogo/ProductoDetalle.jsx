@@ -53,30 +53,55 @@ export default function ProductoDetalle() {
     return porcion * 1000 + 7000;
   }, [porcion]);
 
-  // Función para agregar al carrito
+  // ===== Función corregida para agregar al carrito =====
   const handleAgregarCarrito = async () => {
     try {
+      // obtener usuario desde localStorage (sdh_user)
+      const rawUser = localStorage.getItem("sdh_user");
+      if (!rawUser) {
+        setMensaje("Debes iniciar sesión para agregar al carrito");
+        return;
+      }
+      const user = JSON.parse(rawUser);
+      // soportar diferentes nombres de id en el objeto usuario
+      const id_usuario = user.id_usuario ?? user.id ?? user.userId ?? user.idUser;
+      if (!id_usuario) {
+        setMensaje("Usuario inválido, inicia sesión nuevamente");
+        return;
+      }
+
+      // cuerpo con los campos que espera tu backend (id_usuario, sku, cantidad, porcion)
+      const body = {
+        id_usuario,
+        sku: producto.sku,
+        cantidad: 1,
+        porcion: porcion
+      };
+
       const res = await fetch("http://127.0.0.1:5000/api/carrito/agregar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id_cliente: idCliente,
-          sku: producto.sku,
-          cantidad: 1,
-          porciones: porcion,
-          precio_unitario: precioCalculado
-        }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Error al agregar al carrito");
 
-      setMensaje("Producto agregado al carrito");
+      setMensaje("Producto agregado al carrito ✅");
+
+      // Emitir evento global para que el Header (u otros) puedan refrescar el carrito
+      try {
+        window.dispatchEvent(new CustomEvent("carritoActualizado", { detail: { id_pedido: data.id_pedido } }));
+      } catch (e) {
+        // no crítico si falla el evento; ya agregamos al carrito correctamente
+        console.warn("No se pudo despachar evento carritoActualizado:", e);
+      }
     } catch (err) {
       console.error(err);
-      setMensaje("No se pudo agregar al carrito");
+      setMensaje("No se pudo agregar al carrito ❌");
     }
   };
+  // =====================================================
 
   if (loading) return <p style={{ padding: "2rem" }}>Cargando producto...</p>;
 
