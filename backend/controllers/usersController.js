@@ -12,6 +12,7 @@ const toSafe = (u) => ({
   direccion: u.direccion,
   rol: u.rol,
 });
+
 async function getUsuario(req, res) {
   try {
     const { id } = req.params;
@@ -23,6 +24,7 @@ async function getUsuario(req, res) {
     return res.status(500).json({ message: "Error en el servidor" });
   }
 }
+
 async function patchUsuario(req, res) {
   try {
     const { id } = req.params;
@@ -34,7 +36,6 @@ async function patchUsuario(req, res) {
       fecha_nacimiento, direccion, password, rol
     } = req.body || {};
 
-    // Si cambia email valida que este no exista
     if (email && email !== u.email) {
       const exists = await User.findOne({ where: { email } });
       if (exists) return res.status(400).json({ message: "El correo ya está registrado" });
@@ -47,7 +48,7 @@ async function patchUsuario(req, res) {
     if (telefono != null) data.telefono = telefono;
     if (fecha_nacimiento != null) data.fecha_nacimiento = fecha_nacimiento;
     if (direccion != null) data.direccion = direccion;
-    if (rol != null) data.rol = rol; 
+    if (rol != null) data.rol = rol;
     if (password) data.password = await bcrypt.hash(password, 10);
 
     await User.update(data, { where: { id } });
@@ -59,4 +60,59 @@ async function patchUsuario(req, res) {
   }
 }
 
-module.exports = { getUsuario, patchUsuario };
+function validaPass(p) {
+  return typeof p === "string" && p.length >= 9 && /[A-Za-z]/.test(p) && /\d/.test(p);
+}
+
+async function updateMyPassword(req, res) {
+  try {
+    const { newPassword } = req.body || {};
+    if (!validaPass(newPassword)) return res.status(400).json({ message: "Política inválida" });
+
+    const u = await User.findByPk(req.user.id);
+    if (!u) return res.status(404).json({ message: "Usuario no existe" });
+
+    u.password = await bcrypt.hash(newPassword, 10);
+    u.must_set_password = false;
+    u.password_set_at = new Date();
+    await u.save();
+
+    return res.json({
+      ok: true,
+      user: {
+        id: u.id,
+        email: u.email,
+        rol: u.rol,
+        mustSetPassword: false,
+        passwordSetAt: u.password_set_at
+      }
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ message: "Error interno" });
+  }
+}
+
+async function getMe(req, res) {
+  try {
+    const u = await User.findByPk(req.user.id);
+    if (!u) return res.status(404).json({ message: "Usuario no existe" });
+    return res.json({
+      ok: true,
+      user: {
+        id: u.id,
+        nombre: u.nombre,
+        apellido: u.apellido,
+        email: u.email,
+        rol: u.rol,
+        mustSetPassword: !!u.must_set_password,
+        passwordSetAt: u.password_set_at
+      }
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ message: "Error interno" });
+  }
+}
+
+module.exports = { getUsuario, patchUsuario, updateMyPassword, getMe };

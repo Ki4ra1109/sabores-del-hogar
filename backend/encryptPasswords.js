@@ -1,37 +1,24 @@
-require("dotenv").config();
-const { Sequelize, DataTypes } = require("sequelize");
 const bcrypt = require("bcrypt");
+const { Sequelize, DataTypes } = require("sequelize");
 
-// Conexión usando la URL de Supabase
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
-  dialect: "postgres",
-  logging: false,
-});
-
-// Definir el modelo "Usuario"
-const User = sequelize.define(
-  "User",
+// Conexión a tu base de datos en Render
+const sequelize = new Sequelize(
+  "postgresql://sabores_del_hogar_user:9HJjwv17Sx5h6gRZnLRrmKla96UShfM0@dpg-d2mbb7ur433s73acra1g-a.oregon-postgres.render.com/sabores_del_hogar",
   {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
-    },
-    correo: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    contrasena: {
-      // ⚠️ Usamos "contrasena" sin tilde
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-  },
-  {
-    tableName: "usuarios", // 👈 asegúrate de que así se llama tu tabla
-    timestamps: false,
+    dialect: "postgres",
+    dialectOptions: { ssl: { rejectUnauthorized: false } },
+    logging: false
   }
 );
+
+// Modelo temporal de usuarios
+const User = sequelize.define("User", {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  password: { type: DataTypes.STRING, allowNull: false }
+}, {
+  tableName: "usuarios_detalle",
+  timestamps: false
+});
 
 async function encryptPasswords() {
   try {
@@ -41,21 +28,20 @@ async function encryptPasswords() {
     const users = await User.findAll();
 
     for (const user of users) {
-      // Verificar si ya está encriptada
-      if (!user.contrasena.startsWith("$2b$")) {
-        const hashed = await bcrypt.hash(user.contrasena, 10);
-        user.contrasena = hashed;
-        await user.save();
-        console.log(`Contraseña encriptada para usuario: ${user.correo}`);
-      } else {
-        console.log(`Ya estaba encriptada: ${user.correo}`);
-      }
+      const hashedPassword = await bcrypt.hash(user.password, 10); // 10 rounds de salt
+      await User.update(
+        { password: hashedPassword },
+        { where: { id: user.id } }
+      );
+      console.log(`Usuario ${user.id} actualizado ✅`);
     }
 
-    console.log("✅ Todas las contraseñas han sido procesadas.");
-    await sequelize.close();
-  } catch (err) {
-    console.error("❌ Error al encriptar contraseñas:", err);
+    console.log("Todas las contraseñas han sido encriptadas 🔒");
+    process.exit(0);
+
+  } catch (error) {
+    console.error("Error al encriptar contraseñas:", error);
+    process.exit(1);
   }
 }
 
