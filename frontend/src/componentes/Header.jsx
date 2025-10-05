@@ -497,10 +497,11 @@ export const Header = () => {
             >
               Catálogo
             </Link>
-
+          
             <ul className="submenu">
               <li><Link to="/catalogo?cat=tortas" onClick={() => setMenuOpen(false)}>Tortas</Link></li>
               <li><Link to="/catalogo?cat=dulces" onClick={() => setMenuOpen(false)}>Dulces</Link></li>
+              <li><Link to="/postre" onClick={() => setMenuOpen(false)}>Arma tu Postre</Link></li>
             </ul>
           </li>
 

@@ -5,7 +5,7 @@ import { Footer } from "../../componentes/Footer";
 import "./ProductoDetalle.css";
 
 export default function ProductoDetalle() {
-  const { sku } = useParams(); 
+  const { sku } = useParams();
   const navigate = useNavigate();
 
   const [producto, setProducto] = useState(null);
@@ -15,7 +15,6 @@ export default function ProductoDetalle() {
 
   const ALLOWED_PORCIONES = [12, 18, 24, 30, 50];
   const [porcion, setPorcion] = useState(ALLOWED_PORCIONES[0]);
-
 
   useEffect(() => {
     setLoading(true);
@@ -53,55 +52,53 @@ export default function ProductoDetalle() {
     return porcion * 1000 + 7000;
   }, [porcion]);
 
-  // ===== Función corregida para agregar al carrito =====
+  // ✅ Función corregida para integrar con el Header
   const handleAgregarCarrito = async () => {
     try {
-      // obtener usuario desde localStorage (sdh_user)
       const rawUser = localStorage.getItem("sdh_user");
       if (!rawUser) {
         setMensaje("Debes iniciar sesión para agregar al carrito");
         return;
       }
+
       const user = JSON.parse(rawUser);
-      // soportar diferentes nombres de id en el objeto usuario
       const id_usuario = user.id_usuario ?? user.id ?? user.userId ?? user.idUser;
       if (!id_usuario) {
         setMensaje("Usuario inválido, inicia sesión nuevamente");
         return;
       }
 
-      // cuerpo con los campos que espera tu backend (id_usuario, sku, cantidad, porcion)
-      const body = {
-        id_usuario,
+      // 🔹 Objeto del producto para el localStorage
+      const nuevoItem = {
         sku: producto.sku,
+        nombre: producto.nombre,
+        precio: precioCalculado,
         cantidad: 1,
-        porcion: porcion
+        porcion,
+        imagen: producto.imagen_url || "/placeholder.jpg",
       };
 
-      const res = await fetch("http://127.0.0.1:5000/api/carrito/agregar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+      // 🔹 Guardar/actualizar en localStorage
+      const carritoActual = JSON.parse(localStorage.getItem("carrito") || "[]");
+      const existe = carritoActual.findIndex((p) => p.sku === nuevoItem.sku && p.porcion === nuevoItem.porcion);
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Error al agregar al carrito");
+      if (existe >= 0) {
+        carritoActual[existe].cantidad += 1;
+      } else {
+        carritoActual.push(nuevoItem);
+      }
+
+      localStorage.setItem("carrito", JSON.stringify(carritoActual));
+
+      // 🔹 Notificar al Header
+      window.dispatchEvent(new CustomEvent("carrito:agregado"));
 
       setMensaje("Producto agregado al carrito ✅");
-
-      // Emitir evento global para que el Header (u otros) puedan refrescar el carrito
-      try {
-        window.dispatchEvent(new CustomEvent("carritoActualizado", { detail: { id_pedido: data.id_pedido } }));
-      } catch (e) {
-        // no crítico si falla el evento; ya agregamos al carrito correctamente
-        console.warn("No se pudo despachar evento carritoActualizado:", e);
-      }
     } catch (err) {
       console.error(err);
       setMensaje("No se pudo agregar al carrito ❌");
     }
   };
-  // =====================================================
 
   if (loading) return <p style={{ padding: "2rem" }}>Cargando producto...</p>;
 
