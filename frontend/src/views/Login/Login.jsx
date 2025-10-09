@@ -126,7 +126,7 @@ export default function Login() {
           <h1 className="auth-h1">¡Sabores únicos!</h1>
           <p className="auth-sub">Únete hoy</p>
 
-          <button className="auth-btn auth-btn-light" type="button" onClick={googleLogin}>
+        <button className="auth-btn auth-btn-light" type="button" onClick={googleLogin}>
             <FcGoogle className="auth-ico" />
             Inicia sesión con Google
           </button>
@@ -402,10 +402,9 @@ function SignupModal({ isOpen, onClose, onSwap }) {
   );
 }
 
-/** ====== Recuperación con switch (bloquea “Ingresar código” hasta enviar) ====== */
+/** ====== Recuperación con switch (como en Header) ====== */
 function RecoverModal({ isOpen, onClose }) {
   const [tab, setTab] = useState("send"); // 'send' | 'enter'
-  const [canEnter, setCanEnter] = useState(false); // <-- NUEVO
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [p1, setP1] = useState("");
@@ -415,20 +414,11 @@ function RecoverModal({ isOpen, onClose }) {
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const codeRef = useRef(null); // <-- NUEVO
-
   useEffect(() => {
     if (!isOpen) {
-      setTab("send"); setCanEnter(false);
-      setEmail(""); setCode(""); setP1(""); setP2(""); setMsg(""); setErr("");
+      setTab("send"); setEmail(""); setCode(""); setP1(""); setP2(""); setMsg(""); setErr("");
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    if (tab === "enter" && canEnter) {
-      setTimeout(() => codeRef.current?.focus(), 0);
-    }
-  }, [tab, canEnter]);
 
   const validatePass = (s) => s.length >= 9 && /[A-Za-z]/.test(s) && /\d/.test(s);
 
@@ -445,8 +435,8 @@ function RecoverModal({ isOpen, onClose }) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.message || "Error al enviar código");
       setMsg("Si el correo existe, enviamos un código de 6 dígitos.");
-      setCanEnter(true);         // <-- habilita la pestaña
-      setTab("enter");           // <-- cambia automáticamente
+      // Pasar automáticamente a la pestaña de código
+      setTab("enter");
     } catch (e) {
       setErr(e.message || "Error");
     } finally {
@@ -499,11 +489,7 @@ function RecoverModal({ isOpen, onClose }) {
           <button
             type="button"
             className={`seg-btn ${tab === "enter" ? "active" : ""}`}
-            onClick={() => { if (canEnter) setTab("enter"); }}
-            disabled={!canEnter}
-            aria-disabled={!canEnter}
-            style={{ opacity: canEnter ? 1 : 0.5, cursor: canEnter ? "pointer" : "not-allowed" }}
-            title={canEnter ? "Ingresar código" : "Primero envía el código"}
+            onClick={() => setTab("enter")}
           >
             Ingresar código
           </button>
@@ -538,7 +524,6 @@ function RecoverModal({ isOpen, onClose }) {
             <div className="af">
               <label>Código</label>
               <input
-                ref={codeRef}
                 type="text"
                 inputMode="numeric"
                 pattern="\\d{6}"
