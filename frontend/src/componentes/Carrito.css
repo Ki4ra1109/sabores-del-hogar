@@ -112,9 +112,17 @@
   background-color: #E63946;
   color: white;
   display: flex;
+  justify-content: center;
   align-items: center;
   gap: 0.5rem;
+  padding: 0.8rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s ease;
 }
+
 
 .vaciar-btn:hover {
   background-color: #d62828;
@@ -197,4 +205,65 @@
     font-size: 0.9rem;
     padding: 0.6rem;
   }
+}
+
+.item-eliminar {
+  background: none;
+  border: none;
+  color: #b12d2d;
+  cursor: pointer;
+  margin-left: 8px;
+  transition: transform 0.2s ease;
+}
+
+.item-eliminar:hover {
+  transform: scale(1.2);
+  color: #ff5555;
+}
+
+.cantidad-controles {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+}
+
+.cantidad-controles button {
+  background-color: #f5f0ea;
+  border: none;
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+  font-weight: bold;
+  color: #572420;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.cantidad-controles button:hover {
+  background-color: #e6d8cc;
+  transform: scale(1.1);
+}
+
+.cantidad-controles span {
+  min-width: 25px;
+  text-align: center;
+  font-weight: 600;
+  color: #572420;
+}
+
+.carrito-item {
+  align-items: center;
+  transition: all 0.25s ease;
+}
+
+.eliminando {
+  opacity: 0;
+  transform: translateX(50px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.carrito-item.eliminando {
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }

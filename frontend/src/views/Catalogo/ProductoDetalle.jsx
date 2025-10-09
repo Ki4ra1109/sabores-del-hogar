@@ -11,6 +11,7 @@ export default function ProductoDetalle() {
   const [producto, setProducto] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [mensaje, setMensaje] = useState("");
 
   const ALLOWED_PORCIONES = [12, 18, 24, 30, 50];
   const [porcion, setPorcion] = useState(ALLOWED_PORCIONES[0]);
@@ -45,6 +46,59 @@ export default function ProductoDetalle() {
   useEffect(() => {
     setPorcion(opcionesPorciones[0]);
   }, [opcionesPorciones]);
+
+  const precioCalculado = useMemo(() => {
+    if (!porcion) return 0;
+    return porcion * 1000 + 7000;
+  }, [porcion]);
+
+  // ✅ Función corregida para integrar con el Header
+  const handleAgregarCarrito = async () => {
+    try {
+      const rawUser = localStorage.getItem("sdh_user");
+      if (!rawUser) {
+        setMensaje("Debes iniciar sesión para agregar al carrito");
+        return;
+      }
+
+      const user = JSON.parse(rawUser);
+      const id_usuario = user.id_usuario ?? user.id ?? user.userId ?? user.idUser;
+      if (!id_usuario) {
+        setMensaje("Usuario inválido, inicia sesión nuevamente");
+        return;
+      }
+
+      // 🔹 Objeto del producto para el localStorage
+      const nuevoItem = {
+        sku: producto.sku,
+        nombre: producto.nombre,
+        precio: precioCalculado,
+        cantidad: 1,
+        porcion,
+        imagen: producto.imagen_url || "/placeholder.jpg",
+      };
+
+      // 🔹 Guardar/actualizar en localStorage
+      const carritoActual = JSON.parse(localStorage.getItem("carrito") || "[]");
+      const existe = carritoActual.findIndex((p) => p.sku === nuevoItem.sku && p.porcion === nuevoItem.porcion);
+
+      if (existe >= 0) {
+        carritoActual[existe].cantidad += 1;
+      } else {
+        carritoActual.push(nuevoItem);
+      }
+
+      localStorage.setItem("carrito", JSON.stringify(carritoActual));
+
+      // 🔹 Notificar al Header
+      window.dispatchEvent(new CustomEvent("carrito:agregado"));
+
+      setMensaje("Producto agregado al carrito ✅");
+    } catch (err) {
+      console.error(err);
+      setMensaje("No se pudo agregar al carrito ❌");
+    }
+  };
 
   if (loading) return <p style={{ padding: "2rem" }}>Cargando producto...</p>;
 
@@ -89,7 +143,7 @@ export default function ProductoDetalle() {
 
         <div className="detalle-info">
           <h1 className="detalle-title">{producto.nombre.toUpperCase()}</h1>
-          <p className="detalle-rango">${producto.precio}</p>
+
           <p className="detalle-desc">
             {producto.descripcion || "Torta elaborada artesanalmente. Selecciona el tamaño al comprar."}
           </p>
@@ -117,9 +171,17 @@ export default function ProductoDetalle() {
 
           <div className="detalle-precios">
             <p>
-              <strong>Precio Normal:</strong> ${producto.precio}
+              <strong>Precio Normal:</strong>{" "}
+              ${precioCalculado.toLocaleString("es-CL")}
             </p>
           </div>
+
+          {/* Botón de agregar al carrito */}
+          <button className="btn-comprar" onClick={handleAgregarCarrito}>
+            🛒 Agregar al Carrito
+          </button>
+
+          {mensaje && <p style={{ marginTop: "10px", color: "#663f13" }}>{mensaje}</p>}
 
           <p className="detalle-safe">Venta segura a través de la plataforma</p>
         </div>

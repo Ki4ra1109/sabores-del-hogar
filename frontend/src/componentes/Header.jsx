@@ -63,16 +63,22 @@ export const Header = () => {
   };
 
   useEffect(() => {
-    loadCart();
-    const onAdded = () => { loadCart(); setAbrirCarrito(true); };
-    const onStorage = (e) => { if (e.key === "carrito") loadCart(); };
-    window.addEventListener("carrito:agregado", onAdded);
-    window.addEventListener("storage", onStorage);
-    return () => {
-      window.removeEventListener("carrito:agregado", onAdded);
-      window.removeEventListener("storage", onStorage);
-    };
-  }, []);
+  loadCart();
+  const onAdded = () => { loadCart(); setAbrirCarrito(true); };
+  const onStorage = (e) => { if (e.key === "carrito") loadCart(); };
+  const onUpdated = () => loadCart();
+
+  window.addEventListener("carrito:agregado", onAdded);
+  window.addEventListener("carrito:actualizado", onUpdated);
+  window.addEventListener("storage", onStorage);
+
+  return () => {
+    window.removeEventListener("carrito:agregado", onAdded);
+    window.removeEventListener("carrito:actualizado", onUpdated);
+    window.removeEventListener("storage", onStorage);
+  };
+}, []);
+
 
   useEffect(() => {
     if (!user) return;
@@ -497,10 +503,11 @@ export const Header = () => {
             >
               Catálogo
             </Link>
-
+          
             <ul className="submenu">
               <li><Link to="/catalogo?cat=tortas" onClick={() => setMenuOpen(false)}>Tortas</Link></li>
               <li><Link to="/catalogo?cat=dulces" onClick={() => setMenuOpen(false)}>Dulces</Link></li>
+              <li><Link to="/postre" onClick={() => setMenuOpen(false)}>Arma tu Postre</Link></li>
             </ul>
           </li>
 

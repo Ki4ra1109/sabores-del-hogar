@@ -3,6 +3,9 @@ import { Header } from "../../componentes/Header";
 import { Footer } from "../../componentes/Footer";
 import { useCarrito } from "../../context/carritoContext";
 import "./Postre.css";
+import tortaPersonalizada from "../../assets/carro/tortaPersonalizada.png";
+import cupcakePersonalizado from "../../assets/carro/cupcakePersonalizado.png";
+import tartaletaPersonalizada from "../../assets/carro/tartaletaPersonalizada.png";
 
 const precios = {
   basePersona: 1000,
@@ -112,6 +115,15 @@ const Postre = () => {
       extraCaramelo ? "Cobertura de caramelo" : null,
     ].filter(Boolean);
 
+    const imagen =
+      opcion === "torta"
+        ? tortaPersonalizada
+        : opcion === "cupcake"
+        ? cupcakePersonalizado
+        : opcion === "tartaleta"
+        ? tartaletaPersonalizada
+        : null;
+
     const producto = {
       id: `postre-${Date.now()}`,
       nombre:
@@ -142,7 +154,7 @@ const Postre = () => {
       },
       precio: total,
       cantidad: 1,
-      imagen: "/assets/personalizado.png",
+      imagen,
     };
 
     if (ctx?.agregarAlCarrito) ctx.agregarAlCarrito(producto);

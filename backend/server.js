@@ -10,6 +10,7 @@ const authRoutes = require("./Routes/authRoutes");
 const cuponRoutes = require("./Routes/cuponRoutes");
 const productosRoutes = require("./Routes/productos");
 const clientesRoutes = require("./Routes/clientesRoutes");
+const carritoRoutes = require("./Routes/carritoRoutes");
 
 // Modelos
 const User = require("./models/User");
@@ -31,9 +32,8 @@ app.use("/api/usuarios", usersRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/cupones", cuponRoutes);
 app.use("/api/clientes", clientesRoutes);
-
-// NUEVA RUTA: Productos
 app.use("/api/productos", productosRoutes);
+app.use("/api/carrito", carritoRoutes);
 
 // Test DB
 app.get("/api/test", async (req, res) => {
