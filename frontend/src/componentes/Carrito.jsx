@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { FaTimes, FaTrash, FaPlus, FaMinus } from "react-icons/fa";
+import { FaTrash, FaPlus, FaMinus } from "react-icons/fa";
 import "./Carrito.css";
 
 export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
@@ -17,39 +17,48 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
     };
   }, [abrir]);
 
-const vaciarCarrito = () => {
-  const items = document.querySelectorAll(".carrito-item");
-  items.forEach((el) => el.classList.add("eliminando"));
+  // Vaciar carrito completo
+  const vaciarCarrito = () => {
+    const items = document.querySelectorAll(".carrito-item");
+    items.forEach((el) => el.classList.add("eliminando"));
 
-  setTimeout(() => {
-    setCarrito([]);
-    localStorage.removeItem("carrito");
-    window.dispatchEvent(new Event("carrito:actualizado"));
-  }, 300);
-};
-
-  const eliminarItem = (id) => {
-    const elemento = document.getElementById(`item-${id}`);
-    if (elemento) {
-      elemento.classList.add("eliminando");
-      setTimeout(() => {
-        const actualizado = carrito.filter((item) => item.id !== id);
-        setCarrito(actualizado);
-        localStorage.setItem("carrito", JSON.stringify(actualizado));
-        window.dispatchEvent(new Event("carrito:actualizado"));
-      }, 250);
-    }
+    setTimeout(() => {
+      setCarrito([]);
+      localStorage.removeItem("carrito");
+      window.dispatchEvent(new Event("carrito:actualizado"));
+    }, 300);
   };
 
-  const cambiarCantidad = (id, delta) => {
-    const actualizado = carrito.map((item) =>
-      item.id === id
-        ? { ...item, cantidad: Math.max(1, (item.cantidad || 1) + delta) }
-        : item
-    );
+  // Cambiar cantidad solo del item específico
+  const cambiarCantidad = (sku, porcion, delta) => {
+    const actualizado = carrito
+      .map((item) => {
+        if (item.sku === sku && item.porcion === porcion) {
+          const nuevaCantidad = (item.cantidad || 1) + delta;
+          return { ...item, cantidad: Math.max(nuevaCantidad, 0) };
+        }
+        return item;
+      })
+      .filter((item) => (item.cantidad || 0) > 0);
+
     setCarrito(actualizado);
     localStorage.setItem("carrito", JSON.stringify(actualizado));
     window.dispatchEvent(new Event("carrito:actualizado"));
+  };
+
+  // Eliminar item específico
+  const eliminarItem = (sku, porcion) => {
+    const elemento = document.getElementById(`item-${sku}-${porcion}`);
+    if (elemento) elemento.classList.add("eliminando");
+
+    setTimeout(() => {
+      const actualizado = carrito.filter(
+        (item) => !(item.sku === sku && item.porcion === porcion)
+      );
+      setCarrito(actualizado);
+      localStorage.setItem("carrito", JSON.stringify(actualizado));
+      window.dispatchEvent(new Event("carrito:actualizado"));
+    }, 250);
   };
 
   const cerrarCarrito = () => setAbrir(false);
@@ -61,10 +70,7 @@ const vaciarCarrito = () => {
 
   return (
     <>
-      <div
-        className={`carrito-overlay ${abrir ? "activo" : ""}`}
-        onClick={cerrarCarrito}
-      />
+      <div className={`carrito-overlay ${abrir ? "activo" : ""}`} onClick={cerrarCarrito} />
       <aside
         className={`carrito-sidebar ${abrir ? "activo" : ""}`}
         role="dialog"
@@ -73,9 +79,6 @@ const vaciarCarrito = () => {
       >
         <div className="carrito-header">
           <h2>Tu Carrito</h2>
-          <button className="cerrar-btn" onClick={cerrarCarrito}>
-            <FaTimes size={20} />
-          </button>
         </div>
 
         {carrito.length === 0 ? (
@@ -83,17 +86,22 @@ const vaciarCarrito = () => {
         ) : (
           <div className="carrito-body">
             {carrito.map((item) => (
-              <div key={item.id} className="carrito-item" id={`item-${item.id}`}>
+              <div
+                key={`${item.sku}-${item.porcion}`}
+                id={`item-${item.sku}-${item.porcion}`}
+                className="carrito-item"
+              >
                 <img src={item.imagen} alt={item.nombre} />
                 <div className="info-item">
                   <h3>{item.nombre}</h3>
+                  {item.porcion && <p>Porciones: {item.porcion}</p>}
                   <p>Precio unitario: ${item.precio}</p>
                   <div className="cantidad-controles">
-                    <button onClick={() => cambiarCantidad(item.id, -1)}>
+                    <button onClick={() => cambiarCantidad(item.sku, item.porcion, -1)}>
                       <FaMinus />
                     </button>
                     <span>{item.cantidad || 1}</span>
-                    <button onClick={() => cambiarCantidad(item.id, 1)}>
+                    <button onClick={() => cambiarCantidad(item.sku, item.porcion, 1)}>
                       <FaPlus />
                     </button>
                   </div>
@@ -103,10 +111,10 @@ const vaciarCarrito = () => {
                 </div>
                 <button
                   className="item-eliminar"
-                  onClick={() => eliminarItem(item.id)}
+                  onClick={() => eliminarItem(item.sku, item.porcion)}
                   title="Eliminar producto"
                 >
-                  <FaTimes size={18} />
+                  <FaTrash size={18} />
                 </button>
               </div>
             ))}
