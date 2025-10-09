@@ -17,14 +17,17 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
     };
   }, [abrir]);
 
-  // ✅ Vaciar carrito completamente
-  const vaciarCarrito = () => {
+const vaciarCarrito = () => {
+  const items = document.querySelectorAll(".carrito-item");
+  items.forEach((el) => el.classList.add("eliminando"));
+
+  setTimeout(() => {
     setCarrito([]);
     localStorage.removeItem("carrito");
-    window.dispatchEvent(new Event("carrito:actualizado")); // 🔔 Notifica al Header
-  };
+    window.dispatchEvent(new Event("carrito:actualizado"));
+  }, 300);
+};
 
-  // ✅ Eliminar un solo producto con animación
   const eliminarItem = (id) => {
     const elemento = document.getElementById(`item-${id}`);
     if (elemento) {
@@ -33,12 +36,11 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
         const actualizado = carrito.filter((item) => item.id !== id);
         setCarrito(actualizado);
         localStorage.setItem("carrito", JSON.stringify(actualizado));
-        window.dispatchEvent(new Event("carrito:actualizado")); // 🔔 Notifica al Header
+        window.dispatchEvent(new Event("carrito:actualizado"));
       }, 250);
     }
   };
 
-  // ✅ Aumentar / disminuir cantidad
   const cambiarCantidad = (id, delta) => {
     const actualizado = carrito.map((item) =>
       item.id === id
@@ -47,7 +49,7 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
     );
     setCarrito(actualizado);
     localStorage.setItem("carrito", JSON.stringify(actualizado));
-    window.dispatchEvent(new Event("carrito:actualizado")); // 🔔 Notifica al Header
+    window.dispatchEvent(new Event("carrito:actualizado"));
   };
 
   const cerrarCarrito = () => setAbrir(false);
