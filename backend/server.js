@@ -1,8 +1,12 @@
-// server.js
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
+const passport = require("passport");
+
+dotenv.config(); 
+
+require("./config/passport-setup");
 
 // Rutas
 const usersRoutes = require("./Routes/usersRoutes");
@@ -19,13 +23,12 @@ require("./models/cupon");
 // DB
 const db = require("./config/db");
 
-dotenv.config();
-
 const app = express();
 
 // Middleware
 app.use(express.json());
 app.use(cors());
+app.use(passport.initialize());
 
 // Rutas existentes
 app.use("/api/usuarios", usersRoutes);

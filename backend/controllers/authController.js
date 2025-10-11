@@ -1,4 +1,3 @@
-// controllers/authController.js
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const User = require("../models/User");
@@ -132,83 +131,6 @@ const oauth = new OAuth2Client({
   redirectUri: GOOGLE_REDIRECT_URI,
 });
 
-async function googleLogin(req, res) {
-  try {
-    const { code } = req.body || {};
-    if (!code) return res.status(400).json({ message: "Falta code" });
-
-    const { tokens } = await oauth.getToken(code);
-
-    let email = null;
-    let given = "";
-    let family = "";
-
-    if (tokens.id_token) {
-      const ticket = await oauth.verifyIdToken({
-        idToken: tokens.id_token,
-        audience: GOOGLE_CLIENT_ID,
-      });
-      const payload = ticket.getPayload();
-      email = (payload?.email || "").toLowerCase();
-      given = payload?.given_name || payload?.name || "Usuario";
-      family = payload?.family_name || "";
-    }
-
-    if (!email && tokens.access_token) {
-      const r = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-        headers: { Authorization: `Bearer ${tokens.access_token}` },
-      });
-      const profile = await r.json();
-      email = (profile?.email || "").toLowerCase();
-      given = profile?.given_name || profile?.name || "Usuario";
-      family = profile?.family_name || "";
-    }
-
-    if (!email) return res.status(400).json({ message: "No se pudo obtener el email de Google" });
-
-    let user = await User.findOne({ where: { email } });
-    let isNew = false;
-    if (!user) {
-      const tempPass = await bcrypt.hash(genTempPassword(), 10);
-      user = await User.create({
-        email,
-        password: tempPass,
-        nombre: given,
-        apellido: family || "",
-        rol: "usuario",
-        fecha_creacion: new Date(),
-        must_set_password: true,
-      });
-      isNew = true;
-    }
-
-    const token = JWT_SECRET
-      ? jwt.sign({ uid: user.id, email: user.email, rol: user.rol }, JWT_SECRET, { expiresIn: "7d" })
-      : null;
-
-    return res.json({
-      message: "Login Google exitoso",
-      user: {
-        id: user.id,
-        nombre: user.nombre,
-        apellido: user.apellido,
-        email: user.email,
-        rut: user.rut,
-        telefono: user.telefono,
-        fecha_nacimiento: user.fecha_nacimiento,
-        direccion: user.direccion,
-        rol: user.rol,
-        mustSetPassword: !!user.must_set_password,
-      },
-      token,
-      isNew,
-    });
-  } catch (err) {
-    console.error("Google OAuth error:", err);
-    return res.status(500).json({ message: "Error al autenticar con Google" });
-  }
-}
-
 async function googleLoginToken(req, res) {
   try {
     const { access_token } = req.body || {};
@@ -266,6 +188,90 @@ async function googleLoginToken(req, res) {
   } catch (err) {
     console.error("Google token login error:", err);
     return res.status(500).json({ message: "Error al autenticar con Google" });
+  }
+}
+
+const googleCallback = async (req, res) => {
+    try {
+      const googleUser = req.user;
+      const usuario = await User.findOne({ where: { email: googleUser.email } });
+  
+      if (usuario) {
+        const payload = {
+          usuario: { id: usuario.id, rol: usuario.rol },
+        };
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+        const userForFrontend = {
+          id: usuario.id,
+          nombre: usuario.nombre,
+          apellido: usuario.apellido,
+          email: usuario.email,
+          rol: usuario.rol,
+        };
+        
+        // --- AQUÍ ESTÁ LA CORRECCIÓN ---
+        // Se elimina "/success" para que la redirección sea a la página de Login
+        const frontendUrl = `${process.env.FRONTEND_URL}/login?token=${token}&user=${encodeURIComponent(JSON.stringify(userForFrontend))}`;
+        return res.redirect(frontendUrl);
+
+      } else {
+        const tempPayload = {
+          email: googleUser.email,
+          nombre: googleUser.nombre,
+          apellido: googleUser.apellido,
+          googleId: googleUser.id,
+        };
+        
+        const tempToken = jwt.sign(tempPayload, process.env.JWT_SECRET, { expiresIn: "10m" });
+  
+        const completionUrl = `${process.env.FRONTEND_URL}/login?action=completeGoogle&tempToken=${tempToken}`;
+        return res.redirect(completionUrl);
+      }
+    } catch (error) {
+      console.error("Error en el callback de Google:", error);
+      res.redirect(`${process.env.FRONTEND_URL}/login?error=google_failed`);
+    }
+};
+
+async function googleComplete(req, res) {
+  const { tempToken, password } = req.body;
+
+  try {
+    const decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
+    
+    const existingUser = await User.findOne({ where: { email: decoded.email } });
+    if (existingUser) {
+      return res.status(400).json({ message: "Este correo ya fue registrado." });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = await User.create({
+      nombre: decoded.nombre,
+      apellido: decoded.apellido,
+      email: decoded.email,
+      password: hashedPassword,
+      googleId: decoded.googleId,
+      rol: "usuario",
+    });
+
+    const payload = { usuario: { id: newUser.id, rol: newUser.rol } };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+    res.status(201).json({
+      message: "Cuenta creada con éxito",
+      token,
+      user: {
+        id: newUser.id,
+        nombre: newUser.nombre,
+        apellido: newUser.apellido,
+        email: newUser.email,
+        rol: newUser.rol,
+      },
+    });
+  } catch (error) {
+    console.error("Error completando registro de Google:", error);
+    res.status(400).json({ message: "Token inválido o expirado. Inténtalo de nuevo." });
   }
 }
 
@@ -342,4 +348,4 @@ async function resetPassword(req, res) {
   }
 }
 
-module.exports = { login, registerUser, googleLogin, googleLoginToken, forgotPassword, resetPassword };
+module.exports = { login, registerUser, googleLoginToken, forgotPassword, resetPassword, googleCallback, googleComplete };

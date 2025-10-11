@@ -2,7 +2,7 @@ import "./Login.css";
 import { useState, useEffect, useRef } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { Link, useNavigate } from "react-router-dom";
-import { useGoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
 
 const API_BASE = import.meta.env?.VITE_API_URL || "http://localhost:5000";
 
@@ -32,15 +32,41 @@ export default function Login() {
   const [showSignup, setShowSignup] = useState(false);
   const navigate = useNavigate();
 
-  // Recuperación (un solo modal tipo switch)
   const [showForgot, setShowForgot] = useState(false);
-
-  // Completar cuenta (Google)
   const [showComplete, setShowComplete] = useState(false);
   const [gEmail, setGEmail] = useState("");
   const [p1, setP1] = useState("");
   const [p2, setP2] = useState("");
   const [errC, setErrC] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get('action');
+    const tempToken = params.get('tempToken');
+    const token = params.get('token');
+    const user = params.get('user');
+
+    if (action === 'completeGoogle' && tempToken) {
+      try {
+        sessionStorage.setItem('tempGoogleToken', tempToken);
+        const decoded = jwtDecode(tempToken);
+        setGEmail(decoded.email);
+        setShowComplete(true);
+        navigate('/login', { replace: true });
+      } catch (error) {
+        console.error("Error al procesar token temporal:", error);
+        alert("Hubo un error al procesar tu registro con Google.");
+      }
+    }
+
+    if (token && user) {
+        localStorage.setItem("sdh_user", user);
+        localStorage.setItem("sdh_token", token);
+        const userData = JSON.parse(user);
+        const role = String(userData.rol || "").toLowerCase();
+        navigate(role === "admin" ? "/UserAdmin" : "/", { replace: true });
+    }
+  }, [navigate]);
 
   const openLogin = () => { setShowSignup(false); setShowLogin(true); };
   const openSignup = () => { setShowLogin(false); setShowSignup(true); };
@@ -52,64 +78,34 @@ export default function Login() {
   };
   const openForgot = () => { setShowLogin(false); setShowForgot(true); };
 
-  const googleLogin = useGoogleLogin({
-    flow: "implicit",
-    ux_mode: "popup",
-    onSuccess: async (tokenResponse) => {
-      try {
-        const access_token = tokenResponse?.access_token;
-        if (!access_token) throw new Error("No se recibió access_token");
-
-        const res = await fetch(`${API_BASE}/api/auth/google-token`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ access_token }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data?.message || "No se pudo iniciar sesión con Google");
-
-        if (data.user) localStorage.setItem("sdh_user", JSON.stringify(data.user));
-        if (data.token) localStorage.setItem("sdh_token", data.token);
-
-        const must = !!data.isNew || !!data.user?.mustSetPassword;
-        if (must) {
-          setGEmail(data.user?.email || "");
-          setShowComplete(true);
-          return;
-        }
-
-        const role = String(data.user?.rol || data.user?.role || "").toLowerCase();
-        navigate(role === "admin" ? "/UserAdmin" : "/", { replace: true });
-      } catch (err) {
-        alert(err.message || "Error de autenticación con Google");
-      }
-    },
-    onError: () => alert("Se canceló o falló el inicio de sesión con Google"),
-  });
-
   const guardarPasswordNueva = async () => {
     setErrC("");
     if (p1 !== p2) return setErrC("Las contraseñas no coinciden");
     const ok = p1.length >= 9 && /[A-Za-z]/.test(p1) && /\d/.test(p1);
     if (!ok) return setErrC("Mínimo 9 caracteres con letras y números");
+    
     try {
-      const token = localStorage.getItem("sdh_token") || "";
-      const res = await fetch(`${API_BASE}/api/usuarios/me/password`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ newPassword: p1 }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.message || "No se pudo guardar la contraseña");
+      const tempToken = sessionStorage.getItem('tempGoogleToken');
+      if (!tempToken) throw new Error("No se encontró el token temporal de registro.");
 
-      const u = JSON.parse(localStorage.getItem("sdh_user") || "{}");
-      localStorage.setItem("sdh_user", JSON.stringify({ ...u, mustSetPassword: false }));
+      const res = await fetch(`${API_BASE}/api/auth/google/complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tempToken, password: p1 }),
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "No se pudo completar el registro");
+
+      sessionStorage.removeItem('tempGoogleToken');
+      
+      localStorage.setItem("sdh_user", JSON.stringify(data.user));
+      localStorage.setItem("sdh_token", data.token);
+      
       setShowComplete(false);
-      const role = String(u?.rol || u?.role || "").toLowerCase();
-      navigate(role === "admin" ? "/UserAdmin" : "/", { replace: true });
+      
+      navigate("/", { replace: true }); 
+
     } catch (e) {
       setErrC(e.message || "Error al guardar");
     }
@@ -126,10 +122,10 @@ export default function Login() {
           <h1 className="auth-h1">¡Sabores únicos!</h1>
           <p className="auth-sub">Únete hoy</p>
 
-        <button className="auth-btn auth-btn-light" type="button" onClick={googleLogin}>
+          <a className="auth-btn auth-btn-light" href={`${API_BASE}/api/auth/google`}>
             <FcGoogle className="auth-ico" />
             Inicia sesión con Google
-          </button>
+          </a>
 
           <div className="auth-div"><span>o</span></div>
 
@@ -148,8 +144,7 @@ export default function Login() {
 
       <LoginModal isOpen={showLogin} onClose={closeAll} onSwap={openSignup} onForgot={openForgot} />
       <SignupModal isOpen={showSignup} onClose={closeAll} onSwap={openLogin} />
-
-      {/* Completar cuenta (Google) */}
+      
       <Modal isOpen={showComplete} title="Completa tu cuenta" onClose={() => setShowComplete(false)}>
         <div className="auth-form" style={{ gap: 8 }}>
           <div className="af filled">
@@ -163,7 +158,7 @@ export default function Login() {
               value={p1}
               onChange={(e) => setP1(e.target.value)}
               minLength={9}
-              pattern="^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{9,}$"
+              pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{9,}$"
               placeholder="Mín. 9, letras y números"
             />
           </div>
@@ -174,7 +169,7 @@ export default function Login() {
               value={p2}
               onChange={(e) => setP2(e.target.value)}
               minLength={9}
-              pattern="^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{9,}$"
+              pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{9,}$"
             />
           </div>
           {errC && <div className="auth-err" role="alert">{errC}</div>}
@@ -184,7 +179,6 @@ export default function Login() {
         </div>
       </Modal>
 
-      {/* Recuperación con switch */}
       <RecoverModal isOpen={showForgot} onClose={() => setShowForgot(false)} />
     </div>
   );
@@ -383,7 +377,7 @@ function SignupModal({ isOpen, onClose, onSwap }) {
               onChange={onChange}
               onBlur={() => setT("password")}
               minLength={9}
-              pattern="^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{9,}$"
+              pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{9,}$"
             />
             <button type="button" className="af-eye" aria-pressed={showPass} onClick={() => setShowPass(v => !v)}>
               {showPass ? "🙈" : "👁️"}
@@ -402,9 +396,8 @@ function SignupModal({ isOpen, onClose, onSwap }) {
   );
 }
 
-/** ====== Recuperación con switch (como en Header) ====== */
 function RecoverModal({ isOpen, onClose }) {
-  const [tab, setTab] = useState("send"); // 'send' | 'enter'
+  const [tab, setTab] = useState("send");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [p1, setP1] = useState("");
@@ -435,7 +428,6 @@ function RecoverModal({ isOpen, onClose }) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.message || "Error al enviar código");
       setMsg("Si el correo existe, enviamos un código de 6 dígitos.");
-      // Pasar automáticamente a la pestaña de código
       setTab("enter");
     } catch (e) {
       setErr(e.message || "Error");
@@ -469,7 +461,6 @@ function RecoverModal({ isOpen, onClose }) {
 
   return (
     <Modal isOpen={isOpen} title="Recuperar contraseña" onClose={onClose}>
-      {/* Switch minimalista */}
       <div className="seg" style={{ marginBottom: 12 }}>
         <div className="seg-inner">
           <div
@@ -497,7 +488,6 @@ function RecoverModal({ isOpen, onClose }) {
       </div>
 
       <div className="auth-form" style={{ gap: 10 }}>
-        {/* Campo común: correo */}
         <div className="af">
           <label>Correo</label>
           <input
@@ -526,7 +516,7 @@ function RecoverModal({ isOpen, onClose }) {
               <input
                 type="text"
                 inputMode="numeric"
-                pattern="\\d{6}"
+                pattern="\d{6}"
                 maxLength={6}
                 value={code}
                 onChange={(e)=>setCode(e.target.value)}
