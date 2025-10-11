@@ -1363,72 +1363,17 @@ const UserAdmin = () => {
   // Cuenta conectada
   const renderAccount = () => <CuentaPanel />;
 
-  const renderSettings = () => (
+ const renderSettings = () => (
     <div className="card">
       <h2>Configuración</h2>
 
-      {okPrefs && <div className="profile-ok" style={{ marginBottom: 10 }}>{okPrefs}</div>}
-      {errPrefs && <div className="profile-alert" style={{ marginBottom: 10 }}>{errPrefs}</div>}
+      {/* Contenido del formulario eliminado temporalmente */}
+      <p style={{ color: 'var(--muted)', textAlign: 'center', margin: '20px 0' }}>
+        Próximamente: Más opciones de configuración.
+      </p>
 
-      <div className="grid2">
-        <div className="field">
-          <label>Tema de color</label>
-          <select name="theme" value={prefs.theme} onChange={onChangePref}>
-            <option value="cafe">Café (default)</option>
-            <option value="claro">Claro</option>
-            <option value="pastel">Pastel</option>
-            <option value="cacao">Cacao</option>
-          </select>
-        </div>
-
-        <div className="field">
-          <label>Modo</label>
-          <select name="scheme" value={prefs.scheme} onChange={onChangePref}>
-            <option value="system">Usar el sistema</option>
-            <option value="light">Claro</option>
-            <option value="dark">Oscuro</option>
-          </select>
-        </div>
-
-        <div className="field">
-          <label>Tamaño de fuente</label>
-          <select name="font" value={prefs.font} onChange={onChangePref}>
-            <option value="sm">Pequeña</option>
-            <option value="md">Media</option>
-            <option value="lg">Grande</option>
-          </select>
-        </div>
-
-        <div className="field">
-          <label>Idioma</label>
-          <select name="lang" value={prefs.lang} onChange={onChangePref}>
-            <option value="es">Español</option>
-            <option value="en">Inglés</option>
-            <option value="pt">Portugués</option>
-          </select>
-        </div>
-
-        <div className="field check">
-          <label>
-            <input type="checkbox" name="notifications" checked={prefs.notifications} onChange={onChangePref} />
-            Notificaciones
-          </label>
-          <div className="row">
-            <button type="button" className="btn sm" onClick={testNotifs}>Probar</button>
-          </div>
-        </div>
-
-        <div className="field check">
-          <label>
-            <input type="checkbox" name="showAvatar" checked={prefs.showAvatar} onChange={onChangePref} />
-            Mostrar foto de perfil
-          </label>
-        </div>
-      </div>
-
-      <div className="row mt">
-        <button type="button" className="btn" onClick={resetPrefs}>Restablecer</button>
-        <button type="button" className="btn danger" onClick={logout}>Cerrar sesión</button>
+      <div className="row mt" style={{ justifyContent: 'flex-end' }}>
+      
       </div>
     </div>
   );

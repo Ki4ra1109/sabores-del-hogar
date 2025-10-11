@@ -16,17 +16,19 @@ export const Header = () => {
   const [pwd, setPwd] = useState("");
   const [showPwd, setShowPwd] = useState(false);
 
-  // estados auth
+  const [loginBusy, setLoginBusy] = useState(false);
+  const [loginDone, setLoginDone] = useState(false);
+  const [logoutBusy, setLogoutBusy] = useState(false);
+  const [registerBusy, setRegisterBusy] = useState(false);
+
   const [user, setUser] = useState(() => {
     try {
       const raw = localStorage.getItem("sdh_user");
       return raw ? JSON.parse(raw) : null;
     } catch { return null; }
   });
-  // modo: login | forgot
   const [authMode, setAuthMode] = useState("login");
-  // forgot steps (switch)
-  const [fgStep, setFgStep] = useState(0); // 0 enviar código, 1 ingresar código
+  const [fgStep, setFgStep] = useState(0);
   const [fgEmail, setFgEmail] = useState("");
   const [fgCode, setFgCode] = useState("");
   const [fgP1, setFgP1] = useState("");
@@ -46,6 +48,44 @@ export const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const PANEL_FADE_MS = 280;
+
+  const DotsInline = () => (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }} role="status" aria-live="polite">
+      <style>{`
+        @keyframes sdhDots { 0%,80%,100%{transform:translateY(0);opacity:.6} 40%{transform:translateY(-5px);opacity:1} }
+        .sdh-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:sdhDots 1s infinite}
+        .sdh-dot:nth-child(1){animation-delay:0s}
+        .sdh-dot:nth-child(2){animation-delay:.15s}
+        .sdh-dot:nth-child(3){animation-delay:.3s}
+      `}</style>
+      <span className="sdh-dot" />
+      <span className="sdh-dot" />
+      <span className="sdh-dot" />
+    </span>
+  );
+
+  const ButtonWithLoader = ({ label, busy, type = "button", onClick, disabled, className = "auth-primary" }) => (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled || busy}
+      className={className}
+      style={{
+        position: "relative",
+        width: "100%",
+        minHeight: 44,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 10,
+      }}
+    >
+      <span style={{ opacity: busy ? 0 : 1, transition: "opacity .15s" }}>{label}</span>
+      {busy && <span style={{ position: "absolute", color: "#fff" }}><DotsInline /></span>}
+    </button>
+  );
+
   const hideQuickAuth = useMemo(
     () => location.pathname.toLowerCase() === "/login",
     [location.pathname]
@@ -63,22 +103,21 @@ export const Header = () => {
   };
 
   useEffect(() => {
-  loadCart();
-  const onAdded = () => { loadCart(); setAbrirCarrito(true); };
-  const onStorage = (e) => { if (e.key === "carrito") loadCart(); };
-  const onUpdated = () => loadCart();
+    loadCart();
+    const onAdded = () => { loadCart(); setAbrirCarrito(true); };
+    const onStorage = (e) => { if (e.key === "carrito") loadCart(); };
+    const onUpdated = () => loadCart();
 
-  window.addEventListener("carrito:agregado", onAdded);
-  window.addEventListener("carrito:actualizado", onUpdated);
-  window.addEventListener("storage", onStorage);
+    window.addEventListener("carrito:agregado", onAdded);
+    window.addEventListener("carrito:actualizado", onUpdated);
+    window.addEventListener("storage", onStorage);
 
-  return () => {
-    window.removeEventListener("carrito:agregado", onAdded);
-    window.removeEventListener("carrito:actualizado", onUpdated);
-    window.removeEventListener("storage", onStorage);
-  };
-}, []);
-
+    return () => {
+      window.removeEventListener("carrito:agregado", onAdded);
+      window.removeEventListener("carrito:actualizado", onUpdated);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -118,8 +157,8 @@ export const Header = () => {
     if (e.key !== "Tab" || !authPanelRef.current) return;
     const selectors = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
     const nodes = Array.from(authPanelRef.current.querySelectorAll(selectors)).filter(el => el.offsetParent !== null);
-    if (!nodes.length) return;
     const first = nodes[0]; const last = nodes[nodes.length - 1];
+    if (!nodes.length) return;
     if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   };
@@ -137,6 +176,8 @@ export const Header = () => {
 
   const onLoginSubmit = async (e) => {
     e.preventDefault();
+    if (loginBusy) return;
+    setLoginBusy(true);
     try {
       const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
       const res = await fetch(`${baseUrl}/api/auth/login`, {
@@ -145,20 +186,44 @@ export const Header = () => {
         body: JSON.stringify({ email, password: pwd }),
       });
       const data = await res.json();
-      if (res.ok) {
-        localStorage.setItem("sdh_user", JSON.stringify(data.user));
-        setUser(data.user); setAuthOpen(false); setEmail(""); setPwd("");
-        const role = String(data.user.rol || "").toLowerCase();
-        if (role === "admin") navigate("/UserAdmin"); else navigate("/");
-      } else {
-        alert(data.message || "Email o contraseña incorrecta");
-      }
-    } catch {
-      alert("Error en la conexión con el servidor");
+      if (!res.ok) throw new Error(data?.message || "Email o contraseña incorrecta");
+
+      localStorage.setItem("sdh_user", JSON.stringify(data.user));
+      setUser(data.user);
+
+      setLoginDone(true);
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          setAuthOpen(false);
+          setEmail(""); setPwd("");
+          const role = String(data.user.rol || "").toLowerCase();
+          const to = role === "admin" ? "/UserAdmin" : "/";
+          setTimeout(() => {
+            navigate(to);
+            setLoginBusy(false);
+            setLoginDone(false);
+          }, 30);
+        }, PANEL_FADE_MS);
+      });
+    } catch (err) {
+      alert(err.message || "Error en la conexión con el servidor");
+      setLoginBusy(false);
     }
   };
 
-  // forgot: enviar código
+  const handleRegisterNavigation = () => {
+    if (registerBusy) return;
+    setRegisterBusy(true);
+    setLoginDone(true);
+
+    setTimeout(() => {
+      navigate("/login");
+      setAuthOpen(false);
+      setRegisterBusy(false);
+      setLoginDone(false);
+    }, PANEL_FADE_MS);
+  };
+
   const sendCode = async () => {
     setFgErr(""); setFgMsg("");
     if (!/\S+@\S+\.\S+/.test(fgEmail)) { setFgErr("Ingresa un correo válido"); return; }
@@ -173,7 +238,7 @@ export const Header = () => {
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d?.message || "No se pudo enviar el código");
       setFgMsg("Código enviado. Revisa tu correo.");
-      setFgStep(1); // mueve el switch automáticamente
+      setFgStep(1);
     } catch (e) {
       setFgErr(e.message || "Error al enviar código");
     } finally {
@@ -181,7 +246,6 @@ export const Header = () => {
     }
   };
 
-  // forgot: reset
   const doReset = async () => {
     setFgErr(""); setFgMsg("");
     if (!/^\d{6}$/.test(fgCode)) { setFgErr("Código de 6 dígitos"); return; }
@@ -202,7 +266,7 @@ export const Header = () => {
       setFgMsg("Contraseña actualizada. Inicia sesión.");
       setAuthMode("login");
       setFgStep(0);
-      setEmail(fgEmail); // prellena login
+      setEmail(fgEmail);
     } catch (e) {
       setFgErr(e.message || "Error al actualizar");
     } finally {
@@ -210,7 +274,23 @@ export const Header = () => {
     }
   };
 
-  const onLogout = () => { setUser(null); localStorage.removeItem("sdh_user"); };
+  const onLogoutClick = () => {
+    if (logoutBusy) return;
+    setLogoutBusy(true);
+    setLoginDone(true);
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        localStorage.removeItem("sdh_user");
+        setUser(null);
+        setAuthOpen(false);
+        setTimeout(() => {
+          navigate("/");
+          setLogoutBusy(false);
+          setLoginDone(false);
+        }, 30);
+      }, PANEL_FADE_MS);
+    });
+  };
 
   return (
     <header>
@@ -295,8 +375,11 @@ export const Header = () => {
               >
                 <FaUser className="Header-login-icon" size={26} color="#fff" />
                 <div className="auth-mini-text">
-                  <span>Hola{user ? `, ${user.nombre}` : "!"}</span>
-                  <strong>{user ? user.nombre : "Inicia sesión"}</strong>
+                  {user ? (
+                    <span>Hola, <strong>{user.nombre}</strong></span>
+                  ) : (
+                    <strong>Inicia sesión</strong>
+                  )}
                 </div>
               </button>
 
@@ -308,6 +391,12 @@ export const Header = () => {
                 aria-label="Cuenta"
                 ref={authPanelRef}
                 onKeyDown={onAuthPanelKeyDown}
+                style={{
+                  opacity: loginDone ? 0 : 1,
+                  transform: loginDone ? "translateY(-6px)" : "translateY(0)",
+                  transition: "opacity .28s ease, transform .28s ease",
+                  willChange: "opacity, transform"
+                }}
               >
                 {!user ? (
                   <>
@@ -322,6 +411,7 @@ export const Header = () => {
                               value={email}
                               onChange={(e) => setEmail(e.target.value)}
                               required
+                              disabled={loginBusy}
                             />
                           </label>
 
@@ -334,12 +424,14 @@ export const Header = () => {
                                 value={pwd}
                                 onChange={(e) => setPwd(e.target.value)}
                                 required
+                                disabled={loginBusy}
                               />
                               <button
                                 type="button"
                                 className="pwd-toggle"
                                 onClick={() => setShowPwd(s => !s)}
                                 aria-label="Mostrar/ocultar contraseña"
+                                disabled={loginBusy}
                               >
                                 <FaEyeSlash style={{ display: showPwd ? "inline" : "none" }} />
                                 <FaEye style={{ display: showPwd ? "none" : "inline" }} />
@@ -347,36 +439,39 @@ export const Header = () => {
                             </div>
                           </label>
 
-                          <button type="submit" className="auth-primary">Iniciar Sesión</button>
+                          <div style={{ height: 44, display: "flex", alignItems: "center" }}>
+                            <ButtonWithLoader type="submit" label="Iniciar Sesión" busy={loginBusy} />
+                          </div>
                         </form>
 
-                        <button className="auth-link" type="button" onClick={() => { setAuthMode("forgot"); setFgStep(0); setFgErr(""); setFgMsg(""); setFgEmail(email); }}>
-                          ¿Olvidaste tu contraseña?
-                        </button>
-                        <div className="auth-divider" />
-                        <p>Si no tienes una cuenta registrate aca</p>
-                        <Link className="auth-secondary" to="/login" onClick={() => setAuthOpen(false)}>
-                          Registrarme
-                        </Link>
+                        <div className="auth-link-forgot">
+                          <button
+                            className="auth-link"
+                            type="button"
+                            onClick={() => { setAuthMode("forgot"); setFgStep(0); setFgErr(""); setFgMsg(""); setFgEmail(email); }}
+                            disabled={loginBusy}
+                          >
+                            ¿Olvidaste tu contraseña?
+                          </button>
+                        </div>
+                        <p className="auth-register-text">Si no tienes una cuenta registrate aca</p>
+                        
+                        <ButtonWithLoader
+                          label="Registrarme"
+                          busy={registerBusy}
+                          onClick={handleRegisterNavigation}
+                          className="auth-secondary"
+                        />
                       </>
                     )}
 
                     {authMode === "forgot" && (
                       <div className="auth-form">
                         <div className="seg">
-                          <button
-                            type="button"
-                            className={`seg-btn ${fgStep === 0 ? "on" : ""}`}
-                            onClick={() => setFgStep(0)}
-                          >
+                          <button type="button" className={`seg-btn ${fgStep === 0 ? "on" : ""}`} onClick={() => setFgStep(0)}>
                             Enviar código
                           </button>
-                          <button
-                            type="button"
-                            className={`seg-btn ${fgStep === 1 ? "on" : ""}`}
-                            onClick={() => fgEmail ? setFgStep(1) : setFgStep(0)}
-                            disabled={!fgEmail}
-                          >
+                          <button type="button" className={`seg-btn ${fgStep === 1 ? "on" : ""}`} onClick={() => fgEmail ? setFgStep(1) : setFgStep(0)} disabled={!fgEmail}>
                             Ingresar código
                           </button>
                           <span className="seg-ind" style={{ transform: `translateX(${fgStep * 100}%)` }} />
@@ -386,12 +481,7 @@ export const Header = () => {
                           <>
                             <label>
                               <span>Correo</span>
-                              <input
-                                type="email"
-                                value={fgEmail}
-                                onChange={(e) => setFgEmail(e.target.value)}
-                                placeholder="tu@email.com"
-                              />
+                              <input type="email" value={fgEmail} onChange={(e) => setFgEmail(e.target.value)} placeholder="tu@email.com" />
                             </label>
                             {fgErr && <div className="auth-err">{fgErr}</div>}
                             {fgMsg && <div className="auth-ok">{fgMsg}</div>}
@@ -405,41 +495,19 @@ export const Header = () => {
                           <>
                             <label>
                               <span>Correo</span>
-                              <input
-                                type="email"
-                                value={fgEmail}
-                                onChange={(e) => setFgEmail(e.target.value)}
-                              />
+                              <input type="email" value={fgEmail} onChange={(e) => setFgEmail(e.target.value)} />
                             </label>
                             <label>
                               <span>Código</span>
-                              <input
-                                type="text"
-                                inputMode="numeric"
-                                maxLength={6}
-                                value={fgCode}
-                                onChange={(e) => setFgCode(e.target.value.replace(/\D/g, ""))}
-                                placeholder="6 dígitos"
-                              />
+                              <input type="text" inputMode="numeric" maxLength={6} value={fgCode} onChange={(e) => setFgCode(e.target.value.replace(/\D/g, ""))} placeholder="6 dígitos" />
                             </label>
                             <label>
                               <span>Nueva contraseña</span>
-                              <input
-                                type="password"
-                                value={fgP1}
-                                onChange={(e) => setFgP1(e.target.value)}
-                                minLength={9}
-                                placeholder="Mín. 9, letras y números"
-                              />
+                              <input type="password" value={fgP1} onChange={(e) => setFgP1(e.target.value)} minLength={9} placeholder="Mín. 9, letras y números" />
                             </label>
                             <label>
                               <span>Confirmar contraseña</span>
-                              <input
-                                type="password"
-                                value={fgP2}
-                                onChange={(e) => setFgP2(e.target.value)}
-                                minLength={9}
-                              />
+                              <input type="password" value={fgP2} onChange={(e) => setFgP2(e.target.value)} minLength={9} />
                             </label>
                             {fgErr && <div className="auth-err">{fgErr}</div>}
                             {fgMsg && <div className="auth-ok">{fgMsg}</div>}
@@ -467,16 +535,14 @@ export const Header = () => {
                         if (String(user.rol || "").toLowerCase() === "admin") navigate("/UserAdmin");
                         else navigate("/perfil");
                       }}
+                      disabled={logoutBusy}
                     >
                       Ir al perfil
                     </button>
 
-                    <button
-                      className="auth-primary"
-                      onClick={() => { onLogout(); navigate("/"); }}
-                    >
-                      Cerrar sesión
-                    </button>
+                    <div style={{ height: 44, display: "flex", alignItems: "center" }}>
+                      <ButtonWithLoader label="Cerrar sesión" busy={logoutBusy} onClick={onLogoutClick} />
+                    </div>
                   </>
                 )}
               </div>
@@ -497,13 +563,9 @@ export const Header = () => {
             onMouseEnter={() => setMenuOpen(true)}
             onMouseLeave={() => setMenuOpen(false)}
           >
-            <Link
-              to="/catalogo"
-              onClick={(e) => { e.preventDefault(); setMenuOpen((v) => !v); }}
-            >
+            <Link to="/catalogo" onClick={(e) => { e.preventDefault(); setMenuOpen((v) => !v); }}>
               Catálogo
             </Link>
-          
             <ul className="submenu">
               <li><Link to="/catalogo?cat=tortas" onClick={() => setMenuOpen(false)}>Tortas</Link></li>
               <li><Link to="/catalogo?cat=dulces" onClick={() => setMenuOpen(false)}>Dulces</Link></li>
@@ -516,12 +578,7 @@ export const Header = () => {
         </ul>
       </nav>
 
-      <Carrito
-        carrito={carrito}
-        setCarrito={setCarrito}
-        abrir={abrirCarrito}
-        setAbrir={setAbrirCarrito}
-      />
+      <Carrito carrito={carrito} setCarrito={setCarrito} abrir={abrirCarrito} setAbrir={setAbrirCarrito} />
     </header>
   );
 };

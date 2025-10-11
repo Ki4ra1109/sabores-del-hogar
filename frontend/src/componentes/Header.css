@@ -1,14 +1,14 @@
-:root{
-  --hdr-bg:#572420;
-  --panel-bg:#ffffff;
-  --panel-shadow:0 12px 28px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.12);
-  --panel-radius:14px;
-  --input-bg:#FFF1E6;
-  --input-bd:#D9C6B0;
-  --txt:#2C2A29;
-  --txt-inv:#FFFFFF;
-  --btn-primary:#572420;
-  --btn-primary-hover:#6d352e;
+:root {
+  --hdr-bg: #572420;
+  --panel-bg: #ffffff;
+  --panel-shadow: 0 12px 28px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.12);
+  --panel-radius: 14px;
+  --input-bg: #fff1e6;
+  --input-bd: #d9c6b0;
+  --txt: #2c2a29;
+  --txt-inv: #ffffff;
+  --btn-primary: #572420;
+  --btn-primary-hover: #6d352e;
 }
 
 header {
@@ -18,9 +18,9 @@ header {
   z-index: 500;
 }
 
-/* Banner */
+/* Banner superior con mensaje */
 .mensaje-banner {
-  background-color: #F8D7DA;
+  background-color: #f8d7da;
   overflow: hidden;
   white-space: nowrap;
 }
@@ -29,7 +29,7 @@ header {
   padding: 10px 0;
   font-weight: bold;
   font-size: 15px;
-  color: #8B5E3C;
+  color: #8b5e3c;
   animation: correr 10s linear infinite;
 }
 @keyframes correr {
@@ -37,7 +37,7 @@ header {
   100% { transform: translateX(-100%); }
 }
 
-/* Header */
+/* Navegación principal del Header */
 .Header-nav {
   display: flex;
   align-items: center;
@@ -57,19 +57,21 @@ header {
 }
 .Header-icon:hover {
   transform: scale(1.1) rotate(3deg);
-  filter: drop-shadow(0 0 8px rgba(255,182,193,0.7));
+  filter: drop-shadow(0 0 8px rgba(255, 182, 193, 0.7));
 }
 
 .NombreEmpresa {
   font-family: 'Times New Roman', Times, serif;
   font-size: 50px;
-  color: #F8D7DA;
+  color: #f8d7da;
   text-transform: uppercase;
   flex: 1;
   text-align: center;
-  margin-left: 230px;
+  margin: 0;
 }
-.NombreEmpresa:hover { color: #FFD166; }
+.NombreEmpresa:hover {
+  color: #ffd166;
+}
 
 .header-actions {
   display: flex;
@@ -77,7 +79,7 @@ header {
   gap: 16px;
 }
 
-/* Buscar */
+/* Barra de búsqueda */
 .buscar-container {
   position: relative;
   margin: 10px;
@@ -136,7 +138,7 @@ header {
 .res-nombre { display: block; font-weight: 700; color: #333; }
 .res-precio { display: block; font-size: .85rem; color: #8B5E3C; }
 
-/* Iconos header */
+/* Iconos de carrito y login */
 .Header-carrito-icon,
 .Header-login-icon {
   display: inline-flex;
@@ -167,7 +169,7 @@ header {
   filter: drop-shadow(0 0 8px rgba(255,182,193,0.7));
 }
 
-/* Navbar */
+/* Barra de navegación secundaria */
 .navbar {
   padding: 10px 20px;
   position: sticky;
@@ -192,7 +194,7 @@ header {
   color: #FFD166;
 }
 
-/* Submenu */
+/* Submenú del catálogo */
 .navbar .has-submenu {
   position: relative;
   padding-bottom: 10px;
@@ -225,93 +227,177 @@ header {
 }
 .submenu a:hover { background: #734b2f; color: #FFD166; }
 
-/* Auth */
-.auth-popover{ position:relative; display:flex; align-items:center; }
-.Header-login-trigger{ display:flex; align-items:center; gap:8px; background:transparent; border:0; cursor:pointer; }
-.auth-mini-text{ display:flex; flex-direction:column; align-items:flex-start; line-height:1; color:#F8D7DA; }
-.auth-mini-text span{ font-size:12px; opacity:.9; }
-.auth-mini-text strong{ font-size:13px; }
 
-.auth-panel{
-  position:absolute; right:0; top:calc(100% + 8px); width:320px;
-  background:var(--panel-bg);
-  border-radius:var(--panel-radius);
-  box-shadow:var(--panel-shadow);
-  padding:16px;
-  display:none;
-  z-index:650;
+/* --- Estilos del panel de autenticación --- */
+.auth-popover {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
-.auth-popover.open .auth-panel{ display:block; }
+.Header-login-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.auth-mini-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1;
+  color: #f8d7da;
+}
+.auth-mini-text span {
+  font-size: 12px;
+  opacity: 0.9;
+}
+.auth-mini-text strong {
+  font-size: 13px;
+}
 
-.auth-form{ display:grid; gap:12px; }
-.auth-form label span{
-  color:#333;
-  font-weight:700;
-  font-size:13px;
-  margin-bottom:6px;
+.auth-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 320px;
+  background: var(--panel-bg);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
+  padding: 16px;
+  display: none;
+  z-index: 650;
 }
-.auth-form input{
-  width:100%;
-  min-height:44px;
-  background:#fff;
-  border:1px solid #e6e6e6;
-  border-radius:8px;
-  padding:10px 12px;
-  color:#222;
-  outline:none;
+.auth-popover.open .auth-panel {
+  display: block;
 }
-.auth-form input:focus{
+
+.auth-form {
+  display: grid;
+  gap: 12px;
+}
+.auth-form label span {
+  color: #333;
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.auth-form input {
+  width: 100%;
+  min-height: 44px;
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #222;
+  outline: none;
+}
+.auth-form input:focus {
   border-color: var(--btn-primary);
-  box-shadow: 0 0 0 3px rgba(87,36,32,.15);
+  box-shadow: 0 0 0 3px rgba(87, 36, 32, 0.15);
 }
-.pwd-wrap{ position:relative; }
-.pwd-wrap input{ padding-right:44px; }
-.pwd-toggle{
-  position:absolute; right:10px; top:50%; transform:translateY(-50%);
-  color:#7b7b7b; background:transparent; border:0; cursor:pointer; line-height:0;
+.pwd-wrap {
+  position: relative;
 }
-.auth-hint{ margin-top:6px; color:#777; font-size:12px; }
+.pwd-wrap input {
+  padding-right: 44px;
+}
+.pwd-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #7b7b7b;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  line-height: 0;
+}
+.auth-hint {
+  margin-top: 6px;
+  color: #777;
+  font-size: 12px;
+}
 
 .auth-primary,
 .auth-secondary {
-  width:100%;
-  min-height:44px;
-  border:0;
-  border-radius:10px;
-  background:var(--btn-primary);
-  color:#fff;
-  font-weight:800;
-  cursor:pointer;
-  text-align:center;
-  padding:12px 14px;
-  display:block;
-  margin-top:10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
 }
-.auth-primary:hover,
+
+.auth-primary {
+  background: var(--btn-primary);
+  color: #fff;
+  border: 1px solid var(--btn-primary);
+}
+.auth-primary:hover {
+  background: var(--btn-primary-hover);
+  border-color: var(--btn-primary-hover);
+}
+
+.auth-secondary {
+  border: 1px solid #7c5c5c;
+  background-color: transparent;
+  color: #7c5c5c;
+}
 .auth-secondary:hover {
-  background:var(--btn-primary-hover);
+  background-color: var(--btn-primary);
+  color: #fff;
+  border-color: var(--btn-primary);
+  opacity: 1;
 }
 
-.auth-link{
-  display:block;
-  text-align:center;
-  margin:12px 0 8px;
-  color:var(--btn-primary);
-  text-decoration:none;
-  font-weight:600;
+.auth-link-forgot {
+  display: flex;
+  justify-content: center;
+  margin: 12px 0;
 }
-.auth-link:hover{ text-decoration:underline; }
+.auth-link-forgot button.auth-link {
+  font-size: 0.9em;
+  color: #666;
+  font-weight: 700;
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.auth-link-forgot button.auth-link:hover {
+  text-decoration: underline;
+}
 
-.auth-divider{ height:1px; background:#eee; margin:10px 0 14px; }
+.auth-register-text {
+  font-size: 0.9em;
+  color: #666;
+  text-align: center;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
 
-/* ----------- RESPONSIVE ------------ */
+.auth-divider {
+  height: 1px;
+  background: #eee;
+  margin: 10px 0 14px;
+}
+
+/* --- Estilos Responsivos --- */
 @media (max-width: 1200px) {
   .NombreEmpresa {
     font-size: 36px;
-    margin-left: 0;
   }
 }
-
 @media (max-width: 992px) {
   .Header-nav {
     flex-wrap: wrap;
@@ -325,13 +411,11 @@ header {
   .NombreEmpresa {
     font-size: 32px;
     text-align: center;
-    margin-left: 0;
   }
   .header-actions {
     gap: 10px;
   }
 }
-
 @media (max-width: 768px) {
   .Header-icon {
     height: 70px;
@@ -354,7 +438,6 @@ header {
     position: relative;
   }
 }
-
 @media (max-width: 480px) {
   .Header-icon {
     height: 50px;
@@ -370,39 +453,4 @@ header {
     right: 50%;
     transform: translateX(50%);
   }
-}
-.Header-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between; 
-  gap: 12px;
-  padding: 10px 20px;
-  position: sticky;
-  top: 0;
-  z-index: 500;
-  background-color: var(--hdr-bg);
-  position: relative; 
-}
-
-.NombreEmpresa {
-  font-family: 'Times New Roman', Times, serif;
-  font-size: 50px;
-  color: #F8D7DA;
-  text-transform: uppercase;
-
-  position: absolute;    
-  left: 50%;             
-  transform: translateX(-50%); 
-  margin: 0;            
-}
-.NombreEmpresa:hover {
-  color: #FFD166;
-}
-.auth-popover { 
-  position: relative; 
-  z-index: 2000; 
-}
-.auth-panel { 
-  position: absolute; 
-  z-index: 2100;   
 }

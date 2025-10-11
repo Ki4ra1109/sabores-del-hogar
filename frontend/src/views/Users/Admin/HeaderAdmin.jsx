@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FaUser, FaEye, FaEyeSlash } from "react-icons/fa";
 import "./HeaderAdmin.css";
 
@@ -8,6 +8,11 @@ export const HeaderAdmin = () => {
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
   const [showPwd, setShowPwd] = useState(false);
+
+  const [loginBusy, setLoginBusy] = useState(false);
+  const [logoutBusy, setLogoutBusy] = useState(false);
+  const [panelFading, setPanelFading] = useState(false);
+  const PANEL_FADE_MS = 280;
 
   const [user, setUser] = useState(() => {
     try {
@@ -19,13 +24,50 @@ export const HeaderAdmin = () => {
   });
 
   const authRef = useRef(null);
+  const emailRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const DotsInline = () => (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }} role="status" aria-live="polite">
+      <style>{`
+        @keyframes sdhDots { 0%,80%,100%{transform:translateY(0);opacity:.6} 40%{transform:translateY(-5px);opacity:1} }
+        .sdh-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:sdhDots 1s infinite}
+        .sdh-dot:nth-child(1){animation-delay:0s}
+        .sdh-dot:nth-child(2){animation-delay:.15s}
+        .sdh-dot:nth-child(3){animation-delay:.3s}
+      `}</style>
+      <span className="sdh-dot" />
+      <span className="sdh-dot" />
+      <span className="sdh-dot" />
+    </span>
+  );
+
+  const ButtonWithLoader = ({ label, busy, type = "button", onClick, disabled }) => (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled || busy}
+      className="auth-primary"
+      style={{
+        position: "relative",
+        width: "100%",
+        minHeight: 44,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 10,
+        color: "#fff"
+      }}
+    >
+      <span style={{ opacity: busy ? 0 : 1, transition: "opacity .15s" }}>{label}</span>
+      {busy && <span style={{ position: "absolute" }}><DotsInline /></span>}
+    </button>
+  );
 
   useEffect(() => {
     const onDocClick = (e) => {
-      if (authRef.current && !authRef.current.contains(e.target)) {
-        setAuthOpen(false);
-      }
+      if (authRef.current && !authRef.current.contains(e.target)) setAuthOpen(false);
     };
     const onEsc = (e) => e.key === "Escape" && setAuthOpen(false);
     document.addEventListener("mousedown", onDocClick);
@@ -36,33 +78,61 @@ export const HeaderAdmin = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (authOpen) setTimeout(() => emailRef.current?.focus(), 0);
+  }, [authOpen]);
+
   const onLoginSubmit = async (e) => {
     e.preventDefault();
+    if (loginBusy) return;
+    setLoginBusy(true);
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
+      const baseUrl = import.meta?.env?.VITE_API_URL ?? "http://localhost:5000";
+      const res = await fetch(`${baseUrl}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password: pwd }),
       });
       const data = await res.json();
-      if (res.ok) {
-        setUser(data.user);
-        localStorage.setItem("sdh_user", JSON.stringify(data.user));
-        setAuthOpen(false);
-        navigate("/Useradmin");
-      } else {
-        alert(data.message || "Credenciales inválidas");
-      }
+      if (!res.ok) throw new Error(data?.message || "Credenciales inválidas");
+
+      setUser(data.user);
+      localStorage.setItem("sdh_user", JSON.stringify(data.user));
+
+      setPanelFading(true);
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          setAuthOpen(false);
+          setEmail(""); setPwd("");
+          setTimeout(() => {
+            navigate("/Useradmin");
+            setLoginBusy(false);
+            setPanelFading(false);
+          }, 30);
+        }, PANEL_FADE_MS);
+      });
     } catch (err) {
-      console.error(err);
-      alert("Error en la conexión con el servidor");
+      alert(err.message || "Error en la conexión con el servidor");
+      setLoginBusy(false);
     }
   };
 
-  const onLogout = () => {
-    setUser(null);
-    localStorage.removeItem("sdh_user");
-    navigate("/");
+  const onLogoutClick = () => {
+    if (logoutBusy) return;
+    setLogoutBusy(true);
+    setPanelFading(true);
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        localStorage.removeItem("sdh_user");
+        setUser(null);
+        setAuthOpen(false);
+        setTimeout(() => {
+          navigate("/");
+          setLogoutBusy(false);
+          setPanelFading(false);
+        }, 30);
+      }, PANEL_FADE_MS);
+    });
   };
 
   return (
@@ -89,22 +159,37 @@ export const HeaderAdmin = () => {
             >
               <FaUser className="Header-login-icon" size={26} />
               <div className="auth-mini-text">
-                <span>Hola{user ? `, ${user.nombre}` : "!"}</span>
-                <strong>{user ? user.nombre : "Inicia sesión"}</strong>
+                {user ? (
+                  <span>Hola, <strong>{user.nombre}</strong></span>
+                ) : (
+                  <strong>Inicia sesión</strong>
+                )}
               </div>
             </button>
 
-            <div className="auth-panel" role="dialog" aria-label="Cuenta administrador">
+            <div
+              className="auth-panel"
+              role="dialog"
+              aria-label="Cuenta administrador"
+              style={{
+                opacity: panelFading ? 0 : 1,
+                transform: panelFading ? "translateY(-6px)" : "translateY(0)",
+                transition: "opacity .28s ease, transform .28s ease",
+                willChange: "opacity, transform"
+              }}
+            >
               {!user ? (
                 <>
                   <form className="auth-form" onSubmit={onLoginSubmit}>
                     <label>
                       <span>Email</span>
                       <input
+                        ref={emailRef}
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
+                        disabled={loginBusy}
                       />
                     </label>
 
@@ -117,19 +202,23 @@ export const HeaderAdmin = () => {
                           value={pwd}
                           onChange={(e) => setPwd(e.target.value)}
                           required
+                          disabled={loginBusy}
                         />
                         <button
                           type="button"
                           className="pwd-toggle"
                           onClick={() => setShowPwd((s) => !s)}
                           aria-label="Mostrar/ocultar contraseña"
+                          disabled={loginBusy}
                         >
                           {showPwd ? <FaEyeSlash /> : <FaEye />}
                         </button>
                       </div>
                     </label>
 
-                    <button type="submit" className="auth-primary">Iniciar Sesión</button>
+                    <div style={{ height: 44, display: "flex", alignItems: "center" }}>
+                      <ButtonWithLoader type="submit" label="Iniciar Sesión" busy={loginBusy} />
+                    </div>
                   </form>
 
                   <Link className="auth-link" to="/forgot" onClick={() => setAuthOpen(false)}>
@@ -141,15 +230,20 @@ export const HeaderAdmin = () => {
                   <p className="auth-hello">
                     Sesión iniciada como <strong>{user.nombre}</strong>
                   </p>
-                  <button
-                    className="auth-primary"
-                    onClick={() => navigate("/Useradmin")}
-                  >
-                    Ir al panel
-                  </button>
-                  <button className="auth-primary" onClick={onLogout}>
-                    Cerrar sesión
-                  </button>
+                  
+                  {location.pathname !== "/Useradmin" && (
+                    <button
+                      className="auth-primary"
+                      onClick={() => navigate("/Useradmin")}
+                      disabled={logoutBusy}
+                    >
+                      Ir al panel
+                    </button>
+                  )}
+
+                  <div style={{ height: 44, display: "flex", alignItems: "center" }}>
+                    <ButtonWithLoader label="Cerrar sesión" busy={logoutBusy} onClick={onLogoutClick} />
+                  </div>
                 </>
               )}
             </div>
