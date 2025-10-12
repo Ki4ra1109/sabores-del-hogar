@@ -1,39 +1,45 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../config/db");
+const { QueryTypes } = require("sequelize");
+const sequelize = require("../config/db");
 
-// GET solo clientes (usuarios normales)
-router.get("/", async (req, res) => {
+// ✅ Obtener todos los clientes con rol 'normal'
+router.get("/", async (_req, res) => {
   try {
-    const [rows] = await db.query(
-      "SELECT id, nombre, email, telefono FROM usuarios_detalle WHERE rol = 'normal'"
+    const rows = await sequelize.query(
+      "SELECT id, nombre, correo, telefono FROM usuarios WHERE rol = 'usuario';",
+      { type: QueryTypes.SELECT }
     );
     res.json(rows);
   } catch (error) {
-    console.error("Error al obtener clientes:", error);
-    res.status(500).json({ error: "Error en el servidor" });
+    console.error("❌ Error al obtener clientes:", error);
+    res.status(500).json({ error: "Error al obtener clientes" });
   }
 });
 
-// DELETE: eliminar cliente por correo
+// ✅ Eliminar cliente por correo
 router.delete("/correo/:correo", async (req, res) => {
+  const { correo } = req.params;
+  console.log("🗑️ Correo recibido para eliminar:", correo);
+
   try {
-    const correo = req.params.correo;
-    console.log("Correo recibido para eliminar:", correo);
+    const result = await sequelize.query(
+      "DELETE FROM usuarios WHERE correo = :correo RETURNING *;",
+      {
+        replacements: { correo },
+        type: QueryTypes.DELETE,
+      }
+    );
 
-    const query = "DELETE FROM usuarios_detalle WHERE email = $1 RETURNING *";
-    const result = await db.query(query, [correo]);
-
-    if (result.rowCount === 0) {
+    if (!result || result.length === 0) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
     res.json({ message: "Usuario eliminado correctamente" });
-  } catch (err) {
-    console.error("Error al eliminar usuario:", err);
+  } catch (error) {
+    console.error("❌ Error al eliminar usuario:", error);
     res.status(500).json({ error: "Error al eliminar usuario" });
   }
 });
-
 
 module.exports = router;

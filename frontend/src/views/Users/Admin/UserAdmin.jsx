@@ -1287,16 +1287,17 @@ const UserAdmin = () => {
       </div>
     </div>
   );
+
   //SECCION GESTIOS DE CLIENTES
   const RenderClientes = () => {
     const [clientes, setClientes] = useState([]);
 
-    // Obtener clientes al cargar
     useEffect(() => {
       const fetchClientes = async () => {
         try {
           const res = await fetch("http://localhost:5000/api/clientes");
           const data = await res.json();
+          console.log("Clientes recibidos desde backend:", data);
           setClientes(data);
         } catch (err) {
           console.error("Error al obtener clientes", err);
@@ -1305,7 +1306,6 @@ const UserAdmin = () => {
       fetchClientes();
     }, []);
 
-    // Eliminar cliente por correo
     const eliminarCliente = async (correo) => {
       if (!window.confirm("¿Seguro que deseas eliminar este cliente?")) return;
 
@@ -1316,8 +1316,7 @@ const UserAdmin = () => {
 
         if (!response.ok) throw new Error("Error al eliminar cliente");
 
-        // eliminar del frontend solo el cliente que fue borrado
-        setClientes(clientes.filter((c) => c.email !== correo));
+        setClientes(clientes.filter((c) => c.correo !== correo));
       } catch (err) {
         console.error("Error al eliminar cliente", err);
       }
@@ -1327,24 +1326,27 @@ const UserAdmin = () => {
       <div className="card">
         <h2>Gestión de clientes</h2>
         <div className="list">
-          {clientes.map((c, i) => (
-            <div key={c.id || i} className="client">
-              <div>
-                <h4>{c.nombre}</h4>
-                <p>{c.email}</p>
-                <p>{c.telefono}</p>
+          {clientes.length === 0 ? (
+            <p>No hay clientes registrados o error al cargar.</p>
+          ) : (
+            clientes.map((c, i) => (
+              <div key={c.id || i} className="client">
+                <div>
+                  <h4>{c.nombre}</h4>
+                  <p>{c.correo}</p>
+                  <p>{c.telefono}</p>
+                </div>
+                <div className="row">
+                  <button
+                    className="btn sm danger"
+                    onClick={() => eliminarCliente(c.correo)}
+                  >
+                    Eliminar
+                  </button>
+                </div>
               </div>
-              <div className="row">
-                <button className="btn sm">Modificar</button>
-                <button
-                  className="btn sm danger"
-                  onClick={() => eliminarCliente(c.email)}
-                >
-                  Eliminar
-                </button>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     );
@@ -1363,7 +1365,7 @@ const UserAdmin = () => {
   // Cuenta conectada
   const renderAccount = () => <CuentaPanel />;
 
- const renderSettings = () => (
+  const renderSettings = () => (
     <div className="card">
       <h2>Configuración</h2>
 
@@ -1373,7 +1375,7 @@ const UserAdmin = () => {
       </p>
 
       <div className="row mt" style={{ justifyContent: 'flex-end' }}>
-      
+
       </div>
     </div>
   );

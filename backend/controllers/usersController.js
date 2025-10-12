@@ -6,7 +6,7 @@ const toSafe = (u) => ({
   nombre: u.nombre,
   apellido: u.apellido,
   rut: u.rut,
-  email: u.email,
+  correo: u.correo,
   telefono: u.telefono,
   fecha_nacimiento: u.fecha_nacimiento,
   direccion: u.direccion,
@@ -32,19 +32,19 @@ async function patchUsuario(req, res) {
     if (!u) return res.status(404).json({ message: "Usuario no encontrado" });
 
     const {
-      nombre, apellido, rut, email, telefono,
+      nombre, apellido, rut, correo, telefono,
       fecha_nacimiento, direccion, password, rol
     } = req.body || {};
 
-    if (email && email !== u.email) {
-      const exists = await User.findOne({ where: { email } });
+    if (correo && correo !== u.correo) {
+      const exists = await User.findOne({ where: { correo } });
       if (exists) return res.status(400).json({ message: "El correo ya está registrado" });
     }
     const data = {};
     if (nombre != null) data.nombre = nombre;
     if (apellido != null) data.apellido = apellido;
     if (rut != null) data.rut = rut;
-    if (email != null) data.email = String(email).toLowerCase().trim();
+    if (correo != null) data.correo = String(correo).toLowerCase().trim();
     if (telefono != null) data.telefono = telefono;
     if (fecha_nacimiento != null) data.fecha_nacimiento = fecha_nacimiento;
     if (direccion != null) data.direccion = direccion;
@@ -81,7 +81,7 @@ async function updateMyPassword(req, res) {
       ok: true,
       user: {
         id: u.id,
-        email: u.email,
+        correo: u.correo,
         rol: u.rol,
         mustSetPassword: false,
         passwordSetAt: u.password_set_at
@@ -103,7 +103,7 @@ async function getMe(req, res) {
         id: u.id,
         nombre: u.nombre,
         apellido: u.apellido,
-        email: u.email,
+        correo: u.correo,
         rol: u.rol,
         mustSetPassword: !!u.must_set_password,
         passwordSetAt: u.password_set_at

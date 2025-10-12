@@ -9,7 +9,7 @@ const PasswordReset = db.define(
       primaryKey: true,
       autoIncrement: true,
     },
-    email: {
+    correo: {
       type: DataTypes.STRING,
       allowNull: false,
     },
