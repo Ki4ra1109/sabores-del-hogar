@@ -16,7 +16,7 @@ router.get("/me", authJwt, getMe);
 // Cambiar contraseña del propio usuario
 router.patch("/me/password", authJwt, updateMyPassword);
 
-// Obtener un usuario por id (sin auth si así lo desean; agrega authJwt si debe protegerse)
+// Obtener un usuario por id (sin auth si así lo desean)
 router.get("/:id", getUsuario);
 
 // Actualizar parcialmente un usuario por id
