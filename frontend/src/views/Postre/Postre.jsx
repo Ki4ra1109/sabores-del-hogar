@@ -49,45 +49,47 @@ const Postre = () => {
   const personasOK = Math.max(15, Number.isFinite(+personas) ? +personas : 15);
   const cantidadOK = Math.max(6, Number.isFinite(+cantidad) ? +cantidad : 6);
 
-  const total = useMemo(() => {
-    if (!["torta", "cupcake", "tartaleta"].includes(opcion)) return 0;
+// En Postre.jsx: línea donde defines total
+const total = useMemo(() => {
+  if (!["torta", "cupcake", "tartaleta"].includes(opcion)) return 0;
 
-    const base =
-      opcion === "torta"
-        ? personasOK * precios.basePersona
-        : cantidadOK * precios.basePersona;
+  const base =
+    opcion === "torta"
+      ? personasOK * precios.basePersona
+      : cantidadOK * precios.basePersona;
 
-    let t = base + precios.gananciaFija;
+  let t = base + precios.gananciaFija;
 
-    if (bizcocho) t += precios.bizcocho;
-    if (crema) t += precios.crema;
+  if (bizcocho) t += precios.bizcocho;
+  if (crema) t += precios.crema;
 
-    if (opcion === "torta" && relleno) t += precios.relleno;
-    if (opcion === "cupcake" && cupcakeConRelleno && relleno) t += precios.relleno;
+  if (opcion === "torta" && relleno) t += precios.relleno;
+  if (opcion === "cupcake" && cupcakeConRelleno && relleno) t += precios.relleno;
 
-    if (extraChips) t += precios.extra;
-    if (extraNueces) t += precios.extra;
-    if (extraChispitas) t += precios.extra;
-    if (extraFrutasConfitadas) t += precios.extra;
-    if (extraFondant) t += precios.extra;
-    if (extraCaramelo) t += precios.extra;
+  if (extraChips) t += precios.extra;
+  if (extraNueces) t += precios.extra;
+  if (extraChispitas) t += precios.extra;
+  if (extraFrutasConfitadas) t += precios.extra;
+  if (extraFondant) t += precios.extra;
+  if (extraCaramelo) t += precios.extra;
 
-    return t;
-  }, [
-    opcion,
-    personasOK,
-    cantidadOK,
-    bizcocho,
-    relleno,
-    crema,
-    extraChips,
-    extraNueces,
-    extraChispitas,
-    extraFrutasConfitadas,
-    extraFondant,
-    extraCaramelo,
-    cupcakeConRelleno,
-  ]);
+  return t;
+}, [
+  opcion,
+  personasOK,
+  cantidadOK,
+  bizcocho,
+  relleno,
+  crema,
+  extraChips,
+  extraNueces,
+  extraChispitas,
+  extraFrutasConfitadas,
+  extraFondant,
+  extraCaramelo,
+  cupcakeConRelleno,
+]);
+
 
   const onChangePersonas = (e) =>
     setPersonas(Math.max(15, parseInt(e.target.value || 15, 10)));

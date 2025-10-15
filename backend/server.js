@@ -15,6 +15,7 @@ const cuponRoutes = require("./Routes/cuponRoutes");
 const productosRoutes = require("./Routes/productos");
 const clientesRoutes = require("./Routes/clientesRoutes");
 const carritoRoutes = require("./Routes/carritoRoutes");
+const pedidoRoutes = require("./Routes/pedidoRoutes");
 
 // Modelos
 const User = require("./models/User");
@@ -37,7 +38,7 @@ app.use("/api/cupones", cuponRoutes);
 app.use("/api/clientes", clientesRoutes);
 app.use("/api/productos", productosRoutes);
 app.use("/api/carrito", carritoRoutes);
-
+app.use("/api/pedidos", pedidoRoutes);
 // Test DB
 app.get("/api/test", async (req, res) => {
     try {
@@ -85,5 +86,5 @@ app.post("/api/auth/register", async (req, res) => {
 // Puerto
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`Servidor corriendo en puerto ${PORT}`);
+    console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
 });
