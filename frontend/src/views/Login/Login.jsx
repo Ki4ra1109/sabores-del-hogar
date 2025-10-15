@@ -6,6 +6,23 @@ import { jwtDecode } from "jwt-decode";
 
 const API_BASE = import.meta.env?.VITE_API_URL || "http://localhost:5000";
 
+function DotsInline() {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }} role="status" aria-live="polite">
+      <style>{`
+        @keyframes sdhDots { 0%,80%,100%{transform:translateY(0);opacity:.6} 40%{transform:translateY(-5px);opacity:1} }
+        .sdh-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:sdhDots 1s infinite}
+        .sdh-dot:nth-child(1){animation-delay:0s}
+        .sdh-dot:nth-child(2){animation-delay:.15s}
+        .sdh-dot:nth-child(3){animation-delay:.3s}
+      `}</style>
+      <span className="sdh-dot" />
+      <span className="sdh-dot" />
+      <span className="sdh-dot" />
+    </span>
+  );
+}
+
 function Modal({ isOpen, title, onClose, children }) {
   const first = useRef(null);
   useEffect(() => {
@@ -38,6 +55,9 @@ export default function Login() {
   const [p1, setP1] = useState("");
   const [p2, setP2] = useState("");
   const [errC, setErrC] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [heroBusySignup, setHeroBusySignup] = useState(false);
+  const [heroBusyLogin, setHeroBusyLogin] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -78,13 +98,28 @@ export default function Login() {
   };
   const openForgot = () => { setShowLogin(false); setShowForgot(true); };
 
+  const openLoginHero = async () => {
+    setHeroBusyLogin(true);
+    await new Promise(r => setTimeout(r, 1500));
+    setHeroBusyLogin(false);
+    openLogin();
+  };
+  const openSignupHero = async () => {
+    setHeroBusySignup(true);
+    await new Promise(r => setTimeout(r, 1500));
+    setHeroBusySignup(false);
+    openSignup();
+  };
+
   const guardarPasswordNueva = async () => {
     setErrC("");
     if (p1 !== p2) return setErrC("Las contraseñas no coinciden");
     const ok = p1.length >= 9 && /[A-Za-z]/.test(p1) && /\d/.test(p1);
     if (!ok) return setErrC("Mínimo 9 caracteres con letras y números");
-    
+    const t0 = Date.now();
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     try {
+      setSaving(true);
       const tempToken = sessionStorage.getItem('tempGoogleToken');
       if (!tempToken) throw new Error("No se encontró el token temporal de registro.");
 
@@ -108,6 +143,10 @@ export default function Login() {
 
     } catch (e) {
       setErrC(e.message || "Error al guardar");
+    } finally {
+      const elapsed = Date.now() - t0;
+      if (elapsed < 1500) await sleep(1500 - elapsed);
+      setSaving(false);
     }
   };
 
@@ -129,14 +168,36 @@ export default function Login() {
 
           <div className="auth-div"><span>o</span></div>
 
-          <button className="auth-btn auth-btn-primary" type="button" onClick={openSignup}>
-            Crear cuenta
+          <button
+            className="auth-btn auth-btn-primary"
+            type="button"
+            onClick={openSignupHero}
+            disabled={heroBusySignup}
+            style={{ position: "relative", minHeight: 44 }}
+          >
+            <span style={{ opacity: heroBusySignup ? 0 : 1, transition: "opacity .15s" }}>Crear cuenta</span>
+            {heroBusySignup && (
+              <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <DotsInline />
+              </span>
+            )}
           </button>
 
           <div className="auth-row">
             <span>¿Ya tienes una cuenta?</span>
-            <button className="auth-link" type="button" onClick={openLogin}>
-              Iniciar sesión
+            <button
+              className="auth-link"
+              type="button"
+              onClick={openLoginHero}
+              disabled={heroBusyLogin}
+              style={{ position: "relative", minHeight: 28 }}
+            >
+              <span style={{ opacity: heroBusyLogin ? 0 : 1, transition: "opacity .15s" }}>Iniciar sesión</span>
+              {heroBusyLogin && (
+                <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <DotsInline />
+                </span>
+              )}
             </button>
           </div>
         </section>
@@ -158,7 +219,7 @@ export default function Login() {
               value={p1}
               onChange={(e) => setP1(e.target.value)}
               minLength={9}
-              pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{9,}$"
+              pattern="^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{9,}$"
               placeholder="Mín. 9, letras y números"
             />
           </div>
@@ -169,17 +230,32 @@ export default function Login() {
               value={p2}
               onChange={(e) => setP2(e.target.value)}
               minLength={9}
-              pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{9,}$"
+              pattern="^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{9,}$"
             />
           </div>
           {errC && <div className="auth-err" role="alert">{errC}</div>}
-          <button className="auth-btn auth-btn-primary" type="button" onClick={guardarPasswordNueva}>
-            Guardar
+          <button
+            className="auth-btn auth-btn-primary"
+            type="button"
+            onClick={guardarPasswordNueva}
+            disabled={saving}
+            style={{ position: "relative", minHeight: 44 }}
+          >
+            <span style={{ opacity: saving ? 0 : 1, transition: "opacity .15s" }}>Guardar</span>
+            {saving && (
+              <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <DotsInline />
+              </span>
+            )}
           </button>
         </div>
       </Modal>
 
-      <RecoverModal isOpen={showForgot} onClose={() => setShowForgot(false)} />
+      <RecoverModal
+        isOpen={showForgot}
+        onClose={() => setShowForgot(false)}
+        onGoSignup={() => { setShowForgot(false); setShowSignup(true); }}
+      />
     </div>
   );
 }
@@ -204,6 +280,8 @@ function LoginModal({ isOpen, onClose, onSwap, onForgot }) {
   const onSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
+    const t0 = Date.now();
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     setLoading(true);
     setErrors((p) => ({ ...p, global: "" }));
     try {
@@ -225,6 +303,8 @@ function LoginModal({ isOpen, onClose, onSwap, onForgot }) {
     } catch {
       setErrors((p) => ({ ...p, global: "Error de conexión con el servidor" }));
     } finally {
+      const elapsed = Date.now() - t0;
+      if (elapsed < 1500) await sleep(1500 - elapsed);
       setLoading(false);
     }
   };
@@ -250,8 +330,13 @@ function LoginModal({ isOpen, onClose, onSwap, onForgot }) {
           {errors.password && <span className="auth-err">{errors.password}</span>}
         </div>
 
-        <button type="submit" className="auth-btn auth-btn-primary" disabled={loading}>
-          {loading ? "Ingresando..." : "Entrar"}
+        <button type="submit" className="auth-btn auth-btn-primary" disabled={loading} style={{ position: "relative", minHeight: 44 }}>
+          <span style={{ opacity: loading ? 0 : 1, transition: "opacity .15s" }}>Entrar</span>
+          {loading && (
+            <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <DotsInline />
+            </span>
+          )}
         </button>
       </form>
 
@@ -316,7 +401,8 @@ function SignupModal({ isOpen, onClose, onSwap }) {
     setSubmitted(true);
     setErrors((p) => ({ ...p, global: "" }));
     if (!validateAll()) return;
-
+    const t0 = Date.now();
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     try {
       setLoading(true);
       const res = await fetch(`${API_BASE}/api/auth/register`, {
@@ -340,6 +426,8 @@ function SignupModal({ isOpen, onClose, onSwap }) {
     } catch {
       setErrors((p) => ({ ...p, global: "Error de conexión con el servidor" }));
     } finally {
+      const elapsed = Date.now() - t0;
+      if (elapsed < 1500) await sleep(1500 - elapsed);
       setLoading(false);
     }
   };
@@ -377,7 +465,7 @@ function SignupModal({ isOpen, onClose, onSwap }) {
               onChange={onChange}
               onBlur={() => setT("password")}
               minLength={9}
-              pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{9,}$"
+              pattern="^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{9,}$"
             />
             <button type="button" className="af-eye" aria-pressed={showPass} onClick={() => setShowPass(v => !v)}>
               {showPass ? "🙈" : "👁️"}
@@ -387,8 +475,13 @@ function SignupModal({ isOpen, onClose, onSwap }) {
           {showErr("password") && <span className="auth-err">{errors.password}</span>}
         </div>
 
-        <button type="submit" className="auth-btn auth-btn-primary" disabled={loading}>
-          {loading ? "Creando cuenta..." : "Registrarse"}
+        <button type="submit" className="auth-btn auth-btn-primary" disabled={loading} style={{ position: "relative", minHeight: 44 }}>
+          <span style={{ opacity: loading ? 0 : 1, transition: "opacity .15s" }}>Registrarse</span>
+          {loading && (
+            <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <DotsInline />
+            </span>
+          )}
         </button>
       </form>
       <p className="auth-swap">¿Ya tienes cuenta? <button className="auth-link" type="button" onClick={onSwap}>Inicia sesión</button></p>
@@ -396,7 +489,7 @@ function SignupModal({ isOpen, onClose, onSwap }) {
   );
 }
 
-function RecoverModal({ isOpen, onClose }) {
+function RecoverModal({ isOpen, onClose, onGoSignup }) {
   const [tab, setTab] = useState("send");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -418,8 +511,23 @@ function RecoverModal({ isOpen, onClose }) {
   const send = async () => {
     setErr(""); setMsg("");
     if (!/\S+@\S+\.\S+/.test(email)) return setErr("Ingresa un email válido");
+    const t0 = Date.now();
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     try {
       setLoading(true);
+
+      const chk = await fetch(`${API_BASE}/api/auth/check-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const cj = await chk.json().catch(() => ({}));
+      if (!chk.ok) throw new Error(cj?.message || "Error validando correo");
+      if (!cj.exists) {
+        if (typeof onGoSignup === "function") onGoSignup();
+        return;
+      }
+
       const res = await fetch(`${API_BASE}/api/auth/forgot`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -432,6 +540,8 @@ function RecoverModal({ isOpen, onClose }) {
     } catch (e) {
       setErr(e.message || "Error");
     } finally {
+      const elapsed = Date.now() - t0;
+      if (elapsed < 1500) await sleep(1500 - elapsed);
       setLoading(false);
     }
   };
@@ -442,6 +552,8 @@ function RecoverModal({ isOpen, onClose }) {
     if (!/^\d{6}$/.test(code)) return setErr("Código de 6 dígitos");
     if (p1 !== p2) return setErr("Las contraseñas no coinciden");
     if (!validatePass(p1)) return setErr("Mín. 9, letras y números");
+    const t0 = Date.now();
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     try {
       setLoading(true);
       const res = await fetch(`${API_BASE}/api/auth/reset`, {
@@ -455,6 +567,8 @@ function RecoverModal({ isOpen, onClose }) {
     } catch (e) {
       setErr(e.message || "Error");
     } finally {
+      const elapsed = Date.now() - t0;
+      if (elapsed < 1500) await sleep(1500 - elapsed);
       setLoading(false);
     }
   };
@@ -505,8 +619,19 @@ function RecoverModal({ isOpen, onClose }) {
             </div>
             {err && <div className="auth-err" role="alert">{err}</div>}
             {msg && <div className="auth-ok" role="status">{msg}</div>}
-            <button className="auth-btn auth-btn-primary" type="button" onClick={send} disabled={loading}>
-              {loading ? "Enviando..." : "Enviar código"}
+            <button
+              className="auth-btn auth-btn-primary"
+              type="button"
+              onClick={send}
+              disabled={loading}
+              style={{ position: "relative", minHeight: 44 }}
+            >
+              <span style={{ opacity: loading ? 0 : 1, transition: "opacity .15s" }}>Enviar código</span>
+              {loading && (
+                <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <DotsInline />
+                </span>
+              )}
             </button>
           </>
         ) : (
@@ -516,7 +641,7 @@ function RecoverModal({ isOpen, onClose }) {
               <input
                 type="text"
                 inputMode="numeric"
-                pattern="\d{6}"
+                pattern="\\d{6}"
                 maxLength={6}
                 value={code}
                 onChange={(e)=>setCode(e.target.value)}
@@ -533,8 +658,19 @@ function RecoverModal({ isOpen, onClose }) {
             </div>
             {err && <div className="auth-err" role="alert">{err}</div>}
             {msg && <div className="auth-ok" role="status">{msg}</div>}
-            <button className="auth-btn auth-btn-primary" type="button" onClick={reset} disabled={loading}>
-              {loading ? "Actualizando..." : "Actualizar contraseña"}
+            <button
+              className="auth-btn auth-btn-primary"
+              type="button"
+              onClick={reset}
+              disabled={loading}
+              style={{ position: "relative", minHeight: 44 }}
+            >
+              <span style={{ opacity: loading ? 0 : 1, transition: "opacity .15s" }}>Actualizar contraseña</span>
+              {loading && (
+                <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <DotsInline />
+                </span>
+              )}
             </button>
           </>
         )}
