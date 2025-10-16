@@ -83,13 +83,11 @@ async function registerUser(req, res) {
       if (existingRut) return res.status(400).json({ message: "El RUT ya está registrado" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     const newUser = await User.create({
       nombre,
       apellido,
       email: emailNorm,
-      password: hashedPassword,
+      password,
       rut: rutNorm || null,
       telefono: telefono || null,
       fecha_nacimiento: fechaNacimiento || null,
@@ -151,10 +149,9 @@ async function googleLoginToken(req, res) {
     let user = await User.findOne({ where: { email } });
     let isNew = false;
     if (!user) {
-      const tempPass = await bcrypt.hash(genTempPassword(), 10);
       user = await User.create({
         email,
-        password: tempPass,
+        password: genTempPassword(),
         nombre: given,
         apellido: family || "",
         rol: "usuario",
@@ -241,13 +238,11 @@ async function googleComplete(req, res) {
       return res.status(400).json({ message: "Este correo ya fue registrado." });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     const newUser = await User.create({
       nombre: decoded.nombre,
       apellido: decoded.apellido || "", 
       email: decoded.email,
-      password: hashedPassword,
+      password,
       googleId: decoded.googleId,
       rol: "usuario",
     });
@@ -345,7 +340,7 @@ async function resetPassword(req, res) {
     const sameAsOld = await bcrypt.compare(newPassword, u.password || "");
     if (sameAsOld) return res.status(400).json({ message: "La nueva contraseña debe ser distinta a la actual" });
 
-    u.password = await bcrypt.hash(newPassword, 10);
+    u.password = newPassword;
     await u.save();
 
     pr.used = true;

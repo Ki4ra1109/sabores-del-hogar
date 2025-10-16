@@ -20,6 +20,7 @@ export const Header = () => {
   const [loginDone, setLoginDone] = useState(false);
   const [logoutBusy, setLogoutBusy] = useState(false);
   const [registerBusy, setRegisterBusy] = useState(false);
+  const [loginErr, setLoginErr] = useState("");
 
   const [user, setUser] = useState(() => {
     try {
@@ -206,6 +207,7 @@ export const Header = () => {
     e.preventDefault();
     if (loginBusy) return;
     setLoginBusy(true);
+    setLoginErr("");
     try {
       const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
       const res = await fetch(`${baseUrl}/api/auth/login`, {
@@ -234,7 +236,7 @@ export const Header = () => {
         }, PANEL_FADE_MS);
       });
     } catch (err) {
-      alert(err.message || "Error en la conexión con el servidor");
+      setLoginErr(err.message || "Error en la conexión con el servidor");
       setLoginBusy(false);
     }
   };
@@ -480,6 +482,8 @@ export const Header = () => {
                               </button>
                             </div>
                           </label>
+
+                          {loginErr && <div className="auth-err" role="alert">{loginErr}</div>}
 
                           <div style={{ height: 44, display: "flex", alignItems: "center" }}>
                             <ButtonWithLoader type="submit" label="Iniciar Sesión" busy={loginBusy} />

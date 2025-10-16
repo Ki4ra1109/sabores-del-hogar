@@ -488,3 +488,22 @@ header {
   background: var(--btn-primary);
   transition: transform .25s ease;
 }
+.auth-ok {
+
+  margin: 8px 0 0 ;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #e8f8ec;
+  color: #1b7a36;
+  border: 1px solid #b7e3c1;
+  font-weight: 600;
+  text-align: center;
+}
+
+.auth-form input[readonly] {
+  background-color: #f1f1f1;
+  color: #555;
+  cursor: not-allowed;
+  opacity: 0.8;
+
+}
