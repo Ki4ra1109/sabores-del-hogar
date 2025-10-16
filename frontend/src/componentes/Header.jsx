@@ -20,6 +20,7 @@ export const Header = () => {
   const [loginDone, setLoginDone] = useState(false);
   const [logoutBusy, setLogoutBusy] = useState(false);
   const [registerBusy, setRegisterBusy] = useState(false);
+  const [loginErr, setLoginErr] = useState("");
 
   const [user, setUser] = useState(() => {
     try {
@@ -36,6 +37,8 @@ export const Header = () => {
   const [fgErr, setFgErr] = useState("");
   const [fgMsg, setFgMsg] = useState("");
   const [fgBusy, setFgBusy] = useState(false);
+  const [showFgP1, setShowFgP1] = useState(false);
+  const [showFgP2, setShowFgP2] = useState(false);
 
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -49,6 +52,7 @@ export const Header = () => {
   const location = useLocation();
 
   const PANEL_FADE_MS = 280;
+  const FG_STORE = "sdh_fg_state";
 
   const DotsInline = () => (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }} role="status" aria-live="polite">
@@ -90,6 +94,31 @@ export const Header = () => {
     () => location.pathname.toLowerCase() === "/login",
     [location.pathname]
   );
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(FG_STORE);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      setAuthMode("forgot");
+      setFgEmail(s.email || "");
+      setFgStep(s.step === 1 ? 1 : 0);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    const nav = performance.getEntriesByType?.('navigation')?.[0];
+    if (nav && nav.type === 'reload') {
+      const raw = localStorage.getItem(FG_STORE);
+      if (raw) setAuthOpen(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    const onBeforeUnload = () => localStorage.removeItem(FG_STORE);
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, []);
 
   const loadCart = () => {
     try {
@@ -178,6 +207,7 @@ export const Header = () => {
     e.preventDefault();
     if (loginBusy) return;
     setLoginBusy(true);
+    setLoginErr("");
     try {
       const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
       const res = await fetch(`${baseUrl}/api/auth/login`, {
@@ -206,7 +236,7 @@ export const Header = () => {
         }, PANEL_FADE_MS);
       });
     } catch (err) {
-      alert(err.message || "Error en la conexión con el servidor");
+      setLoginErr(err.message || "Error en la conexión con el servidor");
       setLoginBusy(false);
     }
   };
@@ -227,6 +257,8 @@ export const Header = () => {
   const sendCode = async () => {
     setFgErr(""); setFgMsg("");
     if (!/\S+@\S+\.\S+/.test(fgEmail)) { setFgErr("Ingresa un correo válido"); return; }
+    const t0 = Date.now();
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     try {
       setFgBusy(true);
       const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
@@ -239,9 +271,12 @@ export const Header = () => {
       if (!r.ok) throw new Error(d?.message || "No se pudo enviar el código");
       setFgMsg("Código enviado. Revisa tu correo.");
       setFgStep(1);
+      localStorage.setItem(FG_STORE, JSON.stringify({ email: fgEmail, step: 1 }));
     } catch (e) {
       setFgErr(e.message || "Error al enviar código");
     } finally {
+      const elapsed = Date.now() - t0;
+      if (elapsed < 1500) await sleep(1500 - elapsed);
       setFgBusy(false);
     }
   };
@@ -250,9 +285,9 @@ export const Header = () => {
     setFgErr(""); setFgMsg("");
     if (!/^\d{6}$/.test(fgCode)) { setFgErr("Código de 6 dígitos"); return; }
     if (fgP1 !== fgP2) { setFgErr("Las contraseñas no coinciden"); return; }
-    if (!(fgP1.length >= 9 && /[A-Za-z]/.test(fgP1) && /\d/.test(fgP1))) {
-      setFgErr("Mínimo 9, con letras y números"); return;
-    }
+    if (!(fgP1.length >= 9 && /[A-Za-z]/.test(fgP1) && /\d/.test(fgP1))) { setFgErr("Mínimo 9, con letras y números"); return; }
+    const t0 = Date.now();
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     try {
       setFgBusy(true);
       const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
@@ -267,9 +302,13 @@ export const Header = () => {
       setAuthMode("login");
       setFgStep(0);
       setEmail(fgEmail);
+      setPwd("");
+      localStorage.removeItem(FG_STORE);
     } catch (e) {
       setFgErr(e.message || "Error al actualizar");
     } finally {
+      const elapsed = Date.now() - t0;
+      if (elapsed < 1500) await sleep(1500 - elapsed);
       setFgBusy(false);
     }
   };
@@ -291,6 +330,10 @@ export const Header = () => {
       }, PANEL_FADE_MS);
     });
   };
+
+  const autoShow = (setter) => { setter(true); setTimeout(() => setter(false), 2000); };
+  const onP1Blur = () => { if (fgP2 && fgP1 !== fgP2) setFgErr("Las contraseñas no coinciden"); };
+  const onP2Blur = () => { if (fgP1 && fgP1 !== fgP2) setFgErr("Las contraseñas no coinciden"); };
 
   return (
     <header>
@@ -395,7 +438,8 @@ export const Header = () => {
                   opacity: loginDone ? 0 : 1,
                   transform: loginDone ? "translateY(-6px)" : "translateY(0)",
                   transition: "opacity .28s ease, transform .28s ease",
-                  willChange: "opacity, transform"
+                  willChange: "opacity, transform",
+                  pointerEvents: authOpen ? "auto" : "none"
                 }}
               >
                 {!user ? (
@@ -439,6 +483,8 @@ export const Header = () => {
                             </div>
                           </label>
 
+                          {loginErr && <div className="auth-err" role="alert">{loginErr}</div>}
+
                           <div style={{ height: 44, display: "flex", alignItems: "center" }}>
                             <ButtonWithLoader type="submit" label="Iniciar Sesión" busy={loginBusy} />
                           </div>
@@ -474,7 +520,10 @@ export const Header = () => {
                           <button type="button" className={`seg-btn ${fgStep === 1 ? "on" : ""}`} onClick={() => fgEmail ? setFgStep(1) : setFgStep(0)} disabled={!fgEmail}>
                             Ingresar código
                           </button>
-                          <span className="seg-ind" style={{ transform: `translateX(${fgStep * 100}%)` }} />
+                          <span 
+                            className="seg-ind" 
+                            style={{ transform: `translateX(calc(${fgStep * 100}% + ${fgStep === 1 ? 4 : 0}px))` }} 
+                          />
                         </div>
 
                         {fgStep === 0 && (
@@ -485,9 +534,7 @@ export const Header = () => {
                             </label>
                             {fgErr && <div className="auth-err">{fgErr}</div>}
                             {fgMsg && <div className="auth-ok">{fgMsg}</div>}
-                            <button type="button" className="auth-primary" onClick={sendCode} disabled={fgBusy}>
-                              {fgBusy ? "Enviando..." : "Enviar código"}
-                            </button>
+                            <ButtonWithLoader label="Enviar código" busy={fgBusy} onClick={sendCode} />
                           </>
                         )}
 
@@ -495,7 +542,7 @@ export const Header = () => {
                           <>
                             <label>
                               <span>Correo</span>
-                              <input type="email" value={fgEmail} onChange={(e) => setFgEmail(e.target.value)} />
+                              <input type="email" value={fgEmail} readOnly />
                             </label>
                             <label>
                               <span>Código</span>
@@ -503,21 +550,57 @@ export const Header = () => {
                             </label>
                             <label>
                               <span>Nueva contraseña</span>
-                              <input type="password" value={fgP1} onChange={(e) => setFgP1(e.target.value)} minLength={9} placeholder="Mín. 9, letras y números" />
+                              <div className="pwd-wrap">
+                                <input
+                                  type={showFgP1 ? "text" : "password"}
+                                  value={fgP1}
+                                  onChange={(e) => { setFgP1(e.target.value); if (fgErr && e.target.value === fgP2) setFgErr(""); }}
+                                  minLength={9}
+                                  placeholder="Mín. 9, letras y números"
+                                  onBlur={onP1Blur}
+                                />
+                                <button
+                                  type="button"
+                                  className="pwd-toggle"
+                                  onClick={() => autoShow(setShowFgP1)}
+                                  aria-label="Mostrar/ocultar contraseña"
+                                >
+                                  <FaEyeSlash style={{ display: showFgP1 ? "inline" : "none" }} />
+                                  <FaEye style={{ display: showFgP1 ? "none" : "inline" }} />
+                                </button>
+                              </div>
                             </label>
                             <label>
                               <span>Confirmar contraseña</span>
-                              <input type="password" value={fgP2} onChange={(e) => setFgP2(e.target.value)} minLength={9} />
+                              <div className="pwd-wrap">
+                                <input
+                                  type={showFgP2 ? "text" : "password"}
+                                  value={fgP2}
+                                  onChange={(e) => { setFgP2(e.target.value); if (fgErr && fgP1 === e.target.value) setFgErr(""); }}
+                                  minLength={9}
+                                  onBlur={onP2Blur}
+                                />
+                                <button
+                                  type="button"
+                                  className="pwd-toggle"
+                                  onClick={() => autoShow(setShowFgP2)}
+                                  aria-label="Mostrar/ocultar contraseña"
+                                >
+                                  <FaEyeSlash style={{ display: showFgP2 ? "inline" : "none" }} />
+                                  <FaEye style={{ display: showFgP2 ? "none" : "inline" }} />
+                                </button>
+                              </div>
                             </label>
                             {fgErr && <div className="auth-err">{fgErr}</div>}
                             {fgMsg && <div className="auth-ok">{fgMsg}</div>}
-                            <button type="button" className="auth-primary" onClick={doReset} disabled={fgBusy}>
-                              {fgBusy ? "Actualizando..." : "Actualizar contraseña"}
+                            <ButtonWithLoader label="Actualizar contraseña" busy={fgBusy} onClick={doReset} />
+                            <button className="auth-link" type="button" onClick={() => setFgStep(0)} disabled={fgBusy}>
+                                Reenviar código
                             </button>
                           </>
                         )}
 
-                        <button className="auth-link" type="button" onClick={() => setAuthMode("login")}>
+                        <button className="auth-link" type="button" onClick={() => { setAuthMode("login"); setFgStep(0); localStorage.removeItem(FG_STORE); }}>
                           Volver a iniciar sesión
                         </button>
                       </div>

@@ -1,4 +1,5 @@
 const bcrypt = require("bcrypt");
+const { Op } = require("sequelize");
 const User = require("../models/User");
 
 const toSafe = (u) => ({
@@ -12,6 +13,10 @@ const toSafe = (u) => ({
   direccion: u.direccion,
   rol: u.rol,
 });
+
+function cleanRut(r) {
+  return String(r || "").replace(/[.\-]/g, "").toUpperCase();
+}
 
 async function getUsuario(req, res) {
   try {
@@ -40,6 +45,12 @@ async function patchUsuario(req, res) {
       const exists = await User.findOne({ where: { correo } });
       if (exists) return res.status(400).json({ message: "El correo ya está registrado" });
     }
+
+    if (rutNorm) {
+      const dup = await User.findOne({ where: { rut: rutNorm, id: { [Op.ne]: id } } });
+      if (dup) return res.status(409).json({ message: "RUT ya registrado" });
+    }
+
     const data = {};
     if (nombre != null) data.nombre = nombre;
     if (apellido != null) data.apellido = apellido;
@@ -72,7 +83,7 @@ async function updateMyPassword(req, res) {
     const u = await User.findByPk(req.user.id);
     if (!u) return res.status(404).json({ message: "Usuario no existe" });
 
-    u.password = await bcrypt.hash(newPassword, 10);
+    u.password = newPassword;
     u.must_set_password = false;
     u.password_set_at = new Date();
     await u.save();
