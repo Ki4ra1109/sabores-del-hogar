@@ -12,6 +12,7 @@ import Postre from "../views/Postre/Postre";
 import PoliticaPrivacidad from "../views/Legales/PoliticaPrivacidad";
 import TerminosCondiciones from "../views/Legales/TerminosCondiciones";
 import Contacto from "../views/Legales/Contacto";
+import PedidoExitoso from "../views/PedidoExitoso/PedidoExitoso";
 
 const Login = lazy(() => import("../views/Login/Login"));
 
@@ -40,6 +41,7 @@ export default function AppRouter() {
           <Route path="/politica-privacidad" element={<PoliticaPrivacidad />} />
           <Route path="/terminos-condiciones" element={<TerminosCondiciones />} />
           <Route path="/contacto" element={<Contacto />} />
+          <Route path="/pedido-exitoso" element={<PedidoExitoso />} />
 
           <Route path="/UserNormal" element={<RequireAuth><UserNormal /></RequireAuth>} />
           <Route path="/perfil"     element={<RequireAuth><Perfil /></RequireAuth>} />

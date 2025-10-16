@@ -1,26 +1,24 @@
 // controllers/carritoController.js
 const db = require("../config/db");
 
-// Crear un nuevo carrito (pedido) o agregar producto a un carrito existente
+// Agregar producto al carrito (pendiente)
 exports.agregarAlCarrito = async (req, res) => {
   try {
-    const { id_usuario, sku, porcion, cantidad } = req.body;
+    const { id_usuario, sku, porcion, cantidad, precio_unitario } = req.body;
 
-    if (!id_usuario || !sku || !porcion || !cantidad) {
+    if (!id_usuario || !sku || !cantidad || !precio_unitario) {
       return res.status(400).json({ message: "Faltan datos obligatorios" });
     }
 
-    // precio dinámico = porciones * 1000 + 7000
-    const precio_unitario = porcion * 1000 + 7000;
-
     // 1. Buscar pedido pendiente del usuario
-    let [pedido] = await db.query(
+    const [pedido] = await db.query(
       "SELECT * FROM pedido WHERE id_usuario = ? AND estado = 'pendiente' LIMIT 1",
       [id_usuario]
     );
 
     let id_pedido;
     if (pedido.length === 0) {
+      // Crear pedido pendiente
       const [result] = await db.query(
         "INSERT INTO pedido (id_usuario, estado, total, fecha_pedido) VALUES (?, 'pendiente', 0, NOW())",
         [id_usuario]
@@ -33,7 +31,7 @@ exports.agregarAlCarrito = async (req, res) => {
     // 2. Insertar detalle del pedido
     await db.query(
       "INSERT INTO detalle_pedido (id_pedido, sku, cantidad, precio_unitario, porcion) VALUES (?, ?, ?, ?, ?)",
-      [id_pedido, sku, cantidad, precio_unitario, porcion]
+      [id_pedido, sku, cantidad, precio_unitario, porcion || null]
     );
 
     // 3. Actualizar el total del pedido
@@ -49,7 +47,7 @@ exports.agregarAlCarrito = async (req, res) => {
   }
 };
 
-// Obtener el carrito del usuario
+// Obtener el carrito pendiente del usuario
 exports.obtenerCarrito = async (req, res) => {
   try {
     const { id_usuario } = req.params;
@@ -59,9 +57,7 @@ exports.obtenerCarrito = async (req, res) => {
       [id_usuario]
     );
 
-    if (pedido.length === 0) {
-      return res.json({ carrito: [] });
-    }
+    if (pedido.length === 0) return res.json({ carrito: [] });
 
     const id_pedido = pedido[0].id_pedido;
 
@@ -84,12 +80,42 @@ exports.obtenerCarrito = async (req, res) => {
 exports.eliminarDelCarrito = async (req, res) => {
   try {
     const { id_detalle } = req.params;
-
     await db.query("DELETE FROM detalle_pedido WHERE id_detalle = ?", [id_detalle]);
-
     res.json({ message: "Producto eliminado del carrito" });
   } catch (error) {
     console.error("Error al eliminar del carrito:", error);
+    res.status(500).json({ message: "Error interno del servidor" });
+  }
+};
+
+// Finalizar pedido: guarda el pedido completo en la DB
+exports.finalizarPedido = async (req, res) => {
+  try {
+    const { id_usuario } = req.body;
+
+    if (!id_usuario) return res.status(400).json({ message: "Falta id_usuario" });
+
+    // 1. Obtener pedido pendiente
+    const [pedido] = await db.query(
+      "SELECT * FROM pedido WHERE id_usuario = ? AND estado = 'pendiente' LIMIT 1",
+      [id_usuario]
+    );
+
+    if (pedido.length === 0) {
+      return res.status(400).json({ message: "No hay productos en el carrito" });
+    }
+
+    const id_pedido = pedido[0].id_pedido;
+
+    // 2. Cambiar estado a 'finalizado'
+    await db.query(
+      "UPDATE pedido SET estado = 'finalizado' WHERE id_pedido = ?",
+      [id_pedido]
+    );
+
+    res.status(200).json({ message: "Pedido finalizado con éxito", id_pedido });
+  } catch (error) {
+    console.error("Error al finalizar pedido:", error);
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
