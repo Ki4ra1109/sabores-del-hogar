@@ -16,6 +16,8 @@ const precios = {
   extra: 1500,
 };
 
+const PORCIONES_TORTA = [12, 18, 24, 30, 50];
+
 const Postre = () => {
   let ctx;
   try {
@@ -25,7 +27,7 @@ const Postre = () => {
   }
 
   const [opcion, setOpcion] = useState("");
-  const [personas, setPersonas] = useState(15);
+  const [porcionTorta, setPorcionTorta] = useState(PORCIONES_TORTA[0]);
   const [cantidad, setCantidad] = useState(6);
 
   const [bizcocho, setBizcocho] = useState("");
@@ -46,55 +48,49 @@ const Postre = () => {
   const [decoracion, setDecoracion] = useState("");
   const [mensajeTorta, setMensajeTorta] = useState("");
 
-  const personasOK = Math.max(15, Number.isFinite(+personas) ? +personas : 15);
-  const cantidadOK = Math.max(6, Number.isFinite(+cantidad) ? +cantidad : 6);
+  const cantidadOK =
+    opcion === "cupcake" || opcion === "tartaleta"
+      ? Math.max(6, Number(cantidad) || 6)
+      : undefined;
 
-// En Postre.jsx: línea donde defines total
-const total = useMemo(() => {
-  if (!["torta", "cupcake", "tartaleta"].includes(opcion)) return 0;
+  const total = useMemo(() => {
+    if (!["torta", "cupcake", "tartaleta"].includes(opcion)) return 0;
 
-  const base =
-    opcion === "torta"
-      ? personasOK * precios.basePersona
-      : cantidadOK * precios.basePersona;
+    let base = 0;
+    if (opcion === "torta") base = porcionTorta * precios.basePersona;
+    else base = cantidadOK * precios.basePersona;
 
-  let t = base + precios.gananciaFija;
+    let t = base + precios.gananciaFija;
 
-  if (bizcocho) t += precios.bizcocho;
-  if (crema) t += precios.crema;
+    if (bizcocho) t += precios.bizcocho;
+    if (crema) t += precios.crema;
 
-  if (opcion === "torta" && relleno) t += precios.relleno;
-  if (opcion === "cupcake" && cupcakeConRelleno && relleno) t += precios.relleno;
+    if (opcion === "torta" && relleno) t += precios.relleno;
+    if (opcion === "cupcake" && cupcakeConRelleno && relleno) t += precios.relleno;
 
-  if (extraChips) t += precios.extra;
-  if (extraNueces) t += precios.extra;
-  if (extraChispitas) t += precios.extra;
-  if (extraFrutasConfitadas) t += precios.extra;
-  if (extraFondant) t += precios.extra;
-  if (extraCaramelo) t += precios.extra;
+    if (extraChips) t += precios.extra;
+    if (extraNueces) t += precios.extra;
+    if (extraChispitas) t += precios.extra;
+    if (extraFrutasConfitadas) t += precios.extra;
+    if (extraFondant) t += precios.extra;
+    if (extraCaramelo) t += precios.extra;
 
-  return t;
-}, [
-  opcion,
-  personasOK,
-  cantidadOK,
-  bizcocho,
-  relleno,
-  crema,
-  extraChips,
-  extraNueces,
-  extraChispitas,
-  extraFrutasConfitadas,
-  extraFondant,
-  extraCaramelo,
-  cupcakeConRelleno,
-]);
-
-
-  const onChangePersonas = (e) =>
-    setPersonas(Math.max(15, parseInt(e.target.value || 15, 10)));
-  const onChangeCantidad = (e) =>
-    setCantidad(Math.max(6, parseInt(e.target.value || 6, 10)));
+    return t;
+  }, [
+    opcion,
+    porcionTorta,
+    cantidadOK,
+    bizcocho,
+    relleno,
+    crema,
+    extraChips,
+    extraNueces,
+    extraChispitas,
+    extraFrutasConfitadas,
+    extraFondant,
+    extraCaramelo,
+    cupcakeConRelleno,
+  ]);
 
   const handleAgregar = () => {
     if (
@@ -136,7 +132,7 @@ const total = useMemo(() => {
           : "Tartaleta personalizada",
       detalle: {
         tipo: opcion,
-        cantidad: opcion === "torta" ? personasOK : cantidadOK,
+        cantidad: opcion === "torta" ? porcionTorta : cantidadOK,
         bizcocho,
         relleno:
           opcion === "cupcake"
@@ -174,10 +170,8 @@ const total = useMemo(() => {
     alert("¡Producto agregado al carrito!");
   };
 
-  /* --------- Construimos el grid en pares y con tamaño constante --------- */
   const fields = [];
 
-  // Categoría (siempre)
   fields.push(
     <div className="campo" key="cat">
       <label>Categoría</label>
@@ -201,17 +195,20 @@ const total = useMemo(() => {
     </div>
   );
 
-  // Cantidades / Mensaje / Bizcocho / Relleno / Crema según categoría
   if (opcion === "torta") {
     fields.push(
-      <div className="campo" key="per">
-        <label>Cantidad de personas (mín. 15)</label>
-        <input
-          type="number"
-          min={15}
-          value={personasOK}
-          onChange={onChangePersonas}
-        />
+      <div className="campo" key="porciones">
+        <label>Porciones de la torta</label>
+        <select
+          value={porcionTorta}
+          onChange={(e) => setPorcionTorta(Number(e.target.value))}
+        >
+          {PORCIONES_TORTA.map((p) => (
+            <option key={p} value={p}>
+              {p} personas
+            </option>
+          ))}
+        </select>
       </div>
     );
     fields.push(
@@ -471,63 +468,22 @@ const total = useMemo(() => {
     <>
       <Header />
       <div className="postre-container">
-        {/* LEFT: formulario */}
         <div className="postre-card">
           <h2 className="titulo-formulario">Arma tu Postre</h2>
           <div className="postre-form-grid">{fields}</div>
         </div>
 
-        {/* RIGHT: resumen (sin cambios estructurales) */}
         <aside className="resumen-card">
           <h3>Resumen del Pedido</h3>
           <p><strong>Categoría:</strong> {opcion || "-"}</p>
           <p>
             <strong>Cantidad:</strong>{" "}
             {opcion === "torta"
-              ? personasOK
+              ? porcionTorta
               : ["cupcake", "tartaleta"].includes(opcion)
               ? cantidadOK
               : "-"}
           </p>
-          {opcion !== "tartaleta" && (
-            <>
-              <p><strong>Bizcocho:</strong> {bizcocho || "-"}</p>
-              <p>
-                <strong>Relleno:</strong>{" "}
-                {opcion === "cupcake"
-                  ? cupcakeConRelleno
-                    ? relleno || "-"
-                    : "Sin relleno"
-                  : relleno || "-"}
-              </p>
-              <p><strong>Crema:</strong> {crema || "-"}</p>
-              {opcion === "torta" && (
-                <p><strong>Mensaje:</strong> {mensajeTorta || "-"}</p>
-              )}
-              <p>
-                <strong>Extras:</strong>{" "}
-                {[
-                  extraChips ? "Chips de chocolate" : null,
-                  extraNueces ? "Nueces" : null,
-                  extraChispitas ? "Chispitas de colores" : null,
-                  extraFrutasConfitadas ? "Frutas confitadas" : null,
-                  extraFondant ? "Fondant decorativo" : null,
-                  extraCaramelo ? "Cobertura de caramelo" : null,
-                ]
-                  .filter(Boolean)
-                  .join(", ") || "-"}
-              </p>
-            </>
-          )}
-          {opcion === "tartaleta" && (
-            <>
-              <p>
-                <strong>Frutas:</strong>{" "}
-                {[fruta1, fruta2].filter(Boolean).join(", ") || "-"}
-              </p>
-              <p><strong>Decoración:</strong> {decoracion || "-"}</p>
-            </>
-          )}
           <div className="total-linia">
             <span>Total:</span>
             <strong>${total.toLocaleString("es-CL")}</strong>
@@ -541,4 +497,5 @@ const total = useMemo(() => {
     </>
   );
 };
+
 export default Postre;
