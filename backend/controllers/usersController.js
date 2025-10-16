@@ -1,4 +1,5 @@
 const bcrypt = require("bcrypt");
+const { Op } = require("sequelize");
 const User = require("../models/User");
 
 const toSafe = (u) => ({
@@ -12,6 +13,10 @@ const toSafe = (u) => ({
   direccion: u.direccion,
   rol: u.rol,
 });
+
+function cleanRut(r) {
+  return String(r || "").replace(/[.\-]/g, "").toUpperCase();
+}
 
 async function getUsuario(req, res) {
   try {
@@ -36,15 +41,24 @@ async function patchUsuario(req, res) {
       fecha_nacimiento, direccion, password, rol
     } = req.body || {};
 
-    if (email && email !== u.email) {
-      const exists = await User.findOne({ where: { email } });
+    const emailNorm = email != null ? String(email).toLowerCase().trim() : null;
+    const rutNorm = rut != null ? cleanRut(rut) : null;
+
+    if (emailNorm && emailNorm !== u.email) {
+      const exists = await User.findOne({ where: { email: emailNorm, id: { [Op.ne]: id } } });
       if (exists) return res.status(400).json({ message: "El correo ya está registrado" });
     }
+
+    if (rutNorm) {
+      const dup = await User.findOne({ where: { rut: rutNorm, id: { [Op.ne]: id } } });
+      if (dup) return res.status(409).json({ message: "RUT ya registrado" });
+    }
+
     const data = {};
     if (nombre != null) data.nombre = nombre;
     if (apellido != null) data.apellido = apellido;
-    if (rut != null) data.rut = rut;
-    if (email != null) data.email = String(email).toLowerCase().trim();
+    if (rut !== undefined) data.rut = rut === null || rut === "" ? null : rutNorm;
+    if (email !== undefined) data.email = emailNorm;
     if (telefono != null) data.telefono = telefono;
     if (fecha_nacimiento != null) data.fecha_nacimiento = fecha_nacimiento;
     if (direccion != null) data.direccion = direccion;
@@ -72,7 +86,7 @@ async function updateMyPassword(req, res) {
     const u = await User.findByPk(req.user.id);
     if (!u) return res.status(404).json({ message: "Usuario no existe" });
 
-    u.password = await bcrypt.hash(newPassword, 10);
+    u.password = newPassword;
     u.must_set_password = false;
     u.password_set_at = new Date();
     await u.save();

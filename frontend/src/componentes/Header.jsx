@@ -20,6 +20,7 @@ export const Header = () => {
   const [loginDone, setLoginDone] = useState(false);
   const [logoutBusy, setLogoutBusy] = useState(false);
   const [registerBusy, setRegisterBusy] = useState(false);
+  const [loginErr, setLoginErr] = useState("");
 
   const [user, setUser] = useState(() => {
     try {
@@ -108,23 +109,10 @@ export const Header = () => {
   useEffect(() => {
     const nav = performance.getEntriesByType?.('navigation')?.[0];
     if (nav && nav.type === 'reload') {
-      localStorage.removeItem(FG_STORE);
-      setAuthMode('login');
-      setFgStep(0);
-      setFgEmail('');
-      setFgCode('');
-      setFgP1('');
-      setFgP2('');
-      setFgErr('');
-      setFgMsg('');
-      setShowFgP1(false);
-      setShowFgP2(false);
-      setEmail('');
-      setPwd('');
-      setAuthOpen(true);
-      navigate('/', { replace: true });
+      const raw = localStorage.getItem(FG_STORE);
+      if (raw) setAuthOpen(true);
     }
-  }, [navigate]);
+  }, []);
 
   useEffect(() => {
     const onBeforeUnload = () => localStorage.removeItem(FG_STORE);
@@ -219,6 +207,7 @@ export const Header = () => {
     e.preventDefault();
     if (loginBusy) return;
     setLoginBusy(true);
+    setLoginErr("");
     try {
       const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
       const res = await fetch(`${baseUrl}/api/auth/login`, {
@@ -247,7 +236,7 @@ export const Header = () => {
         }, PANEL_FADE_MS);
       });
     } catch (err) {
-      alert(err.message || "Error en la conexión con el servidor");
+      setLoginErr(err.message || "Error en la conexión con el servidor");
       setLoginBusy(false);
     }
   };
@@ -449,7 +438,8 @@ export const Header = () => {
                   opacity: loginDone ? 0 : 1,
                   transform: loginDone ? "translateY(-6px)" : "translateY(0)",
                   transition: "opacity .28s ease, transform .28s ease",
-                  willChange: "opacity, transform"
+                  willChange: "opacity, transform",
+                  pointerEvents: authOpen ? "auto" : "none"
                 }}
               >
                 {!user ? (
@@ -492,6 +482,8 @@ export const Header = () => {
                               </button>
                             </div>
                           </label>
+
+                          {loginErr && <div className="auth-err" role="alert">{loginErr}</div>}
 
                           <div style={{ height: 44, display: "flex", alignItems: "center" }}>
                             <ButtonWithLoader type="submit" label="Iniciar Sesión" busy={loginBusy} />
