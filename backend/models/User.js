@@ -7,7 +7,7 @@ const User = db.define(
   {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
 
-    correo: {
+    email: {
       type: DataTypes.STRING(150),
       allowNull: false,
       unique: true,

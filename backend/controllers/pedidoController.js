@@ -158,3 +158,30 @@ exports.obtenerDetallePedido = async (req, res) => {
       .json({ message: "Error al obtener los detalles del pedido." });
   }
 };
+
+// Obtener TODOS los pedidos (para la sección de gestión de pedidos)
+exports.obtenerTodosLosPedidos = async (req, res) => {
+  try {
+    const [pedido] = await db.query(`
+      SELECT 
+        p.id_pedido, 
+        p.estado, 
+        p.total, 
+        p.fecha_pedido, 
+        u.nombre AS nombre_cliente, 
+        u.correo AS correo_cliente
+      FROM pedido p
+      INNER JOIN usuarios u ON u.id = p.id_usuario
+      ORDER BY p.fecha_pedido DESC
+    `);
+
+    if (!pedido.length) {
+      return res.status(404).json({ message: "No se encontraron pedidos." });
+    }
+
+    res.status(200).json(pedido);
+  } catch (error) {
+    console.error("❌ Error al obtener todos los pedidos:", error);
+    res.status(500).json({ message: "Error al obtener la lista de pedidos." });
+  }
+};

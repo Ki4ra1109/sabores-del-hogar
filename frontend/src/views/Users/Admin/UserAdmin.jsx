@@ -45,25 +45,60 @@ function applyPrefs(prefs) {
   root.setAttribute("data-font", prefs.font);
 
   // Idioma persistido 
-  try { localStorage.setItem(LS_LANG, prefs.lang); } catch { }
+  try { localStorage.setItem(LS_LANG, prefs.lang); } catch { /* empty */ }
 }
 
-//SECCION DE PEDIDOS
+// SECCIÓN DE PEDIDOS
 function PedidosSection() {
   const [q, setQ] = useState("");
-  const pedidos = [];
-  const list = pedidos.filter((p) =>
-    q.trim() ? String(p.id).includes(q.trim()) : true
-  );
+  const [pedidos, setPedidos] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Función para asignar clases de color según estado
+  const getEstadoClass = (estado) => {
+    if (!estado) return "";
+    const e = estado.toLowerCase();
+
+    if (["entregado", "pagado", "completado"].includes(e)) return "success";
+    if (["pendiente", "en proceso"].includes(e)) return "warning";
+    if (["cancelado", "rechazado"].includes(e)) return "danger";
+    return "";
+  };
+
+  // Fetch de pedidos
+  useEffect(() => {
+    const fetchPedidos = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/pedidos");
+        const data = await res.json();
+        setPedidos(data);
+      } catch (err) {
+        console.error("Error al obtener pedidos:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPedidos();
+  }, []);
+
+  // 🔍 Filtro combinado: busca por ID o nombre de cliente
+  const list = pedidos.filter((p) => {
+    if (!q.trim()) return true;
+
+    const query = q.toLowerCase();
+    const idMatch = String(p.id_pedido).includes(query);
+    const nombreMatch = p.nombre_cliente?.toLowerCase().includes(query);
+
+    return idMatch || nombreMatch;
+  });
 
   return (
     <>
       <div className="orders-search">
         <input
           className="orders-input"
-          type="number"
-          inputMode="numeric"
-          placeholder="Buscar por # de pedido (ej: 1004)"
+          type="text"
+          placeholder="Buscar por # de pedido o nombre del cliente..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
@@ -71,13 +106,39 @@ function PedidosSection() {
 
       <div className="card">
         <h2>Gestión de pedidos</h2>
-        <div className="orders">
-          {list.length === 0 && (
-            <div className="empty">
-              <p>No hay pedidos registrados todavía.</p>
-            </div>
-          )}
-        </div>
+
+        {loading ? (
+          <p>Cargando pedidos...</p>
+        ) : (
+          <div className="orders">
+            {list.length === 0 ? (
+              <div className="empty">
+                <p>No se encontraron pedidos que coincidan con la búsqueda.</p>
+              </div>
+            ) : (
+              list.map((p) => (
+                <div key={p.id_pedido} className="order-item">
+                  <div className="order-info">
+                    <h4>Pedido #{p.id_pedido}</h4>
+                    <p>
+                      Cliente: <strong>{p.nombre_cliente || "N/A"}</strong>
+                    </p>
+                    <p>
+                      Estado:{" "}
+                      <span
+                        className={`status-chip ${getEstadoClass(p.estado)}`}
+                      >
+                        {p.estado}
+                      </span>
+                    </p>
+                    <p>Fecha: {new Date(p.fecha_pedido).toLocaleDateString()}</p>
+                    <p>Total: ${p.total}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
     </>
   );
@@ -1338,7 +1399,6 @@ const UserAdmin = () => {
                 </div>
                 <div className="row">
                   <button
-                    className="btn sm danger"
                     onClick={() => eliminarCliente(c.correo)}
                   >
                     Eliminar
