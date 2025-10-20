@@ -5,6 +5,9 @@ const pedidoController = require("../controllers/pedidoController");
 // Crear pedido
 router.post("/crear", pedidoController.crearPedido);
 
+// Obtener todos los pedidos
+router.get("/", pedidoController.obtenerTodosLosPedidos);
+
 // Obtener pedidos de un usuario
 router.get("/usuario/:id_usuario", pedidoController.obtenerPedidosUsuario);
 

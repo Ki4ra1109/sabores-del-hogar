@@ -45,25 +45,60 @@ function applyPrefs(prefs) {
   root.setAttribute("data-font", prefs.font);
 
   // Idioma persistido 
-  try { localStorage.setItem(LS_LANG, prefs.lang); } catch { }
+  try { localStorage.setItem(LS_LANG, prefs.lang); } catch { /* empty */ }
 }
 
-//SECCION DE PEDIDOS
+// SECCIÓN DE PEDIDOS
 function PedidosSection() {
   const [q, setQ] = useState("");
-  const pedidos = [];
-  const list = pedidos.filter((p) =>
-    q.trim() ? String(p.id).includes(q.trim()) : true
-  );
+  const [pedidos, setPedidos] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Función para asignar clases de color según estado
+  const getEstadoClass = (estado) => {
+    if (!estado) return "";
+    const e = estado.toLowerCase();
+
+    if (["entregado", "pagado", "completado"].includes(e)) return "success";
+    if (["pendiente", "en proceso"].includes(e)) return "warning";
+    if (["cancelado", "rechazado"].includes(e)) return "danger";
+    return "";
+  };
+
+  // Fetch de pedidos
+  useEffect(() => {
+    const fetchPedidos = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/pedidos");
+        const data = await res.json();
+        setPedidos(data);
+      } catch (err) {
+        console.error("Error al obtener pedidos:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPedidos();
+  }, []);
+
+  // 🔍 Filtro combinado: busca por ID o nombre de cliente
+  const list = pedidos.filter((p) => {
+    if (!q.trim()) return true;
+
+    const query = q.toLowerCase();
+    const idMatch = String(p.id_pedido).includes(query);
+    const nombreMatch = p.nombre_cliente?.toLowerCase().includes(query);
+
+    return idMatch || nombreMatch;
+  });
 
   return (
     <>
       <div className="orders-search">
         <input
           className="orders-input"
-          type="number"
-          inputMode="numeric"
-          placeholder="Buscar por # de pedido (ej: 1004)"
+          type="text"
+          placeholder="Buscar por # de pedido o nombre del cliente..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
@@ -71,13 +106,39 @@ function PedidosSection() {
 
       <div className="card">
         <h2>Gestión de pedidos</h2>
-        <div className="orders">
-          {list.length === 0 && (
-            <div className="empty">
-              <p>No hay pedidos registrados todavía.</p>
-            </div>
-          )}
-        </div>
+
+        {loading ? (
+          <p>Cargando pedidos...</p>
+        ) : (
+          <div className="orders">
+            {list.length === 0 ? (
+              <div className="empty">
+                <p>No se encontraron pedidos que coincidan con la búsqueda.</p>
+              </div>
+            ) : (
+              list.map((p) => (
+                <div key={p.id_pedido} className="order-item">
+                  <div className="order-info">
+                    <h4>Pedido #{p.id_pedido}</h4>
+                    <p>
+                      Cliente: <strong>{p.nombre_cliente || "N/A"}</strong>
+                    </p>
+                    <p>
+                      Estado:{" "}
+                      <span
+                        className={`status-chip ${getEstadoClass(p.estado)}`}
+                      >
+                        {p.estado}
+                      </span>
+                    </p>
+                    <p>Fecha: {new Date(p.fecha_pedido).toLocaleDateString()}</p>
+                    <p>Total: ${p.total}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
     </>
   );
@@ -1287,16 +1348,17 @@ const UserAdmin = () => {
       </div>
     </div>
   );
+
   //SECCION GESTIOS DE CLIENTES
   const RenderClientes = () => {
     const [clientes, setClientes] = useState([]);
 
-    // Obtener clientes al cargar
     useEffect(() => {
       const fetchClientes = async () => {
         try {
           const res = await fetch("http://localhost:5000/api/clientes");
           const data = await res.json();
+          console.log("Clientes recibidos desde backend:", data);
           setClientes(data);
         } catch (err) {
           console.error("Error al obtener clientes", err);
@@ -1305,7 +1367,6 @@ const UserAdmin = () => {
       fetchClientes();
     }, []);
 
-    // Eliminar cliente por correo
     const eliminarCliente = async (correo) => {
       if (!window.confirm("¿Seguro que deseas eliminar este cliente?")) return;
 
@@ -1316,8 +1377,7 @@ const UserAdmin = () => {
 
         if (!response.ok) throw new Error("Error al eliminar cliente");
 
-        // eliminar del frontend solo el cliente que fue borrado
-        setClientes(clientes.filter((c) => c.email !== correo));
+        setClientes(clientes.filter((c) => c.correo !== correo));
       } catch (err) {
         console.error("Error al eliminar cliente", err);
       }
@@ -1327,24 +1387,26 @@ const UserAdmin = () => {
       <div className="card">
         <h2>Gestión de clientes</h2>
         <div className="list">
-          {clientes.map((c, i) => (
-            <div key={c.id || i} className="client">
-              <div>
-                <h4>{c.nombre}</h4>
-                <p>{c.email}</p>
-                <p>{c.telefono}</p>
+          {clientes.length === 0 ? (
+            <p>No hay clientes registrados o error al cargar.</p>
+          ) : (
+            clientes.map((c, i) => (
+              <div key={c.id || i} className="client">
+                <div>
+                  <h4>{c.nombre}</h4>
+                  <p>{c.correo}</p>
+                  <p>{c.telefono}</p>
+                </div>
+                <div className="row">
+                  <button
+                    onClick={() => eliminarCliente(c.correo)}
+                  >
+                    Eliminar
+                  </button>
+                </div>
               </div>
-              <div className="row">
-                <button className="btn sm">Modificar</button>
-                <button
-                  className="btn sm danger"
-                  onClick={() => eliminarCliente(c.email)}
-                >
-                  Eliminar
-                </button>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     );
@@ -1363,7 +1425,7 @@ const UserAdmin = () => {
   // Cuenta conectada
   const renderAccount = () => <CuentaPanel />;
 
- const renderSettings = () => (
+  const renderSettings = () => (
     <div className="card">
       <h2>Configuración</h2>
 
@@ -1373,7 +1435,7 @@ const UserAdmin = () => {
       </p>
 
       <div className="row mt" style={{ justifyContent: 'flex-end' }}>
-      
+
       </div>
     </div>
   );

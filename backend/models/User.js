@@ -7,12 +7,12 @@ const User = db.define(
   {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
 
-    email: {
-      type: DataTypes.STRING(150),
-      allowNull: false,
-      unique: true,
-      field: "correo",
-    },
+    email: {
+      type: DataTypes.STRING(150),
+      allowNull: false,
+      unique: true,
+      field: "correo",
+    },
 
     password: {
       type: DataTypes.STRING(100),

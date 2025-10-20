@@ -106,19 +106,71 @@
 
 .bullets { margin: 8px 0 0; padding-left: 18px; color: #444; }
 
-.orders { display: grid; gap: 10px; margin-top: 10px; }
+/*CSS DE PEDIDOS*/
+.orders {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* 3 columnas adaptables */
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.order-item {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.order-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
 
 .order {
   display: flex; justify-content: space-between; gap: 12px;
   padding: 12px; border: 1px solid #eee; border-radius: 10px; background: #fff;
 }
+
 .order-info { display: grid; gap: 4px; }
+
+.order-info h4 {
+  margin-bottom: 0.5rem;
+  color: #333;
+}
 
 .badge {
   display: inline-block; padding: 2px 8px; border-radius: 999px;
   font-size: 12px; color: #fff; background: #f39c12; width: fit-content;
 }
+
 .order.ok .badge { background: #4caf50; }
+
+/* CHIP DE ESTADO */
+.status-chip {
+  padding: 0.3rem 0.7rem;
+  border-radius: 20px;
+  font-weight: 600;
+  text-transform: capitalize;
+  font-size: 0.85rem;
+}
+
+/* COLORES DE ESTADOS */
+.status-chip.success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-chip.warning {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-chip.danger {
+  background-color: #f8d7da;
+  color: #721c24;
+}
 
 .grid {
   display: grid;
@@ -131,6 +183,25 @@
 .product h4 { margin:0 0 6px 0; color: var(--ink-2); }
 
 .list { display: grid; gap:10px; margin-top:10px; }
+
+.client {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.client button,
+.client .btn {
+  background-color: #dc2626;
+  color: white;
+  border-radius: 5%;
+  display: inline-flex;
+  visibility: visible;
+  opacity: 1;
+  height: auto;
+  padding: 6px 10px;
+}
+
 
 .client, .discount {
   display:flex; justify-content:space-between; gap:10px;
