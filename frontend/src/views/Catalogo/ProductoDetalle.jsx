@@ -52,7 +52,7 @@ export default function ProductoDetalle() {
     return porcion * 1000 + 7000;
   }, [porcion]);
 
-  // ✅ Función corregida para integrar con el Header
+  // Función corregida para integrar con el Header
   const handleAgregarCarrito = async () => {
     try {
       const rawUser = localStorage.getItem("sdh_user");
@@ -68,7 +68,7 @@ export default function ProductoDetalle() {
         return;
       }
 
-      // 🔹 Objeto del producto para el localStorage
+      // Objeto del producto para el localStorage
       const nuevoItem = {
         sku: producto.sku,
         nombre: producto.nombre,
@@ -78,7 +78,7 @@ export default function ProductoDetalle() {
         imagen: producto.imagen_url || "/placeholder.jpg",
       };
 
-      // 🔹 Guardar/actualizar en localStorage
+      //  Guardar/actualizar en localStorage
       const carritoActual = JSON.parse(localStorage.getItem("carrito") || "[]");
       const existe = carritoActual.findIndex((p) => p.sku === nuevoItem.sku && p.porcion === nuevoItem.porcion);
 
@@ -90,7 +90,7 @@ export default function ProductoDetalle() {
 
       localStorage.setItem("carrito", JSON.stringify(carritoActual));
 
-      // 🔹 Notificar al Header
+      // Notificar al Header
       window.dispatchEvent(new CustomEvent("carrito:agregado"));
 
       setMensaje("Producto agregado al carrito ✅");

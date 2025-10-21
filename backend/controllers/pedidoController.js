@@ -22,7 +22,7 @@ exports.crearPedido = async (req, res) => {
         .json({ message: "Datos incompletos para crear el pedido." });
     }
 
-    // 1. Crear el pedido principal
+    // 1️⃣ Crear el pedido principal
     const [pedidoResult] = await db.query(
       `
       INSERT INTO pedido (id_usuario, estado, total, fecha_pedido, codigo_descuento, fecha_entrega)
@@ -43,7 +43,7 @@ exports.crearPedido = async (req, res) => {
 
     const id_pedido = pedidoResult[0].id_pedido;
 
-    // 2. Insertar los productos del catálogo
+    // 2️⃣ Insertar los productos del catálogo
     if (Array.isArray(detalle)) {
       for (const item of detalle) {
         const { sku, cantidad, precio_unitario, porcion } = item;
@@ -67,32 +67,41 @@ exports.crearPedido = async (req, res) => {
       }
     }
 
-    // 3. Insertar los postres personalizados (arma tu postre)
+    // 3️⃣ Insertar los postres personalizados (arma tu postre)
     if (Array.isArray(personalizados)) {
       for (const p of personalizados) {
-        const { tipo, cantidad, bizcocho, relleno, cobertura, toppings } = p;
+        const {
+          tipo,
+          cantidad,
+          bizcocho,
+          relleno,
+          cobertura,
+          toppings,
+          mensaje, // 👈 nuevo campo agregado
+        } = p;
 
         await db.query(
           `
-          INSERT INTO postre_personalizado (id_pedido, tipo, cantidad, bizcocho, relleno, cobertura, toppings)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO postre_personalizado (id_pedido, tipo, cantidad, bizcocho, relleno, cobertura, toppings, mensaje)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
           `,
           {
             replacements: [
               id_pedido,
               tipo,
               cantidad,
-              bizcocho,
-              relleno,
-              cobertura,
-              toppings,
+              bizcocho || null,
+              relleno || null,
+              cobertura || null,
+              toppings || null,
+              mensaje || null, // 👈 se guarda el mensaje si existe
             ],
           }
         );
       }
     }
 
-    // 4. Recalcular total del pedido (solo productos del catálogo)
+    // 4️⃣ Recalcular total del pedido (solo productos del catálogo)
     await db.query(
       `
       UPDATE pedido 
@@ -140,6 +149,7 @@ exports.obtenerDetallePedido = async (req, res) => {
   const { id_pedido } = req.params;
 
   try {
+    // 1️⃣ Productos del catálogo
     const [detalles] = await db.query(
       `
       SELECT d.*, p.nombre 
@@ -150,38 +160,24 @@ exports.obtenerDetallePedido = async (req, res) => {
       { replacements: [id_pedido] }
     );
 
-    res.json(detalles);
+    // 2️⃣ Postres personalizados
+    const [personalizados] = await db.query(
+      `
+      SELECT *
+      FROM postre_personalizado
+      WHERE id_pedido = ?
+      `,
+      { replacements: [id_pedido] }
+    );
+
+    res.json({
+      productos: detalles,
+      personalizados: personalizados,
+    });
   } catch (error) {
     console.error("❌ Error al obtener detalle del pedido:", error);
     res
       .status(500)
       .json({ message: "Error al obtener los detalles del pedido." });
-  }
-};
-
-// Obtener TODOS los pedidos (para la sección de gestión de pedidos)
-exports.obtenerTodosLosPedidos = async (req, res) => {
-  try {
-    const [pedido] = await db.query(`
-      SELECT 
-        p.id_pedido, 
-        p.estado, 
-        p.total, 
-        p.fecha_pedido, 
-        u.nombre AS nombre_cliente, 
-        u.correo AS correo_cliente
-      FROM pedido p
-      INNER JOIN usuarios u ON u.id = p.id_usuario
-      ORDER BY p.fecha_pedido DESC
-    `);
-
-    if (!pedido.length) {
-      return res.status(404).json({ message: "No se encontraron pedidos." });
-    }
-
-    res.status(200).json(pedido);
-  } catch (error) {
-    console.error("❌ Error al obtener todos los pedidos:", error);
-    res.status(500).json({ message: "Error al obtener la lista de pedidos." });
   }
 };
