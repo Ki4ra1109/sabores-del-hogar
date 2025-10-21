@@ -100,7 +100,7 @@ export default function ProductoDetalle() {
     }
   };
 
-  if (loading) return <p style={{ padding: "2rem" }}>Cargando producto...</p>;
+  if (loading) return null;
 
   if (error || !producto) {
     return (
@@ -150,7 +150,7 @@ export default function ProductoDetalle() {
 
           <div className="selector-porciones">
             <label htmlFor="select-porciones" className="selector-label">
-              Porciones
+              Cantidad de personas
             </label>
             <select
               id="select-porciones"
