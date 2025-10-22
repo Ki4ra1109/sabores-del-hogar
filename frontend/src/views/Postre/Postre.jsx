@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Header } from "../../componentes/Header";
 import { Footer } from "../../componentes/Footer";
-import { useCarrito } from "../../context/carritoContext";
 import "./Postre.css";
 import tortaPersonalizada from "../../assets/carro/tortaPersonalizada.png";
 import cupcakePersonalizado from "../../assets/carro/cupcakePersonalizado.png";
@@ -19,13 +18,7 @@ const precios = {
 const PORCIONES_TORTA = [12, 18, 24, 30, 50];
 
 const Postre = () => {
-  let ctx;
-  try {
-    ctx = useCarrito();
-  } catch {
-    ctx = undefined;
-  }
-
+  // No usamos contexto aquí; mantenemos compatibilidad con tu flujo actual
   const [opcion, setOpcion] = useState("");
   const [porcionTorta, setPorcionTorta] = useState(PORCIONES_TORTA[0]);
   const [cantidad, setCantidad] = useState(6);
@@ -48,17 +41,24 @@ const Postre = () => {
   const [decoracion, setDecoracion] = useState("");
   const [mensajeTorta, setMensajeTorta] = useState("");
 
+  // ----- helpers de cantidad -----
   const cantidadOK =
     opcion === "cupcake" || opcion === "tartaleta"
       ? Math.max(6, Number(cantidad) || 6)
       : undefined;
 
+  const onChangeCantidad = (e) => {
+    const v = parseInt(e.target.value || "0", 10);
+    setCantidad(Number.isFinite(v) ? v : 6);
+  };
+
+  // ----- total -----
   const total = useMemo(() => {
     if (!["torta", "cupcake", "tartaleta"].includes(opcion)) return 0;
 
     let base = 0;
     if (opcion === "torta") base = porcionTorta * precios.basePersona;
-    else base = cantidadOK * precios.basePersona;
+    else base = (cantidadOK || 0) * precios.basePersona;
 
     let t = base + precios.gananciaFija;
 
@@ -92,7 +92,9 @@ const Postre = () => {
     cupcakeConRelleno,
   ]);
 
-  const handleAgregar = () => {
+  // ----- agregar al carrito (local + backend) -----
+  const handleAgregar = async () => {
+    // Validaciones
     if (
       !opcion ||
       (opcion === "torta" && (!bizcocho || !crema || !relleno)) ||
@@ -130,6 +132,8 @@ const Postre = () => {
           : opcion === "cupcake"
           ? "Cupcakes personalizados"
           : "Tartaleta personalizada",
+      esPersonalizado: true,
+      // Para la UI del carrito (resumen por campos):
       detalle: {
         tipo: opcion,
         cantidad: opcion === "torta" ? porcionTorta : cantidadOK,
@@ -147,31 +151,67 @@ const Postre = () => {
           opcion === "tartaleta" ? [fruta1, fruta2].filter(Boolean) : undefined,
         decoracion:
           opcion === "tartaleta" ? decoracion || "Sin decoración" : undefined,
-        mensajeTorta: opcion === "torta" ? mensajeTorta || "Sin mensaje" : undefined,
+        mensajeTorta: opcion === "torta" ? (mensajeTorta || "Sin mensaje") : undefined,
         extras,
       },
+      // Para el cálculo local
       precio: total,
       cantidad: 1,
       imagen,
     };
 
-    if (ctx?.agregarAlCarrito) ctx.agregarAlCarrito(producto);
-    else {
-      try {
-        const current = JSON.parse(localStorage.getItem("carrito") || "[]");
-        current.push(producto);
-        localStorage.setItem("carrito", JSON.stringify(current));
-        window.dispatchEvent(
-          new CustomEvent("carrito:agregado", { detail: producto })
-        );
-      } catch {}
+    // 1) Agregar al carrito local (para que el usuario lo vea de inmediato)
+    try {
+      const current = JSON.parse(localStorage.getItem("carrito") || "[]");
+      current.push(producto);
+      localStorage.setItem("carrito", JSON.stringify(current));
+      window.dispatchEvent(new CustomEvent("carrito:agregado", { detail: producto }));
+    } catch {}
+
+    // 2) Enviar al backend para que se guarde en DB dentro del pedido 'pendiente'
+    try {
+      const user = JSON.parse(localStorage.getItem("sdh_user") || "null");
+      if (!user || !user.id) {
+        alert("Se agregó al carrito local. Inicia sesión para guardar tu pedido en la tienda.");
+      } else {
+        // Mapear a los campos que espera el backend: cobertura = crema, toppings = string
+        const payload = {
+          id_usuario: user.id,
+          personalizados: [
+            {
+              tipo: opcion, // 'torta' | 'cupcake' | 'tartaleta'
+              cantidad: opcion === "torta" ? porcionTorta : cantidadOK,
+              bizcocho: bizcocho || null,
+              relleno:
+                opcion === "cupcake"
+                  ? (cupcakeConRelleno ? (relleno || null) : null)
+                  : (relleno || null),
+              cobertura: crema || null,
+              toppings: extras.length ? extras.join(", ") : null,
+              mensaje: opcion === "torta" ? (mensajeTorta || null) : null,
+              // Si quieres enviar frutas y decoración para tartaleta, agrega columnas en tu tabla
+              // y en el backend; por ahora quedan en "detalle" del carrito local.
+            },
+          ],
+        };
+
+        await fetch("http://localhost:5000/api/carrito/personalizado", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+    } catch (e) {
+      console.error("No se pudo enviar al backend, queda en carrito local:", e);
     }
 
     alert("¡Producto agregado al carrito!");
   };
 
+  // ----- UI: construcción de campos (manteniendo tu estructura) -----
   const fields = [];
 
+  // Categoría
   fields.push(
     <div className="campo" key="cat">
       <label>Categoría</label>
@@ -195,6 +235,7 @@ const Postre = () => {
     </div>
   );
 
+  // Campos por categoría
   if (opcion === "torta") {
     fields.push(
       <div className="campo" key="porciones">
@@ -326,7 +367,6 @@ const Postre = () => {
         </select>
       </div>
     );
-    // Campo extra para cuadrar filas (si quieres algo útil en vez de filler)
     fields.push(
       <div className="campo" key="presentacion">
         <label>Presentación</label>
@@ -384,7 +424,6 @@ const Postre = () => {
         />
       </div>
     );
-    // Campo útil de relleno para cuadrar pares
     fields.push(
       <div className="campo" key="base-tartaleta">
         <label>Base</label>
@@ -396,7 +435,7 @@ const Postre = () => {
     );
   }
 
-  // --- Normalización: mínimo 6 campos (3 filas) y que sea par ---
+  // Normalización: mínimo 6 campos y par
   const MIN_FIELDS = 6;
   while (fields.length < MIN_FIELDS) {
     fields.push(<div className="campo filler" key={`filler-${fields.length}`} />);
@@ -405,7 +444,7 @@ const Postre = () => {
     fields.push(<div className="campo filler" key={`filler-${fields.length}`} />);
   }
 
-  // Extras (ocupan 2 columnas y van al final). Solo para torta/cupcake.
+  // Extras (toppings)
   if (opcion === "torta" || opcion === "cupcake") {
     fields.push(
       <div className="campo campo-extras full" key="extras">
@@ -468,11 +507,13 @@ const Postre = () => {
     <>
       <Header />
       <div className="postre-container">
+        {/* LEFT */}
         <div className="postre-card">
           <h2 className="titulo-formulario">Arma tu Postre</h2>
           <div className="postre-form-grid">{fields}</div>
         </div>
 
+        {/* RIGHT: resumen */}
         <aside className="resumen-card">
           <h3>Resumen del Pedido</h3>
           <p><strong>Categoría:</strong> {opcion || "-"}</p>
@@ -484,6 +525,48 @@ const Postre = () => {
               ? cantidadOK
               : "-"}
           </p>
+
+          {opcion !== "tartaleta" && (
+            <>
+              <p><strong>Bizcocho:</strong> {bizcocho || "-"}</p>
+              <p>
+                <strong>Relleno:</strong>{" "}
+                {opcion === "cupcake"
+                  ? cupcakeConRelleno
+                    ? relleno || "-"
+                    : "Sin relleno"
+                  : relleno || "-"}
+              </p>
+              <p><strong>Crema:</strong> {crema || "-"}</p>
+              {opcion === "torta" && (
+                <p><strong>Mensaje:</strong> {mensajeTorta || "-"}</p>
+              )}
+              <p>
+                <strong>Extras:</strong>{" "}
+                {[
+                  extraChips ? "Chips de chocolate" : null,
+                  extraNueces ? "Nueces" : null,
+                  extraChispitas ? "Chispitas de colores" : null,
+                  extraFrutasConfitadas ? "Frutas confitadas" : null,
+                  extraFondant ? "Fondant decorativo" : null,
+                  extraCaramelo ? "Cobertura de caramelo" : null,
+                ]
+                  .filter(Boolean)
+                  .join(", ") || "-"}
+              </p>
+            </>
+          )}
+
+          {opcion === "tartaleta" && (
+            <>
+              <p>
+                <strong>Frutas:</strong>{" "}
+                {[fruta1, fruta2].filter(Boolean).join(", ") || "-"}
+              </p>
+              <p><strong>Decoración:</strong> {decoracion || "-"}</p>
+            </>
+          )}
+
           <div className="total-linia">
             <span>Total:</span>
             <strong>${total.toLocaleString("es-CL")}</strong>
