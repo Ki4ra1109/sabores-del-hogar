@@ -3,6 +3,11 @@ import { Footer } from "../../../componentes/Footer";
 import { HeaderAdmin } from "./HeaderAdmin";
 import "./UserAdmin.css";
 import CuentaPanel from "../../../componentes/CuentaPanel";
+import {
+  BarChart, Bar, XAxis,
+  YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Legend,
+} from "recharts";
 
 const THEMES = {
   cafe: { brand: "#442918", btn: "#6d4a35" },
@@ -144,74 +149,103 @@ function PedidosSection() {
   );
 }
 
-//SECCION DE GANACIAS
+//VISUALIZAR GANANCIAS
 function GananciasSection() {
-  const periodos = {
-    day: [
-      { l: "Lun", v: 45600 },
-      { l: "Mar", v: 70000 },
-      { l: "Mié", v: 55090 },
-      { l: "Jue", v: 84900 },
-      { l: "Vie", v: 60500 },
-      { l: "Sáb", v: 95000 },
-      { l: "Dom", v: 54500 },
-    ],
-    week: [
-      { l: "Sem 1", v: 28000 },
-      { l: "Sem 2", v: 35000 },
-      { l: "Sem 3", v: 30000 },
-      { l: "Sem 4", v: 40000 },
-    ],
-    month: [
-      { l: "Ene", v: 120000 },
-      { l: "Feb", v: 110000 },
-      { l: "Mar", v: 140000 },
-      { l: "Abr", v: 130000 },
-      { l: "May", v: 150000 },
-      { l: "Jun", v: 160000 },
-    ],
-  };
   const [period, setPeriod] = useState("day");
-  const data = periodos[period];
-  const max = Math.max(...data.map((d) => d.v));
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchGanancias = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const res = await fetch(`http://localhost:5000/api/ganancias?period=${period}`);
+        if (!res.ok) throw new Error("Error al obtener ganancias");
+        const json = await res.json();
+
+        // Adaptamos los datos al formato que Recharts espera
+        const mapped = json.map((item) => ({
+          label: item.label,
+          total: parseFloat(item.total),
+        }));
+
+        setData(mapped);
+      } catch (err) {
+        console.error(err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGanancias();
+  }, [period]);
 
   return (
     <div className="card">
       <div className="card-head">
         <h2>Ganancias</h2>
         <div className="tabs">
-          <button
-            className={`tab ${period === "day" ? "on" : ""}`}
-            onClick={() => setPeriod("day")}
-          >
+          <button className={`tab ${period === "day" ? "on" : ""}`} onClick={() => setPeriod("day")}>
             Día
           </button>
-          <button
-            className={`tab ${period === "week" ? "on" : ""}`}
-            onClick={() => setPeriod("week")}
-          >
+          <button className={`tab ${period === "week" ? "on" : ""}`} onClick={() => setPeriod("week")}>
             Semana
           </button>
-          <button
-            className={`tab ${period === "month" ? "on" : ""}`}
-            onClick={() => setPeriod("month")}
-          >
+          <button className={`tab ${period === "month" ? "on" : ""}`} onClick={() => setPeriod("month")}>
             Mes
           </button>
         </div>
       </div>
-      <div className="chart">
-        {data.map((d, i) => (
-          <div key={i} className="col">
-            <div
-              className="bar"
-              style={{ height: `${(d.v / max) * 100}%` }}
-              title={`$${d.v.toLocaleString()}`}
-            />
-            <span className="lbl">{d.l}</span>
-          </div>
-        ))}
-      </div>
+
+      {loading && <div className="loading">Cargando datos...</div>}
+      {error && <div className="error">⚠️ {error}</div>}
+      {!loading && !error && data.length === 0 && <div className="empty">No hay datos disponibles</div>}
+
+      {!loading && !error && data.length > 0 && (
+        <div style={{ width: "100%", height: 320 }}>
+          <ResponsiveContainer>
+            <BarChart
+              data={data}
+              margin={{ top: 20, right: 20, left: 20, bottom: 30 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-bd)" />
+              <XAxis
+                dataKey="label"
+                tick={{ fill: "var(--ink-2)", fontSize: 12 }}
+                tickMargin={8}
+              />
+              <YAxis
+                tick={{ fill: "var(--ink-2)", fontSize: 12 }}
+                tickFormatter={(v) => `$${v.toLocaleString()}`}
+              />
+              <Tooltip
+                cursor={{ fill: "rgba(87,36,32,0.08)" }}
+                contentStyle={{
+                  backgroundColor: "var(--surface)",
+                  border: "1px solid var(--surface-bd)",
+                  borderRadius: "8px",
+                  boxShadow: "var(--shadow)",
+                  color: "var(--ink)",
+                  fontSize: "13px",
+                }}
+                formatter={(value) => [`$${value.toLocaleString()}`, "Ganancia"]}
+              />
+              <Legend />
+              <Bar
+                dataKey="total"
+                fill="var(--brand)"
+                radius={[8, 8, 0, 0]}
+                barSize={30}
+                animationDuration={700}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   );
 }
