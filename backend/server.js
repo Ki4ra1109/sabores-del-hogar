@@ -15,6 +15,7 @@ const productosRoutes = require("./Routes/productos");
 const clientesRoutes = require("./Routes/clientesRoutes");
 const carritoRoutes = require("./Routes/carritoRoutes");
 const pedidoRoutes = require("./Routes/pedidoRoutes");
+const gananciasRoutes = require("./Routes/gananciasRoutes"); // NUEVO
 const mpRoutes = require("./Routes/mpRoutes");
 
 const User = require("./models/User");
@@ -44,6 +45,9 @@ app.use("/api/clientes", clientesRoutes);
 app.use("/api/productos", productosRoutes);
 app.use("/api/carrito", carritoRoutes);
 app.use("/api/pedidos", pedidoRoutes);
+app.use("/api/ganancias", gananciasRoutes); // NUEVO
+
+// Test DB
 app.use("/api/mp", mpRoutes);
 
 app.get("/api/test", async (req, res) => {
