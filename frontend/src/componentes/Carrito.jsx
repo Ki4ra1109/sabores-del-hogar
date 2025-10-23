@@ -31,24 +31,24 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
     }, 300);
   };
 
-  const getKey = (item) => `${item.sku || item.id || item.nombre}-${item.porcion || 0}`;
+  const getKey = (item) => `${item.sku || item.id || item.nombre}-${item.porcion || 0}`;
 
-  const cambiarCantidad = (clave, delta) => {
-    const actualizado = carrito
-      .map((item) => {
-        const itemKey = getKey(item);
-        if (itemKey === clave) {
-          const nuevaCantidad = (item.cantidad || 1) + delta;
-          return { ...item, cantidad: Math.max(nuevaCantidad, 0) };
-        }
-        return item;
-      })
-      .filter((item) => (item.cantidad || 0) > 0);
+  const cambiarCantidad = (clave, delta) => {
+    const actualizado = carrito
+      .map((item) => {
+        const itemKey = getKey(item);
+        if (itemKey === clave) {
+          const nuevaCantidad = (item.cantidad || 1) + delta;
+          return { ...item, cantidad: Math.max(nuevaCantidad, 0) };
+        }
+        return item;
+      })
+      .filter((item) => (item.cantidad || 0) > 0);
 
-    setCarrito(actualizado);
-    localStorage.setItem("carrito", JSON.stringify(actualizado));
-    window.dispatchEvent(new Event("carrito:actualizado"));
-  };
+    setCarrito(actualizado);
+    localStorage.setItem("carrito", JSON.stringify(actualizado));
+    window.dispatchEvent(new Event("carrito:actualizado"));
+  };
 
   const eliminarItem = (clave) => {
     const elemento = document.getElementById(`item-${clave}`);
@@ -61,7 +61,7 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
     }, 250);
   };
 
-  const cerrarCarrito = () => setAbrir(false);
+  const cerrarCarrito = () => setAbrir(false);
 
   const total = carrito.reduce(
     (acc, item) => acc + (item.precio || 0) * (item.cantidad || 1),
@@ -98,20 +98,20 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
         }
       });
 
-      const totalFinal = detalle.reduce((acc, p) => {
-        if (p.sku) return acc + p.precio_unitario * (p.cantidad || 1);
-        if (p.detalle) return acc + p.precio_unitario;
-        return acc;
-      }, 0);
+      const totalFinal = detalle.reduce((acc, p) => {
+        if (p.sku) return acc + p.precio_unitario * (p.cantidad || 1);
+        if (p.detalle) return acc + p.precio_unitario;
+        return acc;
+      }, 0);
 
-      const pedidoData = {
-        id_usuario: usuario.id,
-        total: totalFinal,
-        estado: "pendiente",
-        codigo_descuento: null,
-        fecha_entrega: null,
-        detalle,
-      };
+      const pedidoData = {
+        id_usuario: usuario.id,
+        total: totalFinal,
+        estado: "pendiente",
+        codigo_descuento: null,
+        fecha_entrega: null,
+        detalle
+      };
 
       const response = await fetch("http://localhost:5000/api/pedidos/crear", {
         method: "POST",
@@ -122,18 +122,19 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Error al registrar el pedido");
 
-      setCarrito([]);
-      localStorage.removeItem("carrito");
-      window.dispatchEvent(new Event("carrito:actualizado"));
-      setAbrir(false);
-      window.location.href = "/pedido-exitoso";
-    } catch (error) {
-      console.error("Error al finalizar compra:", error);
-      alert("Hubo un problema al registrar el pedido. Intenta nuevamente.");
-    } finally {
-      setProcesando(false);
-    }
-  };
+      setCarrito([]);
+      localStorage.removeItem("carrito");
+      window.dispatchEvent(new Event("carrito:actualizado"));
+      setAbrir(false);
+
+      window.location.href = dataMP.init_point;
+    } catch (error) {
+      console.error("Error al finalizar compra:", error);
+      alert("Hubo un problema al procesar el pago. Intenta nuevamente.");
+    } finally {
+      setProcesando(false);
+    }
+  };
 
   return (
     <>
