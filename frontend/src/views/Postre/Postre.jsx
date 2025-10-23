@@ -18,7 +18,6 @@ const precios = {
 const PORCIONES_TORTA = [12, 18, 24, 30, 50];
 
 const Postre = () => {
-  // No usamos contexto aquí; mantenemos compatibilidad con tu flujo actual
   const [opcion, setOpcion] = useState("");
   const [porcionTorta, setPorcionTorta] = useState(PORCIONES_TORTA[0]);
   const [cantidad, setCantidad] = useState(6);
@@ -41,7 +40,6 @@ const Postre = () => {
   const [decoracion, setDecoracion] = useState("");
   const [mensajeTorta, setMensajeTorta] = useState("");
 
-  // ----- helpers de cantidad -----
   const cantidadOK =
     opcion === "cupcake" || opcion === "tartaleta"
       ? Math.max(6, Number(cantidad) || 6)
@@ -52,7 +50,6 @@ const Postre = () => {
     setCantidad(Number.isFinite(v) ? v : 6);
   };
 
-  // ----- total -----
   const total = useMemo(() => {
     if (!["torta", "cupcake", "tartaleta"].includes(opcion)) return 0;
 
@@ -92,9 +89,7 @@ const Postre = () => {
     cupcakeConRelleno,
   ]);
 
-  // ----- agregar al carrito (local + backend) -----
   const handleAgregar = async () => {
-    // Validaciones
     if (
       !opcion ||
       (opcion === "torta" && (!bizcocho || !crema || !relleno)) ||
@@ -120,9 +115,7 @@ const Postre = () => {
         ? tortaPersonalizada
         : opcion === "cupcake"
         ? cupcakePersonalizado
-        : opcion === "tartaleta"
-        ? tartaletaPersonalizada
-        : null;
+        : tartaletaPersonalizada;
 
     const producto = {
       id: `postre-${Date.now()}`,
@@ -133,7 +126,6 @@ const Postre = () => {
           ? "Cupcakes personalizados"
           : "Tartaleta personalizada",
       esPersonalizado: true,
-      // Para la UI del carrito (resumen por campos):
       detalle: {
         tipo: opcion,
         cantidad: opcion === "torta" ? porcionTorta : cantidadOK,
@@ -151,16 +143,14 @@ const Postre = () => {
           opcion === "tartaleta" ? [fruta1, fruta2].filter(Boolean) : undefined,
         decoracion:
           opcion === "tartaleta" ? decoracion || "Sin decoración" : undefined,
-        mensajeTorta: opcion === "torta" ? (mensajeTorta || "Sin mensaje") : undefined,
+        mensajeTorta: opcion === "torta" ? mensajeTorta || "Sin mensaje" : undefined,
         extras,
       },
-      // Para el cálculo local
       precio: total,
       cantidad: 1,
       imagen,
     };
 
-    // 1) Agregar al carrito local (para que el usuario lo vea de inmediato)
     try {
       const current = JSON.parse(localStorage.getItem("carrito") || "[]");
       current.push(producto);
@@ -168,50 +158,50 @@ const Postre = () => {
       window.dispatchEvent(new CustomEvent("carrito:agregado", { detail: producto }));
     } catch {}
 
-    // 2) Enviar al backend para que se guarde en DB dentro del pedido 'pendiente'
     try {
       const user = JSON.parse(localStorage.getItem("sdh_user") || "null");
       if (!user || !user.id) {
         alert("Se agregó al carrito local. Inicia sesión para guardar tu pedido en la tienda.");
       } else {
-        // Mapear a los campos que espera el backend: cobertura = crema, toppings = string
         const payload = {
           id_usuario: user.id,
           personalizados: [
             {
-              tipo: opcion, // 'torta' | 'cupcake' | 'tartaleta'
+              tipo: opcion,
               cantidad: opcion === "torta" ? porcionTorta : cantidadOK,
               bizcocho: bizcocho || null,
               relleno:
                 opcion === "cupcake"
-                  ? (cupcakeConRelleno ? (relleno || null) : null)
-                  : (relleno || null),
+                  ? cupcakeConRelleno
+                    ? relleno || null
+                    : null
+                  : relleno || null,
               cobertura: crema || null,
               toppings: extras.length ? extras.join(", ") : null,
-              mensaje: opcion === "torta" ? (mensajeTorta || null) : null,
-              // Si quieres enviar frutas y decoración para tartaleta, agrega columnas en tu tabla
-              // y en el backend; por ahora quedan en "detalle" del carrito local.
+              mensaje: opcion === "torta" ? mensajeTorta || null : null,
+              decoracion: opcion === "tartaleta" ? decoracion || null : null,
+              precio_unitario: total,
             },
           ],
         };
 
-        await fetch("http://localhost:5000/api/carrito/personalizado", {
+        const res = await fetch("http://localhost:5000/api/carrito/personalizado", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+
       }
     } catch (e) {
-      console.error("No se pudo enviar al backend, queda en carrito local:", e);
+      console.error("Error al enviar al backend:", e);
+      alert("No se pudo conectar con el servidor.");
     }
 
     alert("¡Producto agregado al carrito!");
   };
 
-  // ----- UI: construcción de campos (manteniendo tu estructura) -----
   const fields = [];
 
-  // Categoría
   fields.push(
     <div className="campo" key="cat">
       <label>Categoría</label>
@@ -235,7 +225,6 @@ const Postre = () => {
     </div>
   );
 
-  // Campos por categoría
   if (opcion === "torta") {
     fields.push(
       <div className="campo" key="porciones">
@@ -367,16 +356,6 @@ const Postre = () => {
         </select>
       </div>
     );
-    fields.push(
-      <div className="campo" key="presentacion">
-        <label>Presentación</label>
-        <select value={""} onChange={() => {}}>
-          <option value="">Caja estándar</option>
-          <option value="mini">Mini cupcakes</option>
-          <option value="mix">Mix sabores</option>
-        </select>
-      </div>
-    );
   } else if (opcion === "tartaleta") {
     fields.push(
       <div className="campo" key="cant-ta">
@@ -424,18 +403,8 @@ const Postre = () => {
         />
       </div>
     );
-    fields.push(
-      <div className="campo" key="base-tartaleta">
-        <label>Base</label>
-        <select value={""} onChange={() => {}}>
-          <option value="">Masa dulce clásica</option>
-          <option value="integral">Masa integral</option>
-        </select>
-      </div>
-    );
   }
 
-  // Normalización: mínimo 6 campos y par
   const MIN_FIELDS = 6;
   while (fields.length < MIN_FIELDS) {
     fields.push(<div className="campo filler" key={`filler-${fields.length}`} />);
@@ -444,7 +413,6 @@ const Postre = () => {
     fields.push(<div className="campo filler" key={`filler-${fields.length}`} />);
   }
 
-  // Extras (toppings)
   if (opcion === "torta" || opcion === "cupcake") {
     fields.push(
       <div className="campo campo-extras full" key="extras">
@@ -507,13 +475,11 @@ const Postre = () => {
     <>
       <Header />
       <div className="postre-container">
-        {/* LEFT */}
         <div className="postre-card">
           <h2 className="titulo-formulario">Arma tu Postre</h2>
           <div className="postre-form-grid">{fields}</div>
         </div>
 
-        {/* RIGHT: resumen */}
         <aside className="resumen-card">
           <h3>Resumen del Pedido</h3>
           <p><strong>Categoría:</strong> {opcion || "-"}</p>

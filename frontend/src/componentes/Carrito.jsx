@@ -4,12 +4,11 @@ import "./Carrito.css";
 
 export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
   const [procesando, setProcesando] = useState(false);
+  const [detallesVisibles, setDetallesVisibles] = useState({});
 
   useEffect(() => {
     if (!abrir) return;
-    const onKey = (e) => {
-      if (e.key === "Escape") setAbrir(false);
-    };
+    const onKey = (e) => e.key === "Escape" && setAbrir(false);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     document.addEventListener("keydown", onKey);
@@ -18,6 +17,9 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
       document.removeEventListener("keydown", onKey);
     };
   }, [abrir]);
+
+  const toggleDetalles = (clave) =>
+    setDetallesVisibles((prev) => ({ ...prev, [clave]: !prev[clave] }));
 
   const vaciarCarrito = () => {
     const items = document.querySelectorAll(".carrito-item");
@@ -51,7 +53,6 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
   const eliminarItem = (clave) => {
     const elemento = document.getElementById(`item-${clave}`);
     if (elemento) elemento.classList.add("eliminando");
-
     setTimeout(() => {
       const actualizado = carrito.filter((item) => getKey(item) !== clave);
       setCarrito(actualizado);
@@ -62,20 +63,17 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
 
   const cerrarCarrito = () => setAbrir(false);
 
-  // Total recalculado considerando personalizados
-  const total = carrito.reduce((acc, item) => {
-    if (!item.esPersonalizado) return acc + item.precio * (item.cantidad || 1);
-    return acc + (item.precio || 0);
-  }, 0);
+  const total = carrito.reduce(
+    (acc, item) => acc + (item.precio || 0) * (item.cantidad || 1),
+    0
+  );
 
   const finalizarCompra = async () => {
     const usuario = JSON.parse(localStorage.getItem("sdh_user"));
-
     if (!usuario || !usuario.id) {
       alert("Debes iniciar sesión para finalizar la compra.");
       return;
     }
-
     if (carrito.length === 0) {
       alert("Tu carrito está vacío.");
       return;
@@ -83,7 +81,6 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
 
     try {
       setProcesando(true);
-
       const detalle = carrito.map((item) => {
         if (!item.esPersonalizado) {
           return {
@@ -123,7 +120,6 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
       });
 
       const data = await response.json();
-
       if (!response.ok) throw new Error(data.message || "Error al registrar el pedido");
 
       setCarrito([]);
@@ -141,8 +137,16 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
 
   return (
     <>
-      <div className={`carrito-overlay ${abrir ? "activo" : ""}`} onClick={cerrarCarrito} />
-      <aside className={`carrito-sidebar ${abrir ? "activo" : ""}`} role="dialog" aria-modal="true" aria-label="Tu Carrito">
+      <div
+        className={`carrito-overlay ${abrir ? "activo" : ""}`}
+        onClick={cerrarCarrito}
+      />
+      <aside
+        className={`carrito-sidebar ${abrir ? "activo" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Tu Carrito"
+      >
         <div className="carrito-header">
           <h2>Tu Carrito</h2>
         </div>
@@ -153,32 +157,62 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
           <div className="carrito-body">
             {carrito.map((item) => {
               const clave = getKey(item);
+              const mostrarDetalles = detallesVisibles[clave];
               return (
                 <div key={clave} id={`item-${clave}`} className="carrito-item">
                   <img src={item.imagen} alt={item.nombre} />
                   <div className="info-item">
-                    <h3>{item.esPersonalizado ? "🍰 Postre personalizado" : item.nombre}</h3>
-                    {item.porcion && <p>Porciones: {item.porcion}</p>}
-                    <p>Precio unitario: ${item.precio}</p>
+                    <h3>
+                      {item.esPersonalizado ? "Postre personalizado" : item.nombre}
+                    </h3>
 
-                    {item.esPersonalizado && (
-                      <div className="detalle-personalizado">
-                        {Object.entries(item.detalle).map(([k, v]) => (
-                          <p key={k}><strong>{k}:</strong> {Array.isArray(v) ? v.join(", ") : v}</p>
-                        ))}
-                      </div>
+                    {item.esPersonalizado ? (
+                      <>
+                        <p><strong>Tipo:</strong> {item.detalle.tipo}</p>
+                        <button
+                          className="detalles-toggle"
+                          onClick={() => toggleDetalles(clave)}
+                        >
+                          {mostrarDetalles ? "Ocultar detalles ▲" : "Ver detalles ▼"}
+                        </button>
+
+                        {mostrarDetalles && (
+                          <div className="detalles-lista">
+                            {Object.entries(item.detalle).map(([k, v]) => (
+                              <p key={k}>
+                                <strong>{k}:</strong>{" "}
+                                {Array.isArray(v) ? v.join(", ") : v}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {item.porcion && <p>Porciones: {item.porcion}</p>}
+                        <p>Precio unitario: ${item.precio}</p>
+                      </>
                     )}
 
                     <div className="cantidad-controles">
-                      <button onClick={() => cambiarCantidad(clave, -1)}><FaMinus /></button>
+                      <button onClick={() => cambiarCantidad(clave, -1)}>
+                        <FaMinus />
+                      </button>
                       <span>{item.cantidad || 1}</span>
-                      <button onClick={() => cambiarCantidad(clave, 1)}><FaPlus /></button>
+                      <button onClick={() => cambiarCantidad(clave, 1)}>
+                        <FaPlus />
+                      </button>
                     </div>
+
                     <p className="subtotal">
                       Subtotal: ${item.precio * (item.cantidad || 1)}
                     </p>
                   </div>
-                  <button className="item-eliminar" onClick={() => eliminarItem(clave)} title="Eliminar producto">
+                  <button
+                    className="item-eliminar"
+                    onClick={() => eliminarItem(clave)}
+                    title="Eliminar producto"
+                  >
                     <FaTrash size={18} />
                   </button>
                 </div>
@@ -188,11 +222,15 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
         )}
 
         <div className="carrito-footer">
-          <p className="carrito-total">Total: ${total}</p>
+          <p className="carrito-total">Total: ${total.toLocaleString("es-CL")}</p>
           <button className="vaciar-btn" onClick={vaciarCarrito}>
             <FaTrash /> Vaciar Carrito
           </button>
-          <button className="finalizar-btn" disabled={procesando} onClick={finalizarCompra}>
+          <button
+            className="finalizar-btn"
+            disabled={procesando}
+            onClick={finalizarCompra}
+          >
             {procesando ? "Procesando..." : "Finalizar Compra"}
           </button>
         </div>
