@@ -115,7 +115,7 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           orderId,
-          payerEmail: usuario.correo,
+          payerEmail: usuario.email,
           items: carrito.map(p => ({
             title: p.nombre || "Producto",
             quantity: p.cantidad || 1,

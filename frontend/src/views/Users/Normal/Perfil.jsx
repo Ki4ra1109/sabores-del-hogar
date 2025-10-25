@@ -17,6 +17,7 @@ export default function Perfil() {
   const [tab, setTab] = useState("account");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [pedidos, setPedidos] = useState([]);
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -96,6 +97,24 @@ export default function Perfil() {
 
   const handleChange = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
 
+  const verDetalleOrden = (idPedido) => {
+    // Por ahora solo mostraremos un alert, pero podrías implementar un modal o una nueva vista
+    const pedido = pedidos.find(p => p.id_pedido === idPedido);
+    if (pedido) {
+      alert(`
+        Orden #${pedido.numero_orden}
+        Fecha: ${new Date(pedido.fecha_pedido).toLocaleDateString()}
+        Estado: ${pedido.estado}
+        Total: $${pedido.total?.toLocaleString('es-CL')}
+        
+        Productos:
+        ${pedido.detalle_productos?.map(item => 
+          `- ${item.nombre_producto} (x${item.cantidad}) $${item.precio_unitario * item.cantidad}`
+        ).join('\n')}
+      `);
+    }
+  };
+
   const handleReset = () => {
     if (!user) return;
     setForm({
@@ -109,6 +128,29 @@ export default function Perfil() {
       direccion: user.direccion || ""
     });
   };
+
+  const cargarPedidos = async () => {
+    if (!user?.id) return;
+    setLoading(true);
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
+      const res = await fetch(`${baseUrl}/api/pedidos/usuario/${user.id}`);
+      if (!res.ok) throw new Error("No se pudo obtener los pedidos");
+      const data = await res.json();
+      setPedidos(data.pedidos || []);
+    } catch (error) {
+      console.error("Error al cargar pedidos:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cargar pedidos cuando cambia la pestaña a "orders"
+  useEffect(() => {
+    if (tab === "orders") {
+      cargarPedidos();
+    }
+  }, [tab, user?.id]);
 
   const handleSave = async () => {
     if (!user?.id) return;
@@ -229,29 +271,34 @@ export default function Perfil() {
           {tab === "orders" && (
             <div className="card">
               <h3>Historial De Órdenes</h3>
-              <div className="orders">
-                <div className="order">
-                  <div className="order-info">
-                    <strong>Entregado</strong>
-                    <span>Llegó el 17 de septiembre</span>
-                    <span>Cheesecake de Frambuesa</span>
-                  </div>
-                  <div className="order-actions">
-                    <button className="btn">Ver compra</button>
-                  </div>
+              {loading ? (
+                <p>Cargando órdenes...</p>
+              ) : (
+                <div className="orders">
+                  {pedidos?.length > 0 ? (
+                    pedidos.map(pedido => (
+                      <div key={pedido.id_pedido} className="order">
+                        <div className="order-info">
+                          <strong>#{pedido.numero_orden}</strong>
+                          <span>{new Date(pedido.fecha_pedido).toLocaleDateString()}</span>
+                          <span>Estado: {pedido.estado}</span>
+                          <span>Total: ${pedido.total?.toLocaleString('es-CL')}</span>
+                          {pedido.detalle_productos?.map((item, index) => (
+                            <span key={index}>{item.nombre_producto} (x{item.cantidad})</span>
+                          ))}
+                        </div>
+                        <div className="order-actions">
+                          <button className="btn" onClick={() => verDetalleOrden(pedido.id_pedido)}>
+                            Ver detalles
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p>No tienes órdenes registradas</p>
+                  )}
                 </div>
-
-                <div className="order">
-                  <div className="order-info">
-                    <strong>Entregado</strong>
-                    <span>Llegó el 17 de septiembre</span>
-                    <span>Muffin de Arándanos</span>
-                  </div>
-                  <div className="order-actions">
-                    <button className="btn">Ver compra</button>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           )}
 
