@@ -113,14 +113,35 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
         detalle
       };
 
-      const response = await fetch("http://localhost:5000/api/pedidos/crear", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(pedidoData),
-      });
+      const respPedido = await fetch("http://localhost:5000/api/pedidos/crear", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(pedidoData)
+      });
+      const dataPedido = await respPedido.json();
+      if (!respPedido.ok) throw new Error(dataPedido.message || "Error al registrar el pedido");
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Error al registrar el pedido");
+      const orderId =
+        dataPedido.id_pedido ||
+        dataPedido.pedido?.id ||
+        dataPedido.id ||
+        dataPedido.orderId;
+
+      const respMP = await fetch("http://localhost:5000/api/mp/preference", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          payerEmail: usuario.email,
+          items: carrito.map(p => ({
+            title: p.nombre || "Producto",
+            quantity: p.cantidad || 1,
+            unit_price: p.precio || 0
+          }))
+        })
+      });
+      const dataMP = await respMP.json();
+      if (!respMP.ok || !dataMP.init_point) throw new Error("No se pudo crear la preferencia de pago");
 
       setCarrito([]);
       localStorage.removeItem("carrito");
