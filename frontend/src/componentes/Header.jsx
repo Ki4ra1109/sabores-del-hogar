@@ -4,6 +4,7 @@ import { FaSearch, FaShoppingCart, FaUser, FaEye, FaEyeSlash } from "react-icons
 import Carrito from './Carrito';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 
+
 export const Header = () => {
   const [abrirCarrito, setAbrirCarrito] = useState(false);
   const [carrito, setCarrito] = useState([]);
@@ -646,7 +647,7 @@ export const Header = () => {
             onMouseEnter={() => setMenuOpen(true)}
             onMouseLeave={() => setMenuOpen(false)}
           >
-            <Link to="/catalogo" onClick={(e) => { e.preventDefault(); setMenuOpen((v) => !v); }}>
+            <Link to="/catalogo">
               Catálogo
             </Link>
             <ul className="submenu">
