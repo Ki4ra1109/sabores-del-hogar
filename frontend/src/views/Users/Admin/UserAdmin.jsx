@@ -1283,7 +1283,7 @@ const UserAdmin = () => {
     const { name, type, checked, value } = e.target;
     const next = { ...prefs, [name]: type === "checkbox" ? checked : value };
     setPrefs(next);
-    try { localStorage.setItem(LS_PREFS, JSON.stringify(next)); } catch { }
+    try { localStorage.setItem(LS_PREFS, JSON.stringify(next)); } catch { /* empty */ }
     applyPrefs(next);
     setOkPrefs("Preferencias aplicadas");
     clearTimeout(window.__prefs_to);
@@ -1292,7 +1292,7 @@ const UserAdmin = () => {
 
   const resetPrefs = () => {
     setPrefs(DEFAULT_PREFS);
-    try { localStorage.setItem(LS_PREFS, JSON.stringify(DEFAULT_PREFS)); } catch { }
+    try { localStorage.setItem(LS_PREFS, JSON.stringify(DEFAULT_PREFS)); } catch { /* empty */ }
     applyPrefs(DEFAULT_PREFS);
     setOkPrefs("Preferencias restablecidas");
     setTimeout(() => setOkPrefs(""), 1200);
@@ -1316,7 +1316,7 @@ const UserAdmin = () => {
   };
 
   const logout = () => {
-    try { localStorage.removeItem("sdh_user"); } catch { }
+    try { localStorage.removeItem("sdh_user"); } catch { /* empty */ }
     window.location.href = "/Login";
   };
 
