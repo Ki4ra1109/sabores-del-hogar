@@ -1,0 +1,68 @@
+.status-pago-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 40px 20px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.icono-status {
+  font-size: 5rem;
+  margin-bottom: 25px;
+}
+
+.status-success {
+  color: #28a745;
+}
+
+.status-pending {
+  color: #ffc107;
+}
+
+.status-failure {
+  color: #dc3545;
+}
+
+.status-pago-container h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.status-pago-container p {
+  font-size: 1.1rem;
+  color: #555;
+  line-height: 1.6;
+  max-width: 500px;
+  margin-bottom: 10px;
+}
+
+.botones-status {
+  margin-top: 30px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+}
+
+.btn-status {
+  display: inline-block;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: #8c5b2c;
+  border: none;
+  border-radius: 5px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-status:hover {
+  background-color: #6a4620;
+}
