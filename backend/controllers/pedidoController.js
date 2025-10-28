@@ -12,66 +12,74 @@ exports.crearPedido = async (req, res) => {
     personalizados,
   } = req.body;
 
-  try {
-    if (
-      !id_usuario ||
-      (!Array.isArray(detalle) && !Array.isArray(personalizados))
-    ) {
-      return res
-        .status(400)
-        .json({ message: "Datos incompletos para crear el pedido." });
-    }
+  if (!id_usuario || (!Array.isArray(detalle) && !Array.isArray(personalizados))) {
+    return res.status(400).json({ message: "Datos incompletos para crear el pedido." });
+  }
 
-    // 1. Crear el pedido principal
+  const t = await db.transaction();
+  try {
     const [pedidoResult] = await db.query(
       `
       INSERT INTO pedido (id_usuario, estado, total, fecha_pedido, codigo_descuento, fecha_entrega)
-      VALUES (?, ?, ?, NOW(), ?, ?)
+      VALUES (?, ?, 0, NOW(), ?, ?)
       RETURNING id_pedido
       `,
       {
         replacements: [
           id_usuario,
           estado || "pendiente",
-          total || 0,
           codigo_descuento || null,
           fecha_entrega || null,
         ],
         type: db.QueryTypes.INSERT,
+        transaction: t,
       }
     );
 
     const id_pedido = pedidoResult[0].id_pedido;
 
-    // 2. Insertar los productos del catálogo
-    if (Array.isArray(detalle)) {
-      for (const item of detalle) {
-        const { sku, cantidad, precio_unitario, porcion } = item;
-        if (!sku || !cantidad || !precio_unitario) continue;
+    if (Array.isArray(detalle) && detalle.length) {
+      const items = detalle
+        .map(it => ({
+          sku: String(it.sku || "").trim(),
+          cantidad: Math.max(1, Number(it.cantidad || 1)),
+          porcion: it.porcion || null,
+        }))
+        .filter(it => it.sku);
 
-        await db.query(
-          `
-          INSERT INTO detalle_pedido (id_pedido, sku, cantidad, precio_unitario, porcion)
-          VALUES (?, ?, ?, ?, ?)
-          `,
-          {
-            replacements: [
-              id_pedido,
-              sku,
-              cantidad,
-              precio_unitario,
-              porcion || null,
-            ],
-          }
+      if (items.length) {
+        const skus = items.map(i => i.sku);
+        const placeholders = skus.map(() => "?").join(",");
+        const [prodRows] = await db.query(
+          `SELECT sku, precio FROM producto WHERE sku IN (${placeholders})`,
+          { replacements: skus, transaction: t }
         );
+
+        const mapaPrecio = new Map(prodRows.map(r => [r.sku, Number(r.precio)]));
+        const faltantes = skus.filter(s => !mapaPrecio.has(s));
+        if (faltantes.length) {
+          await t.rollback();
+          return res.status(409).json({ message: "SKU inexistente", skus: faltantes });
+        }
+
+        for (const it of items) {
+          const precio = mapaPrecio.get(it.sku);
+          await db.query(
+            `
+            INSERT INTO detalle_pedido (id_pedido, sku, cantidad, precio_unitario, porcion)
+            VALUES (?, ?, ?, ?, ?)
+            `,
+            {
+              replacements: [id_pedido, it.sku, it.cantidad, precio, it.porcion],
+              transaction: t,
+            }
+          );
+        }
       }
     }
 
-    // 3. Insertar los postres personalizados (arma tu postre)
-    if (Array.isArray(personalizados)) {
+    if (Array.isArray(personalizados) && personalizados.length) {
       for (const p of personalizados) {
-        const { tipo, cantidad, bizcocho, relleno, cobertura, toppings } = p;
-
         await db.query(
           `
           INSERT INTO postre_personalizado (id_pedido, tipo, cantidad, bizcocho, relleno, cobertura, toppings)
@@ -80,37 +88,41 @@ exports.crearPedido = async (req, res) => {
           {
             replacements: [
               id_pedido,
-              tipo,
-              cantidad,
-              bizcocho,
-              relleno,
-              cobertura,
-              toppings,
+              p.tipo || "personalizado",
+              Math.max(1, Number(p.cantidad || 1)),
+              p.bizcocho || null,
+              p.relleno || null,
+              p.cobertura || null,
+              p.toppings || null,
             ],
+            transaction: t,
           }
         );
       }
     }
 
-    // 4. Recalcular total del pedido (solo productos del catálogo)
-    await db.query(
+    const [sumRows] = await db.query(
       `
-      UPDATE pedido 
-      SET total = (
-        SELECT COALESCE(SUM(cantidad * precio_unitario), 0)
-        FROM detalle_pedido
-        WHERE id_pedido = ?
-      )
-      WHERE id_pedido = ?
+      SELECT COALESCE(SUM(d.cantidad * d.precio_unitario), 0)::numeric AS total_calc
+      FROM detalle_pedido d
+      WHERE d.id_pedido = ?
       `,
-      { replacements: [id_pedido, id_pedido] }
+      { replacements: [id_pedido], transaction: t }
+    );
+    const total_calc = Number(sumRows[0].total_calc || 0);
+
+    await db.query(
+      `UPDATE pedido SET total = ?, estado = COALESCE(?, estado) WHERE id_pedido = ?`,
+      { replacements: [total_calc, estado || "pendiente", id_pedido], transaction: t }
     );
 
+    await t.commit();
     res.status(201).json({
       message: "Pedido creado correctamente.",
       id_pedido,
     });
   } catch (error) {
+    await t.rollback();
     console.error("❌ Error al crear pedido:", error);
     res
       .status(500)
@@ -183,5 +195,26 @@ exports.obtenerTodosLosPedidos = async (req, res) => {
   } catch (error) {
     console.error("❌ Error al obtener todos los pedidos:", error);
     res.status(500).json({ message: "Error al obtener la lista de pedidos." });
+  }
+};
+
+// Obtener pedido por id (para checkout/polling)
+exports.obtenerPedidoPorId = async (req, res) => {
+  const { id_pedido } = req.params;
+
+  try {
+    const [rows] = await db.query(
+      `SELECT * FROM pedido WHERE id_pedido = ?`,
+      { replacements: [id_pedido] }
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ message: "Pedido no encontrado." });
+    }
+
+    res.json(rows[0]);
+  } catch (error) {
+    console.error("❌ Error al obtener pedido por ID:", error);
+    res.status(500).json({ message: "Error al obtener el pedido." });
   }
 };

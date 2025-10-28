@@ -1,4 +1,4 @@
-const express = require("express");
+const express = require("express"); 
 const router = express.Router();
 const pedidoController = require("../controllers/pedidoController");
 
@@ -13,5 +13,8 @@ router.get("/usuario/:id_usuario", pedidoController.obtenerPedidosUsuario);
 
 // Obtener detalle de un pedido
 router.get("/detalle/:id_pedido", pedidoController.obtenerDetallePedido);
+
+// Obtener pedido por id (para checkout/polling)
+router.get("/:id_pedido", pedidoController.obtenerPedidoPorId);
 
 module.exports = router;
