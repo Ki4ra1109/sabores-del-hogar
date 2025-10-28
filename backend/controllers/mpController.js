@@ -1,9 +1,7 @@
-const express = require("express");
+// controllers/mp.controller.js
 const { MercadoPagoConfig, Preference } = require("mercadopago");
 const { QueryTypes } = require("sequelize");
 const sequelize = require("../config/db");
-
-const router = express.Router();
 
 const client = new MercadoPagoConfig({
   accessToken: process.env.MP_ACCESS_TOKEN
@@ -87,7 +85,7 @@ async function syncPagoYPedidoDesdePayment(payment) {
   );
 }
 
-router.post("/preference", express.json(), async (req, res) => {
+async function createPreference(req, res) {
   try {
     const { items, payerEmail, orderId } = req.body;
 
@@ -140,9 +138,9 @@ router.post("/preference", express.json(), async (req, res) => {
     const msg = (error?.cause && error.cause[0]?.description) || error?.message || "Error desconocido";
     res.status(400).json({ error: "Error al crear preferencia de pago", details: msg });
   }
-});
+}
 
-router.get("/status/:orderId", async (req, res) => {
+async function getStatus(req, res) {
   try {
     const { orderId } = req.params;
     const r = await fetch(`https://api.mercadopago.com/v1/payments/search?external_reference=${encodeURIComponent(orderId)}`, {
@@ -164,9 +162,9 @@ router.get("/status/:orderId", async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
-});
+}
 
-router.post("/webhook", express.json(), async (req, res) => {
+async function webhook(req, res) {
   try {
     const topic = req.query.type || req.body.type || req.query.topic;
     const paymentId = req.query["data.id"] || req.query.id || req.body?.data?.id;
@@ -200,6 +198,10 @@ router.post("/webhook", express.json(), async (req, res) => {
   } catch {
     res.sendStatus(200);
   }
-});
+}
 
-module.exports = router;
+module.exports = {
+  createPreference,
+  getStatus,
+  webhook
+};
