@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 const passport = require("passport");
+const path = require("path");
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ const carritoRoutes = require("./Routes/carritoRoutes");
 const pedidoRoutes = require("./Routes/pedidoRoutes");
 const gananciasRoutes = require("./Routes/gananciasRoutes"); // NUEVO
 const mpRoutes = require("./Routes/mpRoutes");
+const uploadsRoutes = require("./Routes/uploads");
 
 const User = require("./models/User");
 require("./models/cupon");
@@ -45,10 +47,10 @@ app.use("/api/clientes", clientesRoutes);
 app.use("/api/productos", productosRoutes);
 app.use("/api/carrito", carritoRoutes);
 app.use("/api/pedidos", pedidoRoutes);
-app.use("/api/ganancias", gananciasRoutes); // NUEVO
-
-// Test DB
+app.use("/api/ganancias", gananciasRoutes);
 app.use("/api/mp", mpRoutes);
+app.use("/api/uploads", uploadsRoutes);
+app.use(express.static(path.resolve(__dirname, "..", "frontend", "public")));
 
 app.get("/api/test", async (req, res) => {
   try {

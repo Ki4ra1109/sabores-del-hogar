@@ -1,6 +1,8 @@
-const express = require("express"); 
+const express = require("express");
 const router = express.Router();
 const pedidoController = require("../controllers/pedidoController");
+// Añadir import de la conexión a la base de datos (Sequelize)
+const sequelize = require("../config/db");
 
 // ✅ Crear un nuevo pedido (con productos del catálogo y personalizados)
 router.post("/crear", (req, res) => pedidoController.crearPedido(req, res));
@@ -8,7 +10,7 @@ router.post("/crear", (req, res) => pedidoController.crearPedido(req, res));
 // ✅ Obtener todos los pedidos (solo si necesitas una vista administrativa)
 router.get("/", async (req, res) => {
   try {
-    const [pedidos] = await pedidoController.db.query("SELECT * FROM pedido");
+    const [pedidos] = await sequelize.query("SELECT * FROM pedido");
     res.json(pedidos);
   } catch (error) {
     console.error("❌ Error al obtener todos los pedidos:", error);
