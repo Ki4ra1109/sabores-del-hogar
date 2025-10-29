@@ -10,10 +10,10 @@ import {
 } from "recharts";
 
 const THEMES = {
-  cafe: { brand: "#442918", btn: "#6d4a35" },
-  claro: { brand: "#744c33", btn: "#9a6a4a" },
-  pastel: { brand: "#7e5a4a", btn: "#a97c68" },
-  cacao: { brand: "#5a3422", btn: "#80513b" },
+  cafe: { brand: "#6f4e37", btn: "#8a5a44" },
+  claro: { brand: "#b07b52", btn: "#d39b70" },
+  cacao: { brand: "#4b2e1f", btn: "#734930" },
+  pastel: { brand: "#a98068", btn: "#c6a489" },
 };
 
 const DEFAULT_PREFS = {
@@ -22,7 +22,6 @@ const DEFAULT_PREFS = {
   font: "md",
   lang: "es",
   showAvatar: true,
-  notifications: true,
 };
 
 const LS_PREFS = "sdh_prefs";
@@ -46,8 +45,28 @@ function applyPrefs(prefs) {
   };
   setScheme(prefs.scheme);
 
-  // Tamaño de fuente base
+  // Tamaño de fuente base (para que la opción funcione)
   root.setAttribute("data-font", prefs.font);
+  // ajustamos font-size en el root para que los textos escalen
+  const fontMap = { sm: "14px", md: "16px", lg: "18px" };
+  const fs = fontMap[prefs.font] || fontMap.md;
+  root.style.fontSize = fs;
+
+  // Ajustes adicionales: texto e input background para mejorar contraste
+  // Si el esquema actual es oscuro, invertimos a colores de alto contraste
+  const scheme = root.getAttribute("data-scheme") || "light";
+  if (scheme === "dark") {
+    // para modo oscuro usar tonos claros en texto y fondo oscuro en inputs
+    root.style.setProperty("--ink", "#f5ede6");
+    root.style.setProperty("--ink-2", "#d8c8bf");
+    root.style.setProperty("--input-bg", "#241d1a");
+  } else {
+    // modo claro: usar colores seguros para lectura (no depender sólo del tema)
+    // preferimos variables de contraste; si el tema sólo tiene brand/btn, calculamos valores seguros
+    root.style.setProperty("--ink", "#3b2a26");
+    root.style.setProperty("--ink-2", "#7b5a49");
+    root.style.setProperty("--input-bg", "#ffffff");
+  }
 
   // Idioma persistido 
   try { localStorage.setItem(LS_LANG, prefs.lang); } catch { /* empty */ }
@@ -254,51 +273,52 @@ function GananciasSection() {
 function ProductosSection() {
   const [showForm, setShowForm] = useState(false);
   const [items, setItems] = useState([]);
+  const [loadingItems, setLoadingItems] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  const [preview, setPreview] = useState({ open: false, src: "", alt: "" });
-  const [zoom, setZoom] = useState(1);
+  // no preview modal: images no abren en ventana al clickear
 
-  const openPreview = (src, alt) => {
-    setPreview({ open: true, src, alt });
-    setZoom(1);
-  };
-  const closePreview = () => setPreview({ open: false, src: "", alt: "" });
-  const toggleZoom = () => setZoom((z) => (z === 1 ? 2.25 : 1));
+  // API base para llamadas al backend
+  const API_BASE = import.meta.env?.VITE_API_URL || "http://localhost:5000";
 
   useEffect(() => {
-    if (!preview.open) return;
-    const onKey = (e) => e.key === "Escape" && closePreview();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [preview.open]);
-
-  useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("productos") || "[]");
-    if (Array.isArray(saved)) setItems(saved);
+    let mounted = true;
+    const fetchProducts = async () => {
+      try {
+        setLoadingItems(true);
+        const res = await fetch(`${API_BASE}/api/productos`);
+        if (!res.ok) throw new Error("Error al cargar productos");
+        const json = await res.json();
+        if (mounted) setItems(Array.isArray(json) ? json : []);
+      } catch (err) {
+        console.error("No se pudo cargar productos:", err);
+      } finally {
+        if (mounted) setLoadingItems(false);
+      }
+    };
+    fetchProducts();
+    return () => { mounted = false; };
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("productos", JSON.stringify(items));
-  }, [items]);
+  const PORCIONES = [12, 18, 24, 30, 50];
 
   const [form, setForm] = useState({
+    sku: "",
     nombre: "",
     categoria: "tortas",
     precioMin: "",
     precioMax: "",
     imagen: "",
     descripcion: "",
-    porciones: [],
+    // siempre incluir todas las porciones predeterminadas
+    porciones: PORCIONES.slice(),
     activo: true,
     usarPorciones: true,
-    porcionPrecios: {},
+    porcionPrecios: {}, // map porcion => precio (strings)
   });
   const [errors, setErrors] = useState({});
 
   const toggleForm = () => setShowForm((v) => !v);
-
-  const PORCIONES = [12, 18, 24, 30, 50];
 
   const num = (v) => {
     const n = Number(String(v).replace(/[^\d.]/g, ""));
@@ -418,20 +438,70 @@ function ProductosSection() {
     }));
   };
 
+  // Subir imagen al backend y guardar la ruta devuelta en form.imagen (imagen_url)
   const onUploadImage = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      setForm((prev) => ({ ...prev, imagen: String(reader.result || "") }));
-    };
-    reader.readAsDataURL(file);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const resp = await fetch(`${API_BASE}/api/uploads`, {
+        method: "POST",
+        body: fd,
+      });
+      const j = await resp.json();
+      if (!resp.ok) {
+        console.error("Upload error:", j);
+        alert("No se pudo subir la imagen");
+        return;
+      }
+      // j.imagen_url expected like "/catalogo/nombre.jpg"
+      setForm((prev) => ({ ...prev, imagen: j.imagen_url || j.path || "" }));
+    } catch (err) {
+      console.error("Error en upload:", err);
+      alert("No se pudo subir la imagen");
+    }
+  };
+
+  // Valida que una URL apunte a una imagen "cargable" en el navegador
+  const validateImageUrl = (url) =>
+    new Promise((resolve) => {
+      try {
+        const img = new Image();
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+        // timeout por si hay bloqueo CORS o no responde
+        const t = setTimeout(() => {
+          img.onload = img.onerror = null;
+          resolve(false);
+        }, 5000);
+        img.onload = () => { clearTimeout(t); resolve(true); };
+        img.onerror = () => { clearTimeout(t); resolve(false); };
+        img.src = url;
+      } catch {
+        resolve(false);
+      }
+    });
+
+  const onValidateUrlClick = async () => {
+    const url = (form.imagen || "").trim();
+    if (!url) { alert("Pega primero la URL en el campo de imagen."); return; }
+    if (!/^https?:\/\//i.test(url) && !url.startsWith("/")) { alert("La URL debe comenzar con http(s) o /"); return; }
+    const ok = await validateImageUrl(url);
+    if (ok) {
+      alert("La URL parece válida. Se usará tal cual.");
+    } else {
+      alert("No se pudo cargar la imagen desde esa URL (CORS o URL inválida). Usa el botón de archivo para subirla.");
+    }
   };
 
   const clearImage = () => setForm((prev) => ({ ...prev, imagen: "" }));
 
   const validate = () => {
     const e = {};
+    const skuVal = (form.sku || "").trim();
+    if (!skuVal) e.sku = "Ingresa un SKU único";
+    else if (!/^[A-Za-z0-9\-_]+$/.test(skuVal)) e.sku = "SKU sólo acepta letras, números, - y _";
     if (!form.nombre.trim()) e.nombre = "Ingresa un nombre";
     if (!form.categoria) e.categoria = "Selecciona una categoría";
 
@@ -440,7 +510,7 @@ function ProductosSection() {
     if (!Number.isFinite(min) || min <= 0) e.precioMin = "Ingresa un mínimo válido";
     if (!Number.isFinite(max) || max <= 0) e.precioMax = "Ingresa un máximo válido";
     if (Number.isFinite(min) && Number.isFinite(max) && min >= max)
-      e.precioMax = "El máximo debe ser mayor al mínimo";
+      e.precioMax = "El máximo debe ser mayor al máximo";
 
     if (!isValidUrl(form.imagen)) e.imagen = "URL de imagen no válida";
 
@@ -472,13 +542,15 @@ function ProductosSection() {
 
   const reset = () => {
     setForm({
+      sku: "",
       nombre: "",
       categoria: "tortas",
       precioMin: "",
       precioMax: "",
       imagen: "",
       descripcion: "",
-      porciones: [],
+      // reset a todas las porciones
+      porciones: PORCIONES.slice(),
       activo: true,
       usarPorciones: true,
       porcionPrecios: {},
@@ -487,129 +559,158 @@ function ProductosSection() {
     setEditingId(null);
   };
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
     const min = num(form.precioMin);
     const max = num(form.precioMax);
 
+    const variantes = PORCIONES.map((p) => {
+      const precioManual = num(form.porcionPrecios?.[p]);
+      const sugerido = suggestions[p];
+      const precio =
+        Number.isFinite(precioManual) && precioManual > 0
+          ? precioManual
+          : Number.isFinite(sugerido)
+          ? sugerido
+          : Number.isFinite(min) && Number.isFinite(max)
+          ? Math.round((min + max) / 2)
+          : Number.isFinite(min)
+          ? min
+          : Number.isFinite(max)
+          ? max
+          : 0;
+      return { personas: p, precio };
+    });
+
     const payload = {
-      id: editingId ?? Date.now(),
+      // incluir sku si el admin lo indicó
+      sku: form.sku.trim() || undefined,
       nombre: form.nombre.trim(),
       categoria: form.categoria,
-      precioMin: min,
-      precioMax: max,
-      imagen: form.imagen.trim(),
+      precioMin: min || null,
+      precioMax: max || null,
+      imagen_url: form.imagen?.trim() || null,
       descripcion: form.descripcion.trim(),
-      variantes: form.usarPorciones
-        ? form.porciones.map((p) => ({
-          personas: p,
-          precio: num(form.porcionPrecios[p]) || suggestions[p] || min,
-        }))
-        : [],
+      variantes,
       activo: form.activo,
     };
 
-    setItems((prev) =>
-      editingId ? prev.map((it) => (it.id === editingId ? payload : it)) : [payload, ...prev]
-    );
-
-    reset();
-    setShowForm(false);
+    try {
+      const url = editingId ? `${API_BASE}/api/productos/${editingId}` : `${API_BASE}/api/productos`;
+      const method = editingId ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json?.message || json?.error || "Error al guardar producto");
+      }
+      // refresh list from server
+      const listRes = await fetch(`${API_BASE}/api/productos`);
+      const listJson = await listRes.json();
+      setItems(Array.isArray(listJson) ? listJson : []);
+      reset();
+      setShowForm(false);
+    } catch (err) {
+      console.error("Error al guardar producto:", err);
+      alert("No se pudo guardar el producto. " + (err.message || ""));
+    }
   };
 
   const startEdit = (item) => {
-    setEditingId(item.id);
+    setEditingId(item.sku ?? item.id);
+    // rellenar precios por porción para todas las PORCIONES predeterminadas
     const porcionPrecios = {};
+    // mapear valores existentes
     (item.variantes || []).forEach((v) => {
-      porcionPrecios[v.personas] = String(v.precio || "");
+      if (v && v.personas) porcionPrecios[v.personas] = String(v.precio ?? "");
     });
+    // asegurar keys para todas las PORCIONES (llenar con sugerencias si no existen)
+    const suggestedMap = (() => {
+      const map = {};
+      const min = item.precioMin ?? null;
+      const max = item.precioMax ?? null;
+      // calc suggestions similar a frontend
+      const ps = PORCIONES.slice().sort((a, b) => a - b);
+      if (Number.isFinite(Number(min)) && Number.isFinite(Number(max)) && Number(min) > 0 && Number(max) > 0 && Number(min) < Number(max)) {
+        const pMin = ps[0];
+        const pMax = ps[ps.length - 1];
+        ps.forEach((p) => {
+          if (pMin === pMax) map[p] = Number(max);
+          else {
+            const t = (p - pMin) / (pMax - pMin);
+            map[p] = Math.round(Number(min) + t * (Number(max) - Number(min)));
+          }
+        });
+      }
+      return map;
+    })();
+
+    PORCIONES.forEach((p) => {
+      if (!porcionPrecios[p]) {
+        porcionPrecios[p] = suggestedMap[p] ? String(suggestedMap[p]) : "";
+      }
+    });
+
     setForm({
+      sku: item.sku || "",
       nombre: item.nombre || "",
       categoria: item.categoria || "tortas",
       precioMin: item.precioMin ? String(item.precioMin) : "",
       precioMax: item.precioMax ? String(item.precioMax) : "",
-      imagen: item.imagen || "",
+      imagen: (item.imagen || item.imagen_url || item.image || ""),
       descripcion: item.descripcion || "",
-      porciones: (item.variantes || []).map((v) => v.personas).sort((a, b) => a - b),
+      // mantener todas las porciones predeterminadas
+      porciones: PORCIONES.slice(),
       activo: !!item.activo,
-      usarPorciones: (item.variantes || []).length > 0 || item.categoria === "tortas",
+      usarPorciones: true,
       porcionPrecios,
     });
     setShowForm(true);
   };
 
   const removeItem = (id) => {
-    setItems((prev) => prev.filter((p) => p.id !== id));
-    if (editingId === id) reset();
+    if (!window.confirm("¿Eliminar el producto?")) return;
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/productos/${id}`, { method: "DELETE" });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json?.message || "Error al eliminar");
+        // refresh list
+        const listRes = await fetch(`${API_BASE}/api/productos`);
+        const listJson = await listRes.json();
+        setItems(Array.isArray(listJson) ? listJson : []);
+        if (editingId === id) reset();
+      } catch (err) {
+        console.error("Error al eliminar producto:", err);
+        alert("No se pudo eliminar el producto.");
+      }
+    })();
   };
 
   const safeThumb = (src) => {
     const url = (src || "").trim();
     if (!url) return "/placeholder.jpg";
+    // URLs absolutas o data/blob se devuelven tal cual
     if (
       url.startsWith("http://") ||
       url.startsWith("https://") ||
-      url.startsWith("/") ||
       url.startsWith("data:") ||
       url.startsWith("blob:")
-    )
-      return url;
-    return "/placeholder.jpg";
+    ) return url;
+    // Normalizar rutas relativas: "catalogo/imagen.jpg" -> "/catalogo/imagen.jpg"
+    // Esto permite que las imágenes ubicadas en frontend/public/catalogo/ sean accesibles.
+    return url.startsWith("/") ? url : `/${url}`;
   };
 
-  const overlayStyle = {
-    position: "fixed",
-    inset: 0,
-    background: "rgba(0,0,0,.6)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 9999,
-    padding: 24,
-  };
-  const viewportStyle = {
-    position: "relative",
-    maxWidth: "90vw",
-    maxHeight: "85vh",
-    overflow: "auto",
-    background: "#fff",
-    borderRadius: 10,
-    boxShadow: "0 10px 30px rgba(0,0,0,.25)",
-    padding: 8,
-  };
-  const imgStyle = {
-    display: "block",
-    width: `${zoom * 100}%`,
-    height: "auto",
-    maxWidth: "none",
-    cursor: zoom === 1 ? "zoom-in" : "zoom-out",
-  };
-  const closeBtn = {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    width: 36,
-    height: 36,
-    borderRadius: 999,
-    border: 0,
-    background: "#ffffff",
-    color: "#333",
-    fontSize: 22,
-    lineHeight: 1,
-    cursor: "pointer",
-    boxShadow: "0 6px 18px rgba(0,0,0,.2)",
-  };
-  const hintStyle = {
-    position: "absolute",
-    left: 12,
-    bottom: 10,
-    fontSize: 12,
-    color: "#666",
-    background: "rgba(255,255,255,.85)",
-    padding: "2px 8px",
-    borderRadius: 6,
+  // Helper: obtener ruta de imagen desde distintos campos que pueda devolver el backend
+  const getProductImage = (p) => {
+    if (!p) return "";
+    return p.imagen || p.imagen_url || p.image || p.url || "";
   };
 
   return (
@@ -624,6 +725,16 @@ function ProductosSection() {
       {showForm && (
         <form className="product-form" onSubmit={onSubmit} noValidate>
           <div className="form-grid">
+            <div className="field">
+              <label>SKU</label>
+              <input
+                name="sku"
+                value={form.sku}
+                onChange={onChange}
+                placeholder="Ej: TCHOC"
+              />
+              {errors.sku && <span className="err">{errors.sku}</span>}
+            </div>
             <div className="field">
               <label>Nombre</label>
               <input
@@ -676,12 +787,18 @@ function ProductosSection() {
 
             <div className="field">
               <label>Imagen del producto</label>
-              <input
-                name="imagen"
-                value={form.imagen}
-                onChange={onChange}
-                placeholder="Pega una URL (https://...)"
-              />
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  name="imagen"
+                  value={form.imagen}
+                  onChange={onChange}
+                  placeholder="Pega una URL (https://...)"
+                  style={{ flex: 1 }}
+                />
+                <button type="button" className="btn sm" onClick={onValidateUrlClick} style={{ whiteSpace: "nowrap" }}>
+                  Validar URL
+                </button>
+              </div>
               <div
                 className="row"
                 style={{ gap: 8, marginTop: 8, alignItems: "center" }}
@@ -826,30 +943,26 @@ function ProductosSection() {
       )}
 
       <div className="grid">
-        {items.length === 0 && (
+        {items.length === 0 && !loadingItems && (
           <div className="empty">
             <p>No hay productos agregados aún.</p>
           </div>
         )}
+        {loadingItems && (
+          <div className="empty"><p>Cargando productos...</p></div>
+        )}
 
         {items.map((p) => {
-          const variantes = (p.variantes || [])
-            .slice()
-            .sort((a, b) => a.personas - b.personas);
-
+          const variantes = (p.variantes || []).slice().sort((a, b) => a.personas - b.personas);
           return (
-            <article key={p.id} className="product modern">
+            <article key={p.sku ?? p.id} className="product modern">
               <div className="thumb">
                 <img
-                  src={safeThumb(p.imagen)}
+                  src={safeThumb(getProductImage(p))}
                   alt={p.nombre}
                   loading="lazy"
-                  onError={(e) => {
-                    e.currentTarget.src = "/placeholder.jpg";
-                  }}
-                  onClick={() => openPreview(safeThumb(p.imagen), p.nombre)}
-                  style={{ cursor: "zoom-in" }}
-                  title="Ver imagen"
+                  onError={(e) => { e.currentTarget.src = "/placeholder.jpg"; }}
+                  style={{ cursor: "default" }}
                 />
               </div>
 
@@ -881,36 +994,14 @@ function ProductosSection() {
               </div>
 
               <div className="card-actions">
-                <button className="btn sm" onClick={() => startEdit(p)}>
-                  Modificar
-                </button>
-                <button className="btn sm danger" onClick={() => removeItem(p.id)}>
-                  Eliminar
-                </button>
+                <button className="btn sm" onClick={() => startEdit(p)}>Modificar</button>
+                <button className="btn sm danger" onClick={() => removeItem(p.sku ?? p.id)}>Eliminar</button>
               </div>
             </article>
           );
         })}
       </div>
 
-      {preview.open && (
-        <div
-          style={overlayStyle}
-          onClick={closePreview}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div style={viewportStyle} onClick={(e) => e.stopPropagation()}>
-            <img src={preview.src} alt={preview.alt} onDoubleClick={toggleZoom} style={imgStyle} />
-            <button style={closeBtn} onClick={closePreview} aria-label="Cerrar">
-              ×
-            </button>
-            <div style={hintStyle}>
-              Doble clic para {zoom === 1 ? "acercar" : "alejar"}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -1265,7 +1356,6 @@ const UserAdmin = () => {
     }
   });
   const [okPrefs, setOkPrefs] = useState("");
-  const [errPrefs, setErrPrefs] = useState("");
 
   useEffect(() => {
     applyPrefs(prefs);
@@ -1296,23 +1386,6 @@ const UserAdmin = () => {
     applyPrefs(DEFAULT_PREFS);
     setOkPrefs("Preferencias restablecidas");
     setTimeout(() => setOkPrefs(""), 1200);
-  };
-
-  const testNotifs = async () => {
-    try {
-      if (!("Notification" in window)) return setErrPrefs("Tu navegador no soporta notificaciones.");
-      let perm = Notification.permission;
-      if (perm !== "granted") perm = await Notification.requestPermission();
-      if (perm === "granted") {
-        new Notification("✅ Notificaciones activas", { body: "Este es un mensaje de prueba." });
-      } else {
-        setErrPrefs("Permiso denegado.");
-      }
-    } catch {
-      setErrPrefs("No se pudo mostrar la notificación.");
-    } finally {
-      setTimeout(() => setErrPrefs(""), 1400);
-    }
   };
 
   const logout = () => {
@@ -1461,15 +1534,55 @@ const UserAdmin = () => {
 
   const renderSettings = () => (
     <div className="card">
-      <h2>Configuración</h2>
+      <h2>Configuración de apariencia</h2>
 
-      {/* Contenido del formulario eliminado temporalmente */}
-      <p style={{ color: 'var(--muted)', textAlign: 'center', margin: '20px 0' }}>
-        Próximamente: Más opciones de configuración.
-      </p>
+      <div style={{ display: "grid", gap: 12, marginTop: 8 }}>
+        <div className="field">
+          <label>Tema</label>
+          <select name="theme" value={prefs.theme} onChange={onChangePref}>
+            {Object.keys(THEMES).map((t) => (
+              <option key={t} value={t}>
+                {t[0].toUpperCase() + t.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <div className="row mt" style={{ justifyContent: 'flex-end' }}>
+        <div className="field">
+          <label>Modo de color</label>
+          <div style={{ display: "flex", gap: 8 }}>
+            <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <input type="radio" name="scheme" value="system" checked={prefs.scheme === "system"} onChange={onChangePref} /> Sistema
+            </label>
+            <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <input type="radio" name="scheme" value="light" checked={prefs.scheme === "light"} onChange={onChangePref} /> Claro
+            </label>
+            <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <input type="radio" name="scheme" value="dark" checked={prefs.scheme === "dark"} onChange={onChangePref} /> Oscuro
+            </label>
+          </div>
+        </div>
 
+        <div className="field">
+          <label>Tamaño de fuente</label>
+          <select name="font" value={prefs.font} onChange={onChangePref}>
+            <option value="sm">Pequeña</option>
+            <option value="md">Mediana</option>
+            <option value="lg">Grande</option>
+          </select>
+        </div>
+
+        <div className="field check">
+          <label>
+            <input type="checkbox" name="showAvatar" checked={prefs.showAvatar} onChange={onChangePref} /> Mostrar avatar en encabezado
+          </label>
+        </div>
+
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="btn" onClick={resetPrefs} type="button">Restablecer</button>
+        </div>
+
+        {okPrefs && <div style={{ color: "var(--ok, #1a7f37)", fontWeight: 700 }}>{okPrefs}</div>}
       </div>
     </div>
   );

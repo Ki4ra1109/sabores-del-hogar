@@ -19,15 +19,12 @@ export default function Catalogo() {
     return productos.filter(p => p.categoria === cat);
   }, [cat, productos]);
 
-  // Traer productos desde el backend
   useEffect(() => {
     fetch("http://127.0.0.1:5000/api/productos")
       .then(res => res.json())
       .then(data => setProductos(data))
       .catch(err => console.error("Error al cargar productos:", err));
   }, []);
-
-  if (!productos.length) return <p>Cargando productos...</p>;
 
   return (
     <div className="productos-container">
@@ -38,6 +35,7 @@ export default function Catalogo() {
             : cat === 'dulces' ? 'Nuestro Catálogo de Dulces'
             : 'Nuestro Catálogo'}
         </h1>
+
         <div className="productos-grid">
           {lista.map(producto => (
             <div

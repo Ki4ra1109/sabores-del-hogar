@@ -1,15 +1,11 @@
-// Routes/carritoRoutes.js
 const express = require("express");
 const router = express.Router();
 const carritoController = require("../controllers/carritoController");
 
-// Agregar producto al carrito
 router.post("/agregar", carritoController.agregarAlCarrito);
-
-// Ver carrito de un cliente
-router.get("/:id_cliente", carritoController.obtenerCarrito);
-
-// Eliminar producto del carrito
+router.post("/personalizado", carritoController.agregarPersonalizado);
+router.get("/:id_usuario", carritoController.obtenerCarrito);
 router.delete("/eliminar/:id_detalle", carritoController.eliminarDelCarrito);
+router.post("/finalizar", carritoController.finalizarPedido);
 
 module.exports = router;

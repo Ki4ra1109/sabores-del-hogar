@@ -82,8 +82,8 @@ exports.crearPedido = async (req, res) => {
       for (const p of personalizados) {
         await db.query(
           `
-          INSERT INTO postre_personalizado (id_pedido, tipo, cantidad, bizcocho, relleno, cobertura, toppings)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO postre_personalizado (id_pedido, tipo, cantidad, bizcocho, relleno, cobertura, toppings, mensaje)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
           `,
           {
             replacements: [
@@ -152,6 +152,7 @@ exports.obtenerDetallePedido = async (req, res) => {
   const { id_pedido } = req.params;
 
   try {
+    // 1️⃣ Productos del catálogo
     const [detalles] = await db.query(
       `
       SELECT d.*, p.nombre 
@@ -162,7 +163,20 @@ exports.obtenerDetallePedido = async (req, res) => {
       { replacements: [id_pedido] }
     );
 
-    res.json(detalles);
+    // 2️⃣ Postres personalizados
+    const [personalizados] = await db.query(
+      `
+      SELECT *
+      FROM postre_personalizado
+      WHERE id_pedido = ?
+      `,
+      { replacements: [id_pedido] }
+    );
+
+    res.json({
+      productos: detalles,
+      personalizados: personalizados,
+    });
   } catch (error) {
     console.error("❌ Error al obtener detalle del pedido:", error);
     res

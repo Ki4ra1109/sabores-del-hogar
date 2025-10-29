@@ -13,6 +13,13 @@
   --brand: #572420;
 }
 
+:root {
+  font-size: 16px;
+}
+body {
+  font-size: 1rem;
+}
+
 .user-container {
   display: grid;
   grid-template-columns: var(--rail) minmax(0, 1fr);
@@ -52,21 +59,23 @@
   transition: background .2s ease, color .2s ease, padding-left .15s ease;
   user-select: none;
   outline: none;
+  background: transparent;
 }
 
 .sidebar li:hover {
-  background: rgba(68, 41, 24, .08);
+  background: color-mix(in oklab, var(--brand) 8%, var(--surface));
   padding-left: 16px;
+  color: var(--ink);
 }
 
 .sidebar li.active {
   background: var(--brand);
   color: #fff;
-  box-shadow: 0 2px 8px rgba(68, 41, 24, .25);
+  box-shadow: 0 2px 8px color-mix(in oklab, var(--brand), black 20%);
 }
 
 .sidebar li:focus-visible {
-  box-shadow: 0 0 0 3px rgba(68, 41, 24, .25);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand), black 12%);
 }
 
 .main-content {
@@ -281,7 +290,9 @@
 .field select,
 .product-form textarea {
   min-height: 40px;
-  border: 1px solid #ddd;
+  background: var(--input-bg);
+  color: var(--ink);
+  border: 1px solid var(--surface-bd);
   border-radius: 8px;
   padding: 8px 10px;
   outline: none;
@@ -291,7 +302,7 @@
 .field select:focus,
 .product-form textarea:focus {
   border-color: var(--brand);
-  box-shadow: 0 0 0 3px rgba(68, 41, 24, .15);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand), transparent 80%);
 }
 
 .grid2 {
