@@ -13,6 +13,14 @@
   --brand: #572420;
 }
 
+/* Nuevo: fondo degradado suave para la lista de clientes (alternado de café → blanco) */
+:root {
+  /* color base para las filas (puedes cambiarlo a cualquier color clarito) */
+  --client-accent: rgba(68,41,24,0.06);     /* café claro */
+  --client-accent-2: rgba(122,85,64,0.04);   /* segundo tono, más sutil */
+  --client-stripe: rgba(68,41,24,0.10);      /* franja lateral sutil */
+}
+
 .user-container {
   display: grid;
   grid-template-columns: var(--rail) minmax(0, 1fr);
@@ -888,4 +896,230 @@ body {
 
 .bar:hover {
   filter: brightness(1.1);
+}
+
+/* Nuevo: fondo degradado suave para la lista de clientes */
+.list .client {
+  background: linear-gradient(90deg, rgba(68,41,24,0.03), rgba(255,255,255,0));
+  transition: background 180ms ease, transform 120ms ease;
+  border: 1px solid rgba(0,0,0,0.04);
+}
+
+.list .client:nth-child(even) {
+  /* filas pares un poco más marcadas para el efecto "de claro a blanco" */
+  background: linear-gradient(90deg, rgba(68,41,24,0.06), rgba(255,255,255,0));
+}
+
+.list .client:hover {
+  background: linear-gradient(90deg, rgba(68,41,24,0.08), rgba(255,255,255,0));
+  transform: translateY(-2px);
+}
+
+/* Entrada de cliente inactivo (si marcas con la clase .inactive desde JSX) */
+.list .client.inactive {
+  background: linear-gradient(90deg, rgba(220,70,70,0.04), rgba(255,255,255,0));
+  opacity: 0.96;
+}
+
+/* Ajuste visual de botón en la fila para que no rompa el estilo */
+.list .client .row button {
+  background: transparent;
+  border: 1px solid rgba(68,41,24,0.08);
+  color: var(--ink);
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+/* Nuevo: fondo degradado suave para la lista de clientes (alternado de café → blanco) */
+:root {
+  /* color base para las filas (puedes cambiarlo a cualquier color clarito) */
+  --client-accent: rgba(68,41,24,0.06);     /* café claro */
+  --client-accent-2: rgba(122,85,64,0.04);   /* segundo tono, más sutil */
+  --client-stripe: rgba(68,41,24,0.10);      /* franja lateral sutil */
+}
+
+.list .client {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(0,0,0,0.04);
+  border-radius: 10px;
+  overflow: hidden;
+  background: linear-gradient(90deg, var(--client-accent) 0%, rgba(255,255,255,0) 50%);
+  transition: background 220ms ease, transform 140ms ease, box-shadow 140ms ease;
+}
+
+/* filas pares con dirección inversa / tono diferente para efecto "pasa de café a blanco" */
+.list .client:nth-child(even) {
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, var(--client-accent-2) 50%, rgba(255,255,255,0) 100%);
+}
+
+/* resaltar al hover */
+.list .client:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+  background: linear-gradient(90deg, color-mix(in oklab, var(--client-accent), white 70%) 0%, rgba(255,255,255,0) 60%);
+}
+
+/* franja lateral decorativa */
+.list .client::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 8px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, var(--client-stripe), color-mix(in oklab, var(--client-stripe), white 40%));
+  opacity: 0.85;
+  transition: width 180ms ease, opacity 180ms ease;
+}
+
+/* filas pares franja a la derecha para variar */
+.list .client:nth-child(even)::before {
+  left: auto;
+  right: 0;
+  background: linear-gradient(180deg, var(--client-stripe), color-mix(in oklab, var(--client-stripe), white 60%));
+  opacity: 0.6;
+}
+
+/* estado inactivo mantiene contraste distinto */
+.list .client.inactive {
+  background: linear-gradient(90deg, rgba(220,70,70,0.04), rgba(255,255,255,0));
+  opacity: 0.95;
+  filter: saturate(0.9);
+}
+
+/* botón en fila: mantener estilo consistente */
+.list .client .row button {
+  background: transparent;
+  border: 1px solid rgba(68,41,24,0.08);
+  color: var(--ink);
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+/* Quitar la franja lateral decorativa de las filas de clientes */
+.list .client::before,
+.list .client:nth-child(even)::before {
+  display: none !important;
+}
+/* Alternativa: mantener el pseudo-elemento pero invisible
+.list .client::before { width: 0 !important; background: transparent !important; }
+*/
+
+/* Intercalado claro ↔ blanco para lista de usuarios (compatible con .list .client) */
+.user-list,
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.user-list .client,
+.list .client {
+  border-radius: 10px;
+  border: 1px solid #e9e1da;
+  margin-bottom: 10px;
+  padding: 14px 18px;
+  transition: background 0.3s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+/* 🎨 Usuarios intercalados: café claro / blanco */
+.user-list .client:nth-child(odd) {
+  background: #f7ede4; /* café clarito/beige */
+  border: 1px solid #e6d4c9;
+}
+
+.user-list .client:nth-child(even) {
+  background: #ffffff; /* blanco */
+  border: 1px solid #e9e0d9;
+}
+
+/* 🧩 Estilo base: bordes redondeados, padding y transición suave */
+.user-list .client {
+  border-radius: 10px;
+  padding: 14px 18px;
+  transition: background 0.25s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  color: var(--ink);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+
+/* 🪶 Hover: se realza un poco y toma un café más cálido */
+.user-list .client:hover {
+  background: #f0d8c6; /* café tostado suave */
+  transform: scale(1.01);
+  border-color: #d9bba8;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+}
+
+/* 🧹 Contenedor general */
+.user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Opcional: que el texto y controles internos tomen el color de la marca al hover */
+.user-list .client:hover * {
+  color: var(--brand);
+}
+
+/* ============================= */
+/* Intercalado claro ↔ blanco (aplica sobre .list, no borra nada) */
+/* ============================= */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: transparent; /* evita que un padre blanco tape el color */
+  padding: 6px 0;
+}
+
+/* base fila */
+.list .client {
+  border-radius: 10px;
+  padding: 14px 18px;
+  transition: background 0.25s ease, transform 0.15s ease, box-shadow 0.18s ease;
+  border: 1px solid rgba(0,0,0,0.04);
+  color: var(--ink, #3b2a26);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+/* alternar colores: impar = café claro, par = blanco */
+.list .client:nth-child(odd) {
+  background: #f7ede4 !important; /* café clarito / beige */
+}
+
+.list .client:nth-child(even) {
+  background: #ffffff !important; /* blanco */
+}
+
+/* hover: tono más cálido y ligero "levantamiento" */
+.list .client:hover {
+  background: #f0d8c6 !important;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+  border-color: rgba(68,41,24,0.08);
+}
+
+/* inactivos (si aplicas .inactive desde JSX) */
+.list .client.inactive {
+  background: linear-gradient(90deg, rgba(220,70,70,0.04), rgba(255,255,255,0)) !important;
+  opacity: 0.95;
+  filter: saturate(0.9);
+}
+
+/* asegura que botones/controles no rompan el estilo */
+.list .client .row button,
+.list .client .btn {
+  background: transparent;
+  border: 1px solid rgba(68,41,24,0.08);
+  color: var(--ink, #3b2a26);
+  padding: 6px 10px;
+  border-radius: 8px;
 }

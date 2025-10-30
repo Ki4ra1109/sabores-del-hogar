@@ -75,6 +75,7 @@ function PedidosSection() {
     const fetchPedidos = async () => {
       try {
         const res = await fetch("http://localhost:5000/api/pedidos");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         setPedidos(data);
       } catch (err) {
@@ -945,9 +946,12 @@ function DescuentosSection() {
     try {
       setLoading(true);
       const r = await fetch(`${API_BASE}/api/cupones`);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const j = await r.json();
-      setCoupons(Array.isArray(j.items) ? j.items : []);
-    } catch {
+      const list = Array.isArray(j) ? j : Array.isArray(j?.items) ? j.items : [];
+      setCoupons(list);
+    } catch (err) {
+      console.error(err);
       alert("No se pudo cargar la lista de cupones");
     } finally {
       setLoading(false);
@@ -1081,7 +1085,7 @@ function DescuentosSection() {
   };
 
   const copyCode = async (code) => {
-    try { await navigator.clipboard.writeText(code); } catch { }
+    try { await navigator.clipboard.writeText(code); } catch { /* empty */ }
   };
   const toggleActive = async (c) => {
     try {
@@ -1425,7 +1429,10 @@ const UserAdmin = () => {
             <p>No hay clientes registrados o error al cargar.</p>
           ) : (
             clientes.map((c, i) => (
-              <div key={c.id || i} className="client">
+              <div
+                key={c.id || i}
+                className={`client ${c.activo === false ? "inactive" : ""}`}
+              >
                 <div>
                   <h4>{c.nombre}</h4>
                   <p>{c.correo}</p>
