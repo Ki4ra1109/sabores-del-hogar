@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { FaTrash, FaPlus, FaMinus } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import "./Carrito.css";
 
 export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
   const [procesando, setProcesando] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!abrir) return;
@@ -81,108 +83,13 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
 
     try {
       setProcesando(true);
-
-      const detalle = carrito
-        .filter((item) => !item.esPersonalizado)
-        .map((item) => ({
-          sku: item.sku,
-          cantidad: item.cantidad || 1,
-          precio_unitario: item.precio,
-          porcion: item.porcion || null,
-        }));
-
-      const personalizados = carrito
-        .filter((item) => item.esPersonalizado)
-        .map((item) => {
-          const d = item.detalle || {};
-          return {
-            tipo: d.tipo || "personalizado",
-            cantidad: item.cantidad || 1,
-            bizcocho: d.bizcocho || null,
-            relleno: d.relleno || null,
-            cobertura: d.cobertura || null,
-            toppings: Array.isArray(d.toppings)
-              ? d.toppings.join(",")
-              : d.toppings || null,
-          };
-        });
-
-      const totalFinal = carrito.reduce((acc, p) => {
-        const precio = Number(p.precio || 0);
-        const cant = Number(p.cantidad || 1);
-        return acc + precio * cant;
-      }, 0);
-
-      const pedidoData = {
-        id_usuario: usuario.id,
-        total: totalFinal,
-        estado: "pendiente",
-        codigo_descuento: null,
-        fecha_entrega: null,
-        detalle,
-        personalizados,
-      };
-
-      const respPedido = await fetch("http://localhost:5000/api/pedidos/crear", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(pedidoData),
-      });
-
-      const dataPedido = await respPedido.json();
-      if (!respPedido.ok)
-        throw new Error(dataPedido.message || "Error al registrar el pedido");
-
-      const orderId =
-        dataPedido.id_pedido ||
-        dataPedido.pedido?.id ||
-        dataPedido.id ||
-        dataPedido.orderId;
-
-      const payerEmail = usuario.correo || usuario.email || "";
-
-      const items = carrito
-        .map((p) => ({
-          title: p.nombre || "Producto",
-          quantity: Number(p.cantidad || 1),
-          unit_price: Number(p.precio || 0),
-        }))
-        .filter((i) => i.quantity > 0 && i.unit_price > 0);
-
-      if (!orderId || !payerEmail || items.length === 0) {
-        alert("Datos incompletos para Mercado Pago.");
-        setProcesando(false);
-        return;
-      }
-
-      const respMP = await fetch("http://localhost:5000/api/mp/preference", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId, payerEmail, items }),
-      });
-
-      const dataMP = await respMP.json();
-      if (!respMP.ok) {
-        console.error("MP resp:", dataMP);
-        alert(`Error Mercado Pago: ${dataMP.details || dataMP.error || "sin detalle"}`);
-        throw new Error(dataMP.details || "No se pudo crear la preferencia de pago");
-      }
-
-      if (!(dataMP.init_point || dataMP.sandbox_init_point))
-        throw new Error("No se pudo crear la preferencia de pago");
-
-      setCarrito([]);
-      localStorage.removeItem("carrito");
+      localStorage.setItem("carrito", JSON.stringify(carrito));
       window.dispatchEvent(new Event("carrito:actualizado"));
       setAbrir(false);
-
-      // Aquí se prioriza init_point (producción). Si no está, usa sandbox_init_point.
-      const checkoutUrl = dataMP.init_point || dataMP.sandbox_init_point;
-      console.log("[MP DEBUG] checkoutUrl:", checkoutUrl, "response:", dataMP);
-      window.location.assign(checkoutUrl);
+      navigate("/resumen-compra", { state: { carrito } });
     } catch (error) {
-      console.error("Error al finalizar compra:", error);
-      alert("Hubo un problema al procesar el pago. Intenta nuevamente.");
+      console.error("Error al preparar resumen:", error);
+      alert("Hubo un problema. Intenta nuevamente.");
     } finally {
       setProcesando(false);
     }
@@ -271,7 +178,7 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
             <FaTrash /> Vaciar Carrito
           </button>
           <button className="finalizar-btn" disabled={procesando} onClick={finalizarCompra}>
-            {procesando ? "Procesando..." : "Finalizar Compra"}
+            {procesando ? "Procesando..." : "Ir a pagar"}
           </button>
         </div>
       </aside>

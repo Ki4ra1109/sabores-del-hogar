@@ -56,7 +56,8 @@ async function syncPagoYPedidoDesdePayment(payment) {
     pending: "pendiente",
     in_process: "pendiente",
     rejected: "rechazado",
-    cancelled: "rechazado"
+    cancelled: "rechazado",
+    charged_back: "cancelado"
   };
 
   await sequelize.query(
@@ -64,17 +65,15 @@ async function syncPagoYPedidoDesdePayment(payment) {
        SET estado = :estado_local,
            estado_pago = :estado_mp,
            metodo_pago = COALESCE(:metodo_pago, metodo_pago),
-           id_pago = :id_pago_mp,
-           fecha_pago = NOW(),
-           numero_orden = COALESCE(
-             numero_orden,
-             CONCAT('#', (
-               SELECT COALESCE(MAX(CAST(SUBSTRING(numero_orden FROM 2) AS INTEGER)), 999) + 1
-               FROM pedido
-               WHERE numero_orden ~ '^#[0-9]+$'
-             ))
-           )
-     WHERE id_pedido = :orderId`,
+           id_pago_mp = :id_pago_mp,
+           fecha_pago = CASE WHEN :estado_mp = 'approved' THEN NOW() ELSE fecha_pago END,
+           numero_orden = CASE
+                            WHEN :estado_mp = 'approved' AND numero_orden IS NULL
+                            THEN 'ORD-'||LPAD(id_pedido::text, 8, '0')
+                            ELSE numero_orden
+                          END
+     WHERE id_pedido = :orderId
+       AND estado = 'pendiente'`,
     {
       replacements: {
         estado_local: statusMap[payment.status] || "pendiente",
@@ -90,6 +89,27 @@ async function syncPagoYPedidoDesdePayment(payment) {
 router.post("/preference", express.json(), async (req, res) => {
   try {
     const { items, payerEmail, orderId } = req.body;
+    if (!payerEmail || !orderId) {
+      return res.status(400).json({ error: "Faltan datos requeridos" });
+    }
+
+    // URLs absolutas del front con fallback al Origin
+    const FE =
+      (process.env.FRONTEND_URL && process.env.FRONTEND_URL.trim()) ||
+      (req.headers.origin && /^https?:\/\//i.test(req.headers.origin) ? req.headers.origin.trim() : "http://127.0.0.1:5174");
+    const base = FE.replace(/\/+$/, "");
+    const success = `${base}/pedido-exitoso?orderId=${orderId}`;
+    const failure = `${base}/pedido-fallido?orderId=${orderId}`;
+    const pending = `${base}/pedido-pendiente?orderId=${orderId}`;
+
+    // Recalcula desde BD si ya existen ítems del pedido. Si no, usa los del cliente como respaldo.
+    const itemsDb = await sequelize.query(
+      `SELECT d.sku, d.cantidad, d.precio_unitario, p.nombre
+         FROM detalle_pedido d
+         JOIN producto p ON p.sku = d.sku
+        WHERE d.id_pedido = :orderId`,
+      { replacements: { orderId }, type: QueryTypes.SELECT }
+    );
 
     const cleanItems = Array.isArray(items)
       ? items
@@ -101,35 +121,49 @@ router.post("/preference", express.json(), async (req, res) => {
           .filter(i => i.title && i.quantity > 0 && i.unit_price > 0)
       : [];
 
-    if (!cleanItems.length || !payerEmail || !orderId) {
-      return res.status(400).json({ error: "Faltan datos requeridos" });
-    }
+    const mpItems =
+      itemsDb.length > 0
+        ? itemsDb.map(i => ({
+            title: (i.nombre || i.sku).slice(0, 255),
+            quantity: Number(i.cantidad),
+            unit_price: Number(i.precio_unitario),
+            currency_id: "CLP"
+          }))
+        : cleanItems.map(i => ({
+            title: i.title,
+            quantity: i.quantity,
+            unit_price: i.unit_price,
+            currency_id: "CLP"
+          }));
+
+    if (!mpItems.length) return res.status(404).json({ error: "pedido_sin_items" });
 
     const API_URL = (process.env.API_URL || "http://localhost:5000").trim();
-    const FRONTEND_URL = (process.env.FRONTEND_URL || "http://localhost:5174").trim();
-    const puedeWebhook = API_URL.startsWith("https://") && !/localhost|127\.0\.0\.1/.test(API_URL);
-
-    const success = `${FRONTEND_URL.replace(/\/+$/,"")}/pedido-exitoso?orderId=${orderId}`;
-    const failure = `${FRONTEND_URL.replace(/\/+$/,"")}/pedido-fallido?orderId=${orderId}`;
-    const pending = `${FRONTEND_URL.replace(/\/+$/,"")}/pedido-pendiente?orderId=${orderId}`;
+    const puedeWebhook = API_URL.startsWith("https://") && !/localhost|127\.0\.0\.1/i.test(API_URL);
 
     const preference = {
-      items: cleanItems.map(i => ({
-        title: i.title,
-        quantity: i.quantity,
-        unit_price: i.unit_price,
-        currency_id: "CLP"
-      })),
+      items: mpItems,
       payer: { email: String(payerEmail) },
       back_urls: { success, failure, pending },
       external_reference: String(orderId),
       statement_descriptor: "Sabores del Hogar",
       binary_mode: true,
-      ...(puedeWebhook ? { notification_url: `${API_URL}/api/mp/webhook` } : {})
+      ...(puedeWebhook ? { notification_url: `${API_URL.replace(/\/+$/,"")}/api/mp/webhook` } : {})
     };
 
-    const response = await preferenceAPI.create({ body: preference });
+    const response = await preferenceAPI.create({
+      body: preference,
+      requestOptions: { idempotencyKey: String(orderId) }
+    });
     if (!response?.id) throw new Error("No se pudo crear la preferencia");
+
+    // Traza de preferencia
+    try {
+      await sequelize.query(
+        "UPDATE pedido SET mp_preference_id = :prefId WHERE id_pedido = :orderId",
+        { replacements: { prefId: response.id || null, orderId }, type: QueryTypes.UPDATE }
+      );
+    } catch {}
 
     res.json({
       preferenceId: response.id,
