@@ -70,9 +70,7 @@ export default function ResumenCompra() {
       const checkoutUrl = dMP.init_point || dMP.sandbox_init_point;
       if (!checkoutUrl) throw new Error("No se obtuvo URL de checkout");
 
-      setCarrito([]);
-      localStorage.removeItem("carrito");
-      window.dispatchEvent(new Event("carrito:actualizado"));
+      sessionStorage.setItem("sdh_last_order", JSON.stringify({ orderId, t: Date.now() }));
       window.location.assign(checkoutUrl);
     } catch (e) {
       console.error(e);
