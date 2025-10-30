@@ -15,46 +15,48 @@ import Contacto from "../views/Legales/Contacto";
 import PedidoExitoso from "../checkout/PedidoExitoso";
 import PedidoPendiente from "../checkout/PedidoPendiente";
 import PedidoFallido from "../checkout/PedidoFallido";
+import ResumenCompra from "../checkout/ResumenCompra";
 
 const Login = lazy(() => import("../views/Login/Login"));
 
 const isLoggedIn = () => !!localStorage.getItem("sdh_user");
 const isAdmin = () => {
-  try {
-    const u = JSON.parse(localStorage.getItem("sdh_user") || "null");
-    return String(u?.rol || "").toLowerCase() === "admin";
-  } catch { return false; }
+  try {
+    const u = JSON.parse(localStorage.getItem("sdh_user") || "null");
+    return String(u?.rol || "").toLowerCase() === "admin";
+  } catch { return false; }
 };
 
-const RequireAuth  = ({ children }) => isLoggedIn() ? children : <Navigate to="/login" replace />;
-const RequireAdmin = ({ children }) => isAdmin()     ? children : <Navigate to="/" replace />;
+const RequireAuth  = ({ children }) => isLoggedIn() ? children : <Navigate to="/login" replace />;
+const RequireAdmin = ({ children }) => isAdmin()     ? children : <Navigate to="/" replace />;
 
 export default function AppRouter() {
-  return (
-    <main>
-      <Suspense fallback={null}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/catalogo" element={<Catalogo />} />
-          <Route path="/catalogo/:sku" element={<ProductoDetalle />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/nosotros" element={<Nosotros />} />
-          <Route path="/postre" element={<Postre />} />
-          <Route path="/politica-privacidad" element={<PoliticaPrivacidad />} />
-          <Route path="/terminos-condiciones" element={<TerminosCondiciones />} />
-          <Route path="/contacto" element={<Contacto />} />
+  return (
+    <main>
+      <Suspense fallback={null}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/catalogo" element={<Catalogo />} />
+          <Route path="/catalogo/:sku" element={<ProductoDetalle />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/nosotros" element={<Nosotros />} />
+          <Route path="/postre" element={<Postre />} />
+          <Route path="/politica-privacidad" element={<PoliticaPrivacidad />} />
+          <Route path="/terminos-condiciones" element={<TerminosCondiciones />} />
+          <Route path="/contacto" element={<Contacto />} />
 
-          <Route path="/pedido-exitoso" element={<PedidoExitoso />} />
-          <Route path="/pedido-pendiente" element={<PedidoPendiente />} />
-          <Route path="/pedido-fallido" element={<PedidoFallido />} />
+          <Route path="/pedido-exitoso" element={<PedidoExitoso />} />
+          <Route path="/pedido-pendiente" element={<PedidoPendiente />} />
+          <Route path="/pedido-fallido" element={<PedidoFallido />} />
+          <Route path="/resumen-compra" element={<ResumenCompra />} />
 
-          <Route path="/UserNormal" element={<RequireAuth><UserNormal /></RequireAuth>} />
-          <Route path="/perfil"     element={<RequireAuth><Perfil /></RequireAuth>} />
-          <Route path="/UserAdmin"  element={<RequireAdmin><UserAdmin /></RequireAdmin>} />
+          <Route path="/UserNormal" element={<RequireAuth><UserNormal /></RequireAuth>} />
+          <Route path="/perfil"     element={<RequireAuth><Perfil /></RequireAuth>} />
+          <Route path="/UserAdmin"  element={<RequireAdmin><UserAdmin /></RequireAdmin>} />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
-    </main>
-  );
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+    </main>
+  );
 }

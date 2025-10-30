@@ -40,3 +40,7 @@
 .read-the-docs {
   color: #888;
 }
+html, body, #root { height: 100%; }
+body { margin: 0; }
+.app-shell { min-height: 100%; display: flex; flex-direction: column; }
+.app-content { flex: 1; }
