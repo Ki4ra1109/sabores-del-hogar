@@ -53,18 +53,14 @@ export default function ProductoDetalle() {
     return producto.precio;
   }, [porcion, producto]);
 
-  const handleAgregarCarrito = async () => {
-    if (cantidad < 1) {
-      setMensaje("La cantidad debe ser al menos 1");
-      return;
-    }
-    
-    try {
-      const rawUser = localStorage.getItem("sdh_user");
-      if (!rawUser) {
-        setMensaje("Debes iniciar sesión para agregar al carrito");
-        return;
-      }
+  // Función corregida para integrar con el Header
+  const handleAgregarCarrito = async () => {
+    try {
+      const rawUser = localStorage.getItem("sdh_user");
+      if (!rawUser) {
+        setMensaje("Debes iniciar sesión para agregar al carrito");
+        return;
+      }
 
       const user = JSON.parse(rawUser);
       const id_usuario = user.id_usuario ?? user.id ?? user.userId ?? user.idUser;
@@ -73,17 +69,19 @@ export default function ProductoDetalle() {
         return;
       }
 
-      const nuevoItem = {
-        sku: producto.sku,
-        nombre: producto.nombre,
-        precio: precioCalculado,
-        cantidad: cantidad,
-        porcion,
-        imagen: producto.imagen_url || "/placeholder.jpg",
-      };
+      // Objeto del producto para el localStorage
+      const nuevoItem = {
+        sku: producto.sku,
+        nombre: producto.nombre,
+        precio: precioCalculado,
+        cantidad: 1,
+        porcion,
+        imagen: producto.imagen_url || "/placeholder.jpg",
+      };
 
-      const carritoActual = JSON.parse(localStorage.getItem("carrito") || "[]");
-      const existe = carritoActual.findIndex((p) => p.sku === nuevoItem.sku && p.porcion === nuevoItem.porcion);
+      //  Guardar/actualizar en localStorage
+      const carritoActual = JSON.parse(localStorage.getItem("carrito") || "[]");
+      const existe = carritoActual.findIndex((p) => p.sku === nuevoItem.sku && p.porcion === nuevoItem.porcion);
 
       if (existe >= 0) {
         carritoActual[existe].cantidad += cantidad;
@@ -93,7 +91,8 @@ export default function ProductoDetalle() {
 
       localStorage.setItem("carrito", JSON.stringify(carritoActual));
 
-      window.dispatchEvent(new CustomEvent("carrito:agregado"));
+      // Notificar al Header
+      window.dispatchEvent(new CustomEvent("carrito:agregado"));
 
       setMensaje("Producto agregado al carrito ✅");
     } catch (err) {
@@ -102,7 +101,7 @@ export default function ProductoDetalle() {
     }
   };
 
-  if (loading) return <p style={{ padding: "2rem" }}>Cargando producto...</p>;
+  if (loading) return null;
 
   if (error || !producto) {
     return (
@@ -150,32 +149,33 @@ export default function ProductoDetalle() {
             {producto.descripcion || "Torta elaborada artesanalmente. Selecciona el tamaño al comprar."}
           </p>
 
-          <div className="selector-porciones">
-            <label htmlFor="select-porciones" className="selector-label">
-              Porciones
-            </label>
-            <select
-              id="select-porciones"
-              className="selector-select"
-              value={porcion}
-              onChange={(e) => setPorcion(Number(e.target.value))}
-            >
-              {opcionesPorciones.map((p) => (
-                <option key={p} value={p}>
-                  {p} personas
-                </option>
-              ))}
-            </select>
-            <div className="selector-resumen">
-              Seleccionaste: <strong>{porcion} personas</strong>
-            </div>
-          </div>
-          <div className="detalle-precios">
-            <p>
-              <strong>Precio Normal:</strong>{" "}
-              ${precioCalculado.toLocaleString("es-CL")}
-            </p>
-          </div>
+          <div className="selector-porciones">
+            <label htmlFor="select-porciones" className="selector-label">
+              Cantidad de personas
+            </label>
+            <select
+              id="select-porciones"
+              className="selector-select"
+              value={porcion}
+              onChange={(e) => setPorcion(Number(e.target.value))}
+            >
+              {opcionesPorciones.map((p) => (
+                <option key={p} value={p}>
+                  {p} personas
+                </option>
+              ))}
+            </select>
+            <div className="selector-resumen">
+              Seleccionaste: <strong>{porcion} personas</strong>
+            </div>
+          </div>
+
+          <div className="detalle-precios">
+            <p>
+              <strong>Precio Normal:</strong>{" "}
+              ${precioCalculado.toLocaleString("es-CL")}
+            </p>
+          </div>
 
           <button className="btn-comprar" onClick={handleAgregarCarrito}>
             🛒 Agregar al Carrito

@@ -1,11 +1,14 @@
+// server.js
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 const passport = require("passport");
+const path = require("path");
+const cron = require("node-cron");
+const { QueryTypes } = require("sequelize");
 
 dotenv.config();
-
 require("./config/passport-setup");
 
 const usersRoutes = require("./Routes/usersRoutes");
@@ -15,8 +18,9 @@ const productosRoutes = require("./Routes/productos");
 const clientesRoutes = require("./Routes/clientesRoutes");
 const carritoRoutes = require("./Routes/carritoRoutes");
 const pedidoRoutes = require("./Routes/pedidoRoutes");
-const gananciasRoutes = require("./Routes/gananciasRoutes"); // NUEVO
+const gananciasRoutes = require("./Routes/gananciasRoutes");
 const mpRoutes = require("./Routes/mpRoutes");
+const uploadsRoutes = require("./Routes/uploads");
 
 const User = require("./models/User");
 require("./models/cupon");
@@ -33,7 +37,8 @@ app.use(
       process.env.FRONTEND_ORIGIN_2,
       process.env.FRONTEND_ORIGIN_3,
       process.env.FRONTEND_ORIGIN_4
-    ].filter(Boolean)
+    ].filter(Boolean),
+    credentials: true
   })
 );
 app.use(passport.initialize());
@@ -45,10 +50,10 @@ app.use("/api/clientes", clientesRoutes);
 app.use("/api/productos", productosRoutes);
 app.use("/api/carrito", carritoRoutes);
 app.use("/api/pedidos", pedidoRoutes);
-app.use("/api/ganancias", gananciasRoutes); // NUEVO
-
-// Test DB
+app.use("/api/ganancias", gananciasRoutes);
 app.use("/api/mp", mpRoutes);
+app.use("/api/uploads", uploadsRoutes);
+app.use(express.static(path.resolve(__dirname, "..", "frontend", "public")));
 
 app.get("/api/test", async (req, res) => {
   try {
@@ -62,18 +67,14 @@ app.get("/api/test", async (req, res) => {
 app.post("/api/auth/register", async (req, res) => {
   try {
     const { nombre, apellido, rut, correo, password, telefono, fechaNacimiento, direccion } = req.body;
-
     if (!nombre || !apellido || !rut || !correo || !password) {
       return res.status(400).json({ message: "Faltan datos obligatorios" });
     }
-
     const existingUser = await User.findOne({ where: { correo } });
     if (existingUser) {
       return res.status(400).json({ message: "Correo ya registrado" });
     }
-
     const hashedPassword = await bcrypt.hash(password, 10);
-
     const newUser = await User.create({
       nombre,
       apellido,
@@ -84,15 +85,31 @@ app.post("/api/auth/register", async (req, res) => {
       fecha_nacimiento: fechaNacimiento,
       direccion
     });
-
     return res.status(201).json({ message: "Usuario registrado", user: { id: newUser.id, nombre, correo } });
   } catch (error) {
-    console.error(error);
     return res.status(500).json({ message: "Error interno del servidor" });
   }
 });
 
 const PORT = process.env.PORT || 5000;
+const BASE_API = (process.env.API_URL || `http://localhost:${PORT}`).replace(/\/+$/,"");
+
+// Reconciliación automática de pedidos pendientes sin esperar el webhook
+cron.schedule("*/2 * * * *", async () => {
+  try {
+    const [pendientes] = await db.query(
+      "SELECT id_pedido FROM pedido WHERE estado='pendiente' AND created_at <= NOW() - INTERVAL '5 minutes' LIMIT 50"
+    );
+    for (const row of pendientes) {
+      const id = row.id_pedido || row.order_id || row.id;
+      if (!id) continue;
+      try {
+        await fetch(`${BASE_API}/api/mp/status/${id}`);
+      } catch {}
+    }
+  } catch {}
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
 });

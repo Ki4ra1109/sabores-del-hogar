@@ -1,4 +1,3 @@
-// src/routes/AppRouter.jsx
 import React, { Suspense, lazy } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "../views/Home/Home";
@@ -12,7 +11,11 @@ import Postre from "../views/Postre/Postre";
 import PoliticaPrivacidad from "../views/Legales/PoliticaPrivacidad";
 import TerminosCondiciones from "../views/Legales/TerminosCondiciones";
 import Contacto from "../views/Legales/Contacto";
-import PedidoExitoso from "../views/PedidoExitoso/PedidoExitoso";
+
+import PedidoExitoso from "../checkout/PedidoExitoso";
+import PedidoPendiente from "../checkout/PedidoPendiente";
+import PedidoFallido from "../checkout/PedidoFallido";
+import ResumenCompra from "../checkout/ResumenCompra";
 
 const Login = lazy(() => import("../views/Login/Login"));
 
@@ -41,7 +44,11 @@ export default function AppRouter() {
           <Route path="/politica-privacidad" element={<PoliticaPrivacidad />} />
           <Route path="/terminos-condiciones" element={<TerminosCondiciones />} />
           <Route path="/contacto" element={<Contacto />} />
+
           <Route path="/pedido-exitoso" element={<PedidoExitoso />} />
+          <Route path="/pedido-pendiente" element={<PedidoPendiente />} />
+          <Route path="/pedido-fallido" element={<PedidoFallido />} />
+          <Route path="/resumen-compra" element={<ResumenCompra />} />
 
           <Route path="/UserNormal" element={<RequireAuth><UserNormal /></RequireAuth>} />
           <Route path="/perfil"     element={<RequireAuth><Perfil /></RequireAuth>} />
