@@ -1,12 +1,15 @@
 const { Op } = require("sequelize");
+const db = require("../config/db");
 const Descuento = require("../models/cupon");
+
 const norm = (s) => String(s || "").trim();
+
 function normalizePayload(body) {
   let {
     codigo,
     tipo,
     valor,
-    porcentaje,       
+    porcentaje,
     fecha_inicio,
     fecha_fin,
     uso_unico = false,
@@ -29,36 +32,28 @@ function normalizePayload(body) {
 
   if (tipo === "percent") {
     const n = Number(valor);
-    if (!Number.isFinite(n) || n < 1 || n > 60) {
-      throw new Error("Porcentaje entre 1 y 60");
-    }
-    porcentaje = n;             
-    valor = n;                   
-    minimo_compra = null;       
+    if (!Number.isFinite(n) || n < 1 || n > 60) throw new Error("Porcentaje entre 1 y 60");
+    porcentaje = n;
+    valor = n;
+    minimo_compra = null;
   }
 
   if (tipo === "amount") {
     const n = Number(valor);
-    if (!Number.isFinite(n) || n <= 0) {
-      throw new Error("Monto del descuento (> 0)");
-    }
+    if (!Number.isFinite(n) || n <= 0) throw new Error("Monto del descuento (> 0)");
     valor = Math.floor(n);
     const min = Number(minimo_compra);
-    if (!Number.isFinite(min) || min <= 0) {
-      throw new Error("Mínimo de compra (> 0)");
-    }
+    if (!Number.isFinite(min) || min <= 0) throw new Error("Mínimo de compra (> 0)");
     minimo_compra = Math.floor(min);
-    porcentaje = null;         
+    porcentaje = null;
   }
 
   if (tipo === "free_shipping") {
-    valor = null;               
+    valor = null;
     const min = Number(minimo_compra);
-    if (!Number.isFinite(min) || min <= 0) {
-      throw new Error("Mínimo de compra (> 0) para envío gratis");
-    }
+    if (!Number.isFinite(min) || min <= 0) throw new Error("Mínimo de compra (> 0) para envío gratis");
     minimo_compra = Math.floor(min);
-    porcentaje = null;        
+    porcentaje = null;
   }
 
   if (fecha_inicio && fecha_fin && new Date(fecha_inicio) > new Date(fecha_fin)) {
@@ -71,7 +66,7 @@ function normalizePayload(body) {
     codigo,
     tipo,
     valor,
-    porcentaje,       
+    porcentaje,
     fecha_inicio: fecha_inicio || null,
     fecha_fin: fecha_fin || null,
     minimo_compra: minimo_compra ?? null,
@@ -81,14 +76,13 @@ function normalizePayload(body) {
   };
 }
 
-// Cálculo del descuento segun el tipo que se aplica
 function applyDiscount({ cup, subtotal, shipping = 0 }) {
   const sub = Number(subtotal) || 0;
   const ship = Number(shipping) || 0;
 
   if (cup.tipo === "percent") {
     const pct = Math.min(Number(cup.valor || cup.porcentaje || 0), 60);
-    return Math.floor(sub * pct / 100); 
+    return Math.floor((sub * pct) / 100);
   }
 
   if (cup.tipo === "amount") {
@@ -104,8 +98,6 @@ function applyDiscount({ cup, subtotal, shipping = 0 }) {
 
   return 0;
 }
-
-// ---------- CRUD ----------
 
 exports.list = async (req, res) => {
   try {
@@ -129,10 +121,8 @@ exports.getOne = async (req, res) => {
 exports.create = async (req, res) => {
   try {
     const payload = normalizePayload(req.body);
-
     const dup = await Descuento.findOne({ where: { codigo: payload.codigo } });
     if (dup) return res.status(400).json({ ok: false, message: "El código ya existe" });
-
     const item = await Descuento.create(payload);
     res.status(201).json({ ok: true, item });
   } catch (e) {
@@ -170,7 +160,7 @@ exports.remove = async (req, res) => {
     res.status(500).json({ ok: false, message: e.message });
   }
 };
-// |- Validacion para el pedido -|
+
 exports.validateForOrder = async (req, res) => {
   try {
     const { codigo, subtotal = 0, shipping = 0 } = req.body;
@@ -196,8 +186,48 @@ exports.validateForOrder = async (req, res) => {
     const discountValue = applyDiscount({ cup, subtotal: Number(subtotal), shipping: Number(shipping) });
     const newTotal = Math.max(0, Number(subtotal) + Number(shipping) - discountValue);
 
-    res.json({ ok: true, tipo: cup.tipo, discountValue, newTotal });
+    res.json({
+      ok: true,
+      id: cup.id_descuento,
+      tipo: cup.tipo,
+      discountValue,
+      newTotal,
+    });
   } catch (e) {
     res.status(500).json({ ok: false, message: e.message });
+  }
+};
+
+exports.consume = async (req, res) => {
+  try {
+    const { codigo } = req.body;
+    const today = new Date().toISOString().slice(0, 10);
+
+    await db.transaction(async (t) => {
+      const cup = await Descuento.findOne({
+        where: {
+          codigo: norm(codigo).toUpperCase(),
+          activo: true,
+          [Op.and]: [
+            { [Op.or]: [{ fecha_inicio: null }, { fecha_inicio: { [Op.lte]: today } }] },
+            { [Op.or]: [{ fecha_fin: null }, { fecha_fin: { [Op.gte]: today } }] },
+          ],
+        },
+        lock: t.LOCK.UPDATE,
+        transaction: t,
+      });
+
+      if (!cup) throw new Error("Cupón no válido o vencido");
+      if (cup.limite_uso && Number(cup.veces_usado || 0) >= cup.limite_uso) {
+        throw new Error("Límite de uso alcanzado");
+      }
+
+      cup.veces_usado = Number(cup.veces_usado || 0) + 1;
+      await cup.save({ transaction: t });
+
+      res.json({ ok: true, id: cup.id_descuento, veces_usado: cup.veces_usado });
+    });
+  } catch (e) {
+    res.status(400).json({ ok: false, message: e.message });
   }
 };
