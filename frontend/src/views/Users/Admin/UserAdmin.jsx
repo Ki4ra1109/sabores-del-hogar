@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Footer } from "../../../componentes/Footer";
 import { HeaderAdmin } from "./HeaderAdmin";
+import Dashboard from "./Dashboard";
 import "./UserAdmin.css";
 import CuentaPanel from "../../../componentes/CuentaPanel";
 import {
@@ -1711,8 +1712,7 @@ const UserAdmin = () => {
           {active === "productos" && <ProductosSection />}
           {active === "clientes" && <RenderClientes />}
           {active === "ganancias" && <GananciasSection />}
-          {active === "interactivo" && renderInteractivo()}
-
+          {active === "interactivo" && <Dashboard />}
           <section style={{ display: active === "descuentos" ? "block" : "none" }}>
             <DescuentosSection />
           </section>
