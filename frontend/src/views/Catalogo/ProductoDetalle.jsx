@@ -5,55 +5,53 @@ import { Footer } from "../../componentes/Footer";
 import "./ProductoDetalle.css";
 
 export default function ProductoDetalle() {
-  const { sku } = useParams();
-  const navigate = useNavigate();
+  const { sku } = useParams();
+  const navigate = useNavigate();
 
-  const [producto, setProducto] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [mensaje, setMensaje] = useState("");
+  const [producto, setProducto] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [mensaje, setMensaje] = useState("");
 
-  const ALLOWED_PORCIONES = [12, 18, 24, 30, 50];
-  const [porcion, setPorcion] = useState(ALLOWED_PORCIONES[0]);
-  const [cantidad, setCantidad] = useState(1);
+  const PORCIONES_VALIDAS = [12, 18, 24, 30, 50];
+  const [porcion, setPorcion] = useState(PORCIONES_VALIDAS[0]);
+  const [cantidad, setCantidad] = useState(1);
 
-  useEffect(() => {
-    setLoading(true);
-    fetch(`http://127.0.0.1:5000/api/productos/${sku}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Producto no encontrado");
-        return res.json();
-      })
-      .then((data) => {
-        setProducto(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error cargando producto:", err);
-        setError(err.message);
-        setLoading(false);
-      });
-  }, [sku]);
+  useEffect(() => {
+    const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
+    setLoading(true);
+    fetch(`${baseUrl}/api/productos/${sku}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Producto no encontrado");
+        return res.json();
+      })
+      .then((data) => {
+        setProducto(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error cargando producto:", err);
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [sku]);
 
-  const opcionesPorciones = useMemo(() => {
-    if (producto && Array.isArray(producto.variantes) && producto.variantes.length > 0) {
-      const delProducto = [...new Set(producto.variantes.map((v) => v.personas))];
-      const inter = ALLOWED_PORCIONES.filter((p) => delProducto.includes(p));
-      return inter.length ? inter : ALLOWED_PORCIONES;
-    }
-    return ALLOWED_PORCIONES;
-  }, [producto]);
+  // Regla:
+  // - 12 personas => usar precio base de la BD (ya incluye ganancia)
+  // - >=18 personas => precio = porciones*1000 + ganancia_fija
+  //   donde ganancia_fija = max(0, precioBase - 12000)
+  const precioCalculado = useMemo(() => {
+    if (!producto) return 0;
+    const precioBase = Number(producto.precio) || 0;
+    const gananciaFija = Math.max(0, precioBase - 12000);
 
-  useEffect(() => {
-    setPorcion(opcionesPorciones[0]);
-  }, [opcionesPorciones]);
+    if (Number(porcion) === 12) {
+      return Math.round(precioBase);
+    }
+    const total = (Number(porcion) * 1000) + gananciaFija;
+    return Math.round(total);
+  }, [producto, porcion]);
 
-  const precioCalculado = useMemo(() => {
-    if (!producto || !porcion) return 0;
-    return producto.precio;
-  }, [porcion, producto]);
-
-  // Función corregida para integrar con el Header
   const handleAgregarCarrito = async () => {
     try {
       const rawUser = localStorage.getItem("sdh_user");
@@ -61,93 +59,86 @@ export default function ProductoDetalle() {
         setMensaje("Debes iniciar sesión para agregar al carrito");
         return;
       }
+      const user = JSON.parse(rawUser);
+      const id_usuario = user.id_usuario ?? user.id ?? user.userId ?? user.idUser;
+      if (!id_usuario) {
+        setMensaje("Usuario inválido, inicia sesión nuevamente");
+        return;
+      }
 
-      const user = JSON.parse(rawUser);
-      const id_usuario = user.id_usuario ?? user.id ?? user.userId ?? user.idUser;
-      if (!id_usuario) {
-        setMensaje("Usuario inválido, inicia sesión nuevamente");
-        return;
-      }
-
-      // Objeto del producto para el localStorage
       const nuevoItem = {
         sku: producto.sku,
         nombre: producto.nombre,
         precio: precioCalculado,
-        cantidad: 1,
+        cantidad,
         porcion,
         imagen: producto.imagen_url || "/placeholder.jpg",
       };
 
-      //  Guardar/actualizar en localStorage
       const carritoActual = JSON.parse(localStorage.getItem("carrito") || "[]");
-      const existe = carritoActual.findIndex((p) => p.sku === nuevoItem.sku && p.porcion === nuevoItem.porcion);
+      const existe = carritoActual.findIndex(
+        (p) => p.sku === nuevoItem.sku && p.porcion === nuevoItem.porcion
+      );
 
-      if (existe >= 0) {
-        carritoActual[existe].cantidad += cantidad;
-      } else {
-        carritoActual.push(nuevoItem);
-      }
+      if (existe >= 0) {
+        carritoActual[existe].cantidad += cantidad;
+      } else {
+        carritoActual.push(nuevoItem);
+      }
 
-      localStorage.setItem("carrito", JSON.stringify(carritoActual));
-
-      // Notificar al Header
+      localStorage.setItem("carrito", JSON.stringify(carritoActual));
       window.dispatchEvent(new CustomEvent("carrito:agregado"));
-
-      setMensaje("Producto agregado al carrito ✅");
-    } catch (err) {
-      console.error(err);
-      setMensaje("No se pudo agregar al carrito ❌");
-    }
-  };
+      setMensaje("Producto agregado al carrito ✅");
+    } catch (err) {
+      console.error(err);
+      setMensaje("No se pudo agregar al carrito ❌");
+    }
+  };
 
   if (loading) return null;
 
-  if (error || !producto) {
-    return (
-      <>
-        <Header />
-        <div className="detalle-fallback">
-          <h2>{error || "Producto no encontrado"}</h2>
-          <button className="btn-volver" onClick={() => navigate("/catalogo")}>
-            Volver al catálogo
-          </button>
-        </div>
-        <Footer />
-      </>
-    );
-  }
+  if (error || !producto) {
+    return (
+      <>
+        <Header />
+        <div className="detalle-fallback">
+          <h2>{error || "Producto no encontrado"}</h2>
+          <button className="btn-volver" onClick={() => navigate("/catalogo")}>
+            Volver al catálogo
+          </button>
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
-  const safeSrc = (() => {
-    const img = (producto.imagen_url || "").trim();
-    if (img.startsWith("http://") || img.startsWith("https://")) return img;
-    if (img.startsWith("/")) return img;
-    return "/placeholder.jpg";
-  })();
+  const safeSrc = (() => {
+    const img = (producto.imagen_url || "").trim();
+    if (img.startsWith("http://") || img.startsWith("https://")) return img;
+    if (img.startsWith("/")) return img;
+    return "/placeholder.jpg";
+  })();
 
-  return (
-    <div className="detalle-page">
-      <Header />
+  return (
+    <div className="detalle-page">
+      <Header />
+      <div className="detalle-wrap">
+        <div className="detalle-img">
+          <img
+            src={safeSrc}
+            alt={producto.nombre}
+            loading="lazy"
+            onError={(e) => (e.currentTarget.src = "/placeholder.jpg")}
+          />
+        </div>
 
-      <div className="detalle-wrap">
-        <div className="detalle-img">
-          <img
-            src={safeSrc}
-            alt={producto.nombre}
-            loading="lazy"
-            referrerPolicy="no-referrer"
-            onError={(e) => {
-              e.currentTarget.src = "/placeholder.jpg";
-            }}
-          />
-        </div>
+        <div className="detalle-info">
+          <h1 className="detalle-title">{producto.nombre.toUpperCase()}</h1>
 
-        <div className="detalle-info">
-          <h1 className="detalle-title">{producto.nombre.toUpperCase()}</h1>
-
-          <p className="detalle-desc">
-            {producto.descripcion || "Torta elaborada artesanalmente. Selecciona el tamaño al comprar."}
-          </p>
+          <p className="detalle-desc">
+            {producto.descripcion ||
+              "Torta elaborada artesanalmente. Selecciona el tamaño al comprar."}
+          </p>
 
           <div className="selector-porciones">
             <label htmlFor="select-porciones" className="selector-label">
@@ -159,7 +150,7 @@ export default function ProductoDetalle() {
               value={porcion}
               onChange={(e) => setPorcion(Number(e.target.value))}
             >
-              {opcionesPorciones.map((p) => (
+              {PORCIONES_VALIDAS.map((p) => (
                 <option key={p} value={p}>
                   {p} personas
                 </option>
@@ -172,22 +163,24 @@ export default function ProductoDetalle() {
 
           <div className="detalle-precios">
             <p>
-              <strong>Precio Normal:</strong>{" "}
+              <strong>Precio Total:</strong>{" "}
               ${precioCalculado.toLocaleString("es-CL")}
             </p>
           </div>
 
-          <button className="btn-comprar" onClick={handleAgregarCarrito}>
-            🛒 Agregar al Carrito
-          </button>
 
-          {mensaje && <p style={{ marginTop: "10px", color: "#663f13" }}>{mensaje}</p>}
+          <button className="btn-comprar" onClick={handleAgregarCarrito} style={{ marginTop: 12 }}>
+            🛒 Agregar al Carrito
+          </button>
 
-          <p className="detalle-safe">Venta segura a través de la plataforma</p>
-        </div>
-      </div>
+          {mensaje && (
+            <p style={{ marginTop: "10px", color: "#663f13" }}>{mensaje}</p>
+          )}
 
-      <Footer />
-    </div>
-  );
+          <p className="detalle-safe">Venta segura a través de la plataforma</p>
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
 }

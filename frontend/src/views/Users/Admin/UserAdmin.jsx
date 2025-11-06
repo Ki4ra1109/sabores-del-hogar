@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Footer } from "../../../componentes/Footer";
 import { HeaderAdmin } from "./HeaderAdmin";
+import Dashboard from "./Dashboard";
 import "./UserAdmin.css";
 import CuentaPanel from "../../../componentes/CuentaPanel";
 import {
@@ -993,13 +994,23 @@ function ProductosSection() {
                 )}
               </div>
 
+              {/* 🔸 Aquí están los dos botones de acción */}
               <div className="card-actions">
-                <button className="btn sm" onClick={() => startEdit(p)}>Modificar</button>
-                <button className="btn sm danger" onClick={() => removeItem(p.sku ?? p.id)}>Eliminar</button>
+                <button className="btn sm" onClick={() => startEdit(p)}>
+                  Modificar
+                </button>
+
+                <button
+                  className="btn sm danger"
+                  onClick={() => removeItem(p.sku ?? p.id)}
+                >
+                  Eliminar
+                </button>
               </div>
             </article>
           );
         })}
+
       </div>
 
     </div>
@@ -1701,8 +1712,7 @@ const UserAdmin = () => {
           {active === "productos" && <ProductosSection />}
           {active === "clientes" && <RenderClientes />}
           {active === "ganancias" && <GananciasSection />}
-          {active === "interactivo" && renderInteractivo()}
-
+          {active === "interactivo" && <Dashboard />}
           <section style={{ display: active === "descuentos" ? "block" : "none" }}>
             <DescuentosSection />
           </section>
