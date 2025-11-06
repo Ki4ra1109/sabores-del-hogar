@@ -1048,8 +1048,6 @@ function DescuentosSection() {
       const r = await fetch(`${API_BASE}/api/cupones`);
       const j = await r.json();
       setCoupons(Array.isArray(j.items) ? j.items : []);
-    } catch {
-      alert("No se pudo cargar la lista de cupones");
     } finally {
       setLoading(false);
     }
@@ -1060,14 +1058,28 @@ function DescuentosSection() {
 
   const onChange = (e) => {
     const { name, value, type, checked } = e.target;
+    if (name === "valor" && form.tipo === "percent") {
+      const v = String(value).replace(/[^\d]/g, "");
+      if (v === "") { setForm(prev => ({ ...prev, valor: "" })); setErrors({}); return; }
+      let n = Number(v);
+      if (!Number.isFinite(n)) n = 1;
+      n = Math.max(1, Math.min(60, n));
+      setForm(prev => ({ ...prev, valor: String(n) }));
+      setErrors({});
+      return;
+    }
     setForm(prev => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+    setErrors({});
   };
+
   const onChangeTipo = (t) => {
     setForm(prev => ({
       ...prev,
       tipo: t,
-      valor: t === "free_shipping" ? "" : (prev.valor || (t === "percent" ? 10 : 1000)),
-      minimo_compra: (t === "percent") ? "" : (prev.minimo_compra || 0)
+      valor: t === "free_shipping"
+        ? ""
+        : (t === "percent" ? String(Math.min(Number(prev.valor || 10), 60)) : (prev.valor || 1000)),
+      minimo_compra: t === "percent" ? "" : (prev.minimo_compra || 0)
     }));
     setErrors({});
   };
@@ -1083,10 +1095,11 @@ function DescuentosSection() {
 
   const validate = () => {
     const e = {};
-    const code = form.codigo.trim().toUpperCase();
+    const code = (form.codigo || "").trim().toUpperCase();
     if (!code) e.codigo = "Ingresa un código";
     const exists = coupons.some(c => c.codigo === code && c.id_descuento !== editingId);
     if (code && exists) e.codigo = "El código ya existe";
+
     if (form.fecha_inicio && form.fecha_fin && new Date(form.fecha_inicio) > new Date(form.fecha_fin)) {
       e.fecha_fin = "La fecha fin debe ser mayor o igual a inicio";
     }
@@ -1096,7 +1109,7 @@ function DescuentosSection() {
     }
     if (form.tipo === "free_shipping") {
       const min = Number(form.minimo_compra);
-      if (Number.isNaN(min) || min <= 0) e.minimo_compra = "Define un mínimo de compra (> 0)";
+      if (Number.isNaN(min) || min <= 0) e.minimo_compra = "Mínimo de compra (> 0)";
     }
     if (form.tipo === "amount") {
       const n = Number(form.valor);
@@ -1123,6 +1136,34 @@ function DescuentosSection() {
     setEditingId(null);
   };
 
+  const genCode = () => {
+    const base = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const r = Array.from({ length: 8 }, () => base[Math.floor(Math.random() * base.length)]).join("");
+    setForm(prev => ({ ...prev, codigo: r }));
+  };
+
+  const summary = (() => {
+    if (form.tipo === "percent") {
+      if (!form.valor) return "Define el porcentaje";
+      return `Descuento ${form.valor}% sobre el subtotal`;
+    }
+    if (form.tipo === "amount") {
+      if (!form.valor || !form.minimo_compra) return "Monto y mínimo requeridos";
+      return `Descuento $${Number(form.valor).toLocaleString("es-CL")} sobre compras desde $${Number(form.minimo_compra).toLocaleString("es-CL")}`;
+    }
+    if (form.tipo === "free_shipping") {
+      if (!form.minimo_compra) return "Define el mínimo de compra";
+      return `Envío gratis desde $${Number(form.minimo_compra).toLocaleString("es-CL")}`;
+    }
+    return "";
+  })();
+
+  const ready =
+    (form.codigo || "").trim() &&
+    ((form.tipo === "percent" && Number(form.valor) >= 1 && Number(form.valor) <= 60) ||
+      (form.tipo === "amount" && Number(form.valor) > 0 && Number(form.minimo_compra) > 0) ||
+      (form.tipo === "free_shipping" && Number(form.minimo_compra) > 0));
+
   const onSubmit = async (e) => {
     e.preventDefault();
     if (!validate() || submitting) return;
@@ -1132,7 +1173,7 @@ function DescuentosSection() {
       codigo: form.codigo.trim().toUpperCase(),
       tipo: form.tipo,
       valor: form.tipo === "free_shipping" ? null : Number(form.valor),
-      minimo_compra: (form.tipo === "percent") ? null : Number(form.minimo_compra),
+      minimo_compra: form.tipo === "percent" ? null : Number(form.minimo_compra),
       fecha_inicio: form.fecha_inicio || null,
       fecha_fin: form.fecha_fin || null,
       uso_unico: !!form.uso_unico,
@@ -1142,12 +1183,16 @@ function DescuentosSection() {
     try {
       const url = editingId ? `${API_BASE}/api/cupones/${editingId}` : `${API_BASE}/api/cupones`;
       const method = editingId ? "PUT" : "POST";
-      const r = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const r = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
       const j = await r.json();
       if (!j.ok) { alert(j.message || "Error al guardar"); return; }
-      await load(); reset(); setShowForm(false);
-    } catch {
-      alert("No se pudo guardar el cupón");
+      await load();
+      reset();
+      setShowForm(false);
     } finally {
       setSubmitting(false);
     }
@@ -1181,9 +1226,7 @@ function DescuentosSection() {
     } catch { alert("No se pudo eliminar"); }
   };
 
-  const copyCode = async (code) => {
-    try { await navigator.clipboard.writeText(code); } catch { }
-  };
+  const copyCode = async (code) => { try { await navigator.clipboard.writeText(code); } catch {} };
   const toggleActive = async (c) => {
     try {
       await fetch(`${API_BASE}/api/cupones/${c.id_descuento}`, {
@@ -1208,9 +1251,7 @@ function DescuentosSection() {
 
   const StatusBadge = ({ s }) => (
     <span className={`badge ${s}`}>
-      {s === "activos" ? "Activo"
-        : s === "futuros" ? "Futuro"
-          : s === "vencidos" ? "Vencido" : "Inactivo"}
+      {s === "activos" ? "Activo" : s === "futuros" ? "Futuro" : s === "vencidos" ? "Vencido" : "Inactivo"}
     </span>
   );
 
@@ -1238,35 +1279,67 @@ function DescuentosSection() {
       </div>
 
       {showForm && (
-        <form className="product-form" onSubmit={onSubmit} noValidate>
-          <div className="form-grid">
+        <form className="coupon-form" onSubmit={onSubmit} noValidate>
+          <div className="coupon-types">
+            <button
+              type="button"
+              className={`ctype ${form.tipo === "percent" ? "on" : ""}`}
+              onClick={() => onChangeTipo("percent")}
+            >
+              <div className="ctype-title">% Porcentaje</div>
+              <div className="ctype-desc">Descuento sobre subtotal</div>
+            </button>
+            <button
+              type="button"
+              className={`ctype ${form.tipo === "amount" ? "on" : ""}`}
+              onClick={() => onChangeTipo("amount")}
+            >
+              <div className="ctype-title">$ Monto fijo</div>
+              <div className="ctype-desc">Requiere mínimo de compra</div>
+            </button>
+            <button
+              type="button"
+              className={`ctype ${form.tipo === "free_shipping" ? "on" : ""}`}
+              onClick={() => onChangeTipo("free_shipping")}
+            >
+              <div className="ctype-title">Envío gratis</div>
+              <div className="ctype-desc">Con mínimo de compra</div>
+            </button>
+          </div>
+
+          <div className="coupon-grid">
             <div className="field">
               <label>Código</label>
-              <input name="codigo" value={form.codigo} onChange={onChange} placeholder="Ej: CUMP2025" />
+              <div className="input-group">
+                <input name="codigo" value={form.codigo} onChange={onChange} placeholder="Ej: BIENVENIDA10" />
+                <button type="button" className="btn sm" onClick={genCode}>Auto</button>
+              </div>
               {errors.codigo && <span className="err">{errors.codigo}</span>}
             </div>
-            <div className="field">
-              <label>Tipo de descuento</label>
-              <select name="tipo" value={form.tipo} onChange={e => onChangeTipo(e.target.value)}>
-                <option value="percent">% Porcentaje</option>
-                <option value="amount">Monto fijo (CLP)</option>
-                <option value="free_shipping">Envío gratis</option>
-              </select>
-            </div>
+
             {form.tipo === "percent" && (
               <div className="field">
                 <label>Porcentaje (%)</label>
-                <input name="valor" type="number" min="1" max="60" step="1" value={form.valor} onChange={onChange} placeholder="Ej: 10 = 10%" />
+                <input
+                  name="valor"
+                  type="number"
+                  min="1"
+                  max="60"
+                  step="1"
+                  value={form.valor}
+                  onChange={onChange}
+                  onBlur={(e) => {
+                    let n = Number(e.target.value);
+                    if (!Number.isFinite(n)) n = 1;
+                    n = Math.max(1, Math.min(60, n));
+                    setForm(prev => ({ ...prev, valor: String(n) }));
+                  }}
+                  placeholder="Ej: 10 = 10%"
+                />
                 {errors.valor && <span className="err">{errors.valor}</span>}
               </div>
             )}
-            {form.tipo === "free_shipping" && (
-              <div className="field">
-                <label>Mínimo de compra para envío gratis (CLP)</label>
-                <input name="minimo_compra" type="number" min="1" step="1" value={form.minimo_compra} onChange={onChange} placeholder="Ej: 20000" />
-                {errors.minimo_compra && <span className="err">{errors.minimo_compra}</span>}
-              </div>
-            )}
+
             {form.tipo === "amount" && (
               <>
                 <div className="field">
@@ -1281,6 +1354,15 @@ function DescuentosSection() {
                 </div>
               </>
             )}
+
+            {form.tipo === "free_shipping" && (
+              <div className="field">
+                <label>Mínimo de compra para envío gratis (CLP)</label>
+                <input name="minimo_compra" type="number" min="1" step="1" value={form.minimo_compra} onChange={onChange} placeholder="Ej: 20000" />
+                {errors.minimo_compra && <span className="err">{errors.minimo_compra}</span>}
+              </div>
+            )}
+
             <div className="field">
               <label>Vigencia desde</label>
               <input name="fecha_inicio" type="date" value={form.fecha_inicio} onChange={onChange} />
@@ -1290,6 +1372,7 @@ function DescuentosSection() {
               <input name="fecha_fin" type="date" value={form.fecha_fin} onChange={onChange} />
               {errors.fecha_fin && <span className="err">{errors.fecha_fin}</span>}
             </div>
+
             <div className="field check">
               <label><input type="checkbox" name="uso_unico" checked={form.uso_unico} onChange={onChange} /> Uso único</label>
             </div>
@@ -1297,11 +1380,15 @@ function DescuentosSection() {
               <label><input type="checkbox" name="activo" checked={form.activo} onChange={onChange} /> Activo</label>
             </div>
           </div>
-          <div className="row mt form-actions">
-            <button type="submit" className="btn primary" disabled={submitting}>
-              {submitting ? "Guardando..." : editingId ? "Guardar cambios" : "Crear código"}
-            </button>
-            <button type="button" className="btn" onClick={reset} disabled={submitting}>Limpiar</button>
+
+          <div className="coupon-summary">
+            <div className="hint">{summary}</div>
+            <div className="row" style={{ gap: 8 }}>
+              <button type="submit" className="btn primary" disabled={!ready || submitting}>
+                {submitting ? "Guardando..." : editingId ? "Guardar cambios" : "Crear código"}
+              </button>
+              <button type="button" className="btn" onClick={reset} disabled={submitting}>Limpiar</button>
+            </div>
           </div>
         </form>
       )}

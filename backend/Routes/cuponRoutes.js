@@ -9,5 +9,6 @@ router.put("/:id", cuponCtrl.update);
 router.delete("/:id", cuponCtrl.remove);
 
 router.post("/validate", cuponCtrl.validateForOrder);
+router.post("/consume", cuponCtrl.consume);
 
 module.exports = router;
