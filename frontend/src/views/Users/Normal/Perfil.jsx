@@ -9,8 +9,11 @@ export default function Perfil() {
   const location = useLocation();
 
   const storedUser = useMemo(() => {
-    try { return JSON.parse(localStorage.getItem("sdh_user") || "null"); }
-    catch { return null; }
+    try {
+      return JSON.parse(localStorage.getItem("sdh_user") || "null");
+    } catch {
+      return null;
+    }
   }, []);
 
   const [user, setUser] = useState(null);
@@ -18,6 +21,8 @@ export default function Perfil() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pedidos, setPedidos] = useState([]);
+  const [detallePedido, setDetallePedido] = useState(null);
+
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -26,7 +31,7 @@ export default function Perfil() {
     rut: "",
     telefono: "",
     fecha_nacimiento: "",
-    direccion: ""
+    direccion: "",
   });
 
   useEffect(() => {
@@ -61,8 +66,10 @@ export default function Perfil() {
           apellido: u.apellido || "",
           rut: u.rut || "",
           telefono: u.telefono || "",
-          fecha_nacimiento: u.fecha_nacimiento ? formatForInput(u.fecha_nacimiento) : "",
-          direccion: u.direccion || ""
+          fecha_nacimiento: u.fecha_nacimiento
+            ? formatForInput(u.fecha_nacimiento)
+            : "",
+          direccion: u.direccion || "",
         });
       } catch (e) {
         console.error(e);
@@ -95,25 +102,7 @@ export default function Perfil() {
     navigate("/login", { replace: true });
   };
 
-  const handleChange = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
-
-  const verDetalleOrden = (idPedido) => {
-    // Por ahora solo mostraremos un alert, pero podrías implementar un modal o una nueva vista
-    const pedido = pedidos.find(p => p.id_pedido === idPedido);
-    if (pedido) {
-      alert(`
-        Orden #${pedido.numero_orden}
-        Fecha: ${new Date(pedido.fecha_pedido).toLocaleDateString()}
-        Estado: ${pedido.estado}
-        Total: $${pedido.total?.toLocaleString('es-CL')}
-        
-        Productos:
-        ${pedido.detalle_productos?.map(item => 
-          `- ${item.nombre_producto} (x${item.cantidad}) $${item.precio_unitario * item.cantidad}`
-        ).join('\n')}
-      `);
-    }
-  };
+  const handleChange = (k, v) => setForm((prev) => ({ ...prev, [k]: v }));
 
   const handleReset = () => {
     if (!user) return;
@@ -124,11 +113,14 @@ export default function Perfil() {
       apellido: user.apellido || "",
       rut: user.rut || "",
       telefono: user.telefono || "",
-      fecha_nacimiento: user.fecha_nacimiento ? formatForInput(user.fecha_nacimiento) : "",
-      direccion: user.direccion || ""
+      fecha_nacimiento: user.fecha_nacimiento
+        ? formatForInput(user.fecha_nacimiento)
+        : "",
+      direccion: user.direccion || "",
     });
   };
 
+  // 🟢 Cargar pedidos del usuario con detalle incluido
   const cargarPedidos = async () => {
     if (!user?.id) return;
     setLoading(true);
@@ -145,7 +137,6 @@ export default function Perfil() {
     }
   };
 
-  // Cargar pedidos cuando cambia la pestaña a "orders"
   useEffect(() => {
     if (tab === "orders") {
       cargarPedidos();
@@ -164,13 +155,13 @@ export default function Perfil() {
         email: form.email || null,
         telefono: form.telefono || null,
         fecha_nacimiento: form.fecha_nacimiento || null,
-        direccion: form.direccion || null
+        direccion: form.direccion || null,
       };
       if (form.password && form.password.length > 0) payload.password = form.password;
       const res = await fetch(`${baseUrl}/api/usuarios/${user.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -182,7 +173,7 @@ export default function Perfil() {
       const merged = { ...user, ...updated };
       localStorage.setItem("sdh_user", JSON.stringify(merged));
       setUser(merged);
-      setForm(prev => ({ ...prev, password: "" }));
+      setForm((prev) => ({ ...prev, password: "" }));
       alert("Perfil actualizado");
     } catch (e) {
       console.error(e);
@@ -199,127 +190,143 @@ export default function Perfil() {
       <div className="user-container" style={{ paddingTop: 24 }}>
         <aside className="sidebar" aria-hidden={false}>
           <ul>
-            <li className={tab === "account" ? "active" : ""} onClick={() => changeTab("account")}>Cuenta</li>
-            <li className={tab === "orders" ? "active" : ""} onClick={() => changeTab("orders")}>Mis Órdenes</li>
-            <li className={tab === "settings" ? "active" : ""} onClick={() => changeTab("settings")}>Configuración</li>
+            <li
+              className={tab === "account" ? "active" : ""}
+              onClick={() => changeTab("account")}
+            >
+              Cuenta
+            </li>
+            <li
+              className={tab === "orders" ? "active" : ""}
+              onClick={() => changeTab("orders")}
+            >
+              Mis Órdenes
+            </li>
+            <li
+              className={tab === "settings" ? "active" : ""}
+              onClick={() => changeTab("settings")}
+            >
+              Configuración
+            </li>
           </ul>
         </aside>
 
         <main className="main-content">
-          {tab === "account" && (
-            <div className="card">
-              <div className="card-head">
-                <h3>Datos de tu cuenta</h3>
-              </div>
-
-              <div className="card-stack">
-                <div className="grid2">
-                  <div className="field">
-                    <label>Email</label>
-                    <input type="email" value={form.email} disabled />
-                  </div>
-                  <div className="field">
-                    <label>Contraseña</label>
-                    <input type="password" value={form.password} onChange={(e) => handleChange("password", e.target.value)} placeholder="Dejar en blanco para mantener" />
-                  </div>
-                </div>
-
-                <div className="grid2">
-                  <div className="field">
-                    <label>Nombre</label>
-                    <input value={form.nombre} onChange={(e) => handleChange("nombre", e.target.value)} />
-                  </div>
-                  <div className="field">
-                    <label>Apellido</label>
-                    <input value={form.apellido} onChange={(e) => handleChange("apellido", e.target.value)} />
-                  </div>
-                </div>
-
-                <div className="grid2">
-                  <div className="field">
-                    <label>RUT</label>
-                    <input value={form.rut} onChange={(e) => handleChange("rut", e.target.value)} />
-                  </div>
-                  <div className="field">
-                    <label>Teléfono</label>
-                    <input value={form.telefono} onChange={(e) => handleChange("telefono", e.target.value)} />
-                  </div>
-                </div>
-
-                <div className="grid2">
-                  <div className="field">
-                    <label>Fecha de Nacimiento</label>
-                    <input type="date" value={form.fecha_nacimiento} onChange={(e) => handleChange("fecha_nacimiento", e.target.value)} />
-                  </div>
-                  <div className="field">
-                    <label>Dirección</label>
-                    <input value={form.direccion} onChange={(e) => handleChange("direccion", e.target.value)} />
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 8 }}>
-                  <button className="btn primary" onClick={handleSave} disabled={saving}>{saving ? "Guardando..." : "Guardar cambios"}</button>
-                  <button className="btn" onClick={handleReset} disabled={saving}>Restablecer</button>
-                  <div style={{ marginLeft: "auto" }}>
-                    <button className="btn danger" onClick={logout}>Cerrar sesión</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
+          {/* 🧾 TAB ÓRDENES */}
           {tab === "orders" && (
             <div className="card">
-              <h3>Historial De Órdenes</h3>
+              <h3>Historial de Órdenes</h3>
               {loading ? (
                 <p>Cargando órdenes...</p>
-              ) : (
+              ) : pedidos?.length > 0 ? (
                 <div className="orders">
-                  {pedidos?.length > 0 ? (
-                    pedidos.map(pedido => (
-                      <div key={pedido.id_pedido} className="order">
-                        <div className="order-info">
-                          <strong>#{pedido.numero_orden}</strong>
-                          <span>{new Date(pedido.fecha_pedido).toLocaleDateString()}</span>
-                          <span>Estado: {pedido.estado}</span>
-                          <span>Total: ${pedido.total?.toLocaleString('es-CL')}</span>
-                          {pedido.detalle_productos?.map((item, index) => (
-                            <span key={index}>{item.nombre_producto} (x{item.cantidad})</span>
-                          ))}
+                  {pedidos.map((pedido) => (
+                    <div key={pedido.id_pedido} className="order">
+                      <div className="order-info">
+                        <strong>#{pedido.id_pedido}</strong>
+                        <span>
+                          Fecha: {new Date(pedido.fecha_pedido).toLocaleDateString()}
+                        </span>
+                        <span>
+                          Estado:{" "}
+                          <span
+                            className={`estado ${
+                              pedido.estado === "completado"
+                                ? "estado-completado"
+                                : pedido.estado === "cancelado"
+                                ? "estado-cancelado"
+                                : "estado-pendiente"
+                            }`}
+                          >
+                            {pedido.estado}
+                          </span>
+                        </span>
+                        <span>Total: ${pedido.total?.toLocaleString("es-CL")}</span>
+
+                        <div className="order-products">
+                          {pedido.detalle_productos?.length > 0 ? (
+                            pedido.detalle_productos.map((item, index) => (
+                              <div key={index} className="order-item">
+                                <span>
+                                  {item.nombre_producto} (x{item.cantidad})
+                                </span>
+                                <span>
+                                  ${(
+                                    item.precio_unitario * item.cantidad
+                                  ).toLocaleString("es-CL")}
+                                </span>
+                              </div>
+                            ))
+                          ) : (
+                            <em>Sin productos registrados</em>
+                          )}
                         </div>
+
                         <div className="order-actions">
-                          <button className="btn" onClick={() => verDetalleOrden(pedido.id_pedido)}>
-                            Ver detalles
+                          <button
+                            className="btn btn-detalle"
+                            onClick={() => setDetallePedido(pedido)}
+                          >
+                            Ver detalle
                           </button>
                         </div>
                       </div>
-                    ))
-                  ) : (
-                    <p>No tienes órdenes registradas</p>
-                  )}
+                    </div>
+                  ))}
                 </div>
+              ) : (
+                <p>No tienes órdenes registradas</p>
               )}
-            </div>
-          )}
-
-          {tab === "settings" && (
-            <div className="card">
-              <h3>Configuración</h3>
-              <div className="field">
-                <label>Tema de color</label>
-                <select defaultValue="default">
-                  <option value="default">Café (default)</option>
-                  <option value="oscuro">Oscuro</option>
-                  <option value="claro">Claro</option>
-                </select>
-              </div>
-              <div className="mt">
-                <button className="btn primary" onClick={() => alert("Guardado")}>Guardar</button>
-              </div>
             </div>
           )}
         </main>
       </div>
+
+      {/* MODAL DETALLE */}
+      {detallePedido && (
+        <div className="modal-overlay" onClick={() => setDetallePedido(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>Detalle del Pedido #{detallePedido.id_pedido}</h3>
+            <p>
+              <b>Fecha:</b>{" "}
+              {new Date(detallePedido.fecha_pedido).toLocaleDateString()}
+            </p>
+            <p>
+              <b>Estado:</b>{" "}
+              <span
+                className={`estado ${
+                  detallePedido.estado === "completado"
+                    ? "estado-completado"
+                    : detallePedido.estado === "cancelado"
+                    ? "estado-cancelado"
+                    : "estado-pendiente"
+                }`}
+              >
+                {detallePedido.estado}
+              </span>
+            </p>
+            <hr />
+            <h4>Productos:</h4>
+            {detallePedido.detalle_productos?.length > 0 ? (
+              detallePedido.detalle_productos.map((p, i) => (
+                <div key={i} className="order-item">
+                  {p.nombre_producto} (x{p.cantidad}) - $
+                  {(p.precio_unitario * p.cantidad).toLocaleString("es-CL")}
+                </div>
+              ))
+            ) : (
+              <em>No hay productos en este pedido</em>
+            )}
+            <hr />
+            <h4>Total: ${detallePedido.total?.toLocaleString("es-CL")}</h4>
+            <div style={{ textAlign: "right" }}>
+              <button className="btn btn-detalle" onClick={() => setDetallePedido(null)}>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </>

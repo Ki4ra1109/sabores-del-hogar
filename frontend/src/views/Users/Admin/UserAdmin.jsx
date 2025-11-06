@@ -993,13 +993,23 @@ function ProductosSection() {
                 )}
               </div>
 
+              {/* 🔸 Aquí están los dos botones de acción */}
               <div className="card-actions">
-                <button className="btn sm" onClick={() => startEdit(p)}>Modificar</button>
-                <button className="btn sm danger" onClick={() => removeItem(p.sku ?? p.id)}>Eliminar</button>
+                <button className="btn sm" onClick={() => startEdit(p)}>
+                  Modificar
+                </button>
+
+                <button
+                  className="btn sm danger"
+                  onClick={() => removeItem(p.sku ?? p.id)}
+                >
+                  Eliminar
+                </button>
               </div>
             </article>
           );
         })}
+
       </div>
 
     </div>

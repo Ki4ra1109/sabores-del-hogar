@@ -369,12 +369,24 @@ body {
 }
 
 .btn.danger {
-  background: #e74c3c;
+  background-color: #a0372c;  /* Rojo chocolate oscuro */
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  padding: 8px 12px;
+  transition: background 0.2s ease-in-out, transform 0.1s ease-in-out;
 }
 
 .btn.danger:hover {
-  background: #c0392b;
+  background-color: #821f16; /* Más oscuro al pasar el mouse */
+  transform: scale(1.03);
 }
+
+.btn.danger:active {
+  transform: scale(0.97);
+}
+
 
 .table {
   width: 100%;
