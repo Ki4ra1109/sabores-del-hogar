@@ -1,0 +1,101 @@
+.dashboard-container {
+  padding: 20px;
+  background: #fff7f1;
+  min-height: 100vh;
+}
+
+.dashboard-title {
+  font-size: 1.6rem;
+  color: #572420;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+/* === FILTROS === */
+.dashboard-filters {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-bottom: 16px;
+  background: #fffdfb;
+  padding: 8px 16px;
+  border: 1px solid #efdfd6;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,.05);
+}
+
+.dashboard-select {
+  border: 1px solid #ecd8cd;
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-weight: 600;
+  color: #572420;
+  min-width: 150px;
+}
+
+.dashboard-refresh {
+  background: #572420;
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: filter .2s ease;
+}
+.dashboard-refresh:hover {
+  filter: brightness(1.1);
+}
+
+/* === KPI CARDS === */
+.dashboard-kpis {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.kpi-card {
+  flex: 1;
+  background: #fffdfb;
+  border: 1px solid #efdfd6;
+  border-radius: 12px;
+  box-shadow: 0 6px 14px rgba(0,0,0,.05);
+  text-align: center;
+  padding: 18px 8px;
+}
+.kpi-card h3 {
+  color: #572420;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.kpi-card p {
+  font-size: 1.3rem;
+  color: #3b2a26;
+  font-weight: 800;
+}
+
+/* === SECCIONES === */
+.dashboard-section {
+  background: #fffdfb;
+  border: 1px solid #efdfd6;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,.05);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.dashboard-section h3 {
+  color: #572420;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+/* Loading */
+.dashboard-loading {
+  text-align: center;
+  margin-top: 80px;
+  font-size: 1.3rem;
+  color: #572420;
+  font-weight: 700;
+}

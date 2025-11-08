@@ -1,6 +1,6 @@
 const db = require("../config/db");
 
-// Crear un pedido y sus detalles (productos del catálogo + personalizados)
+// 🟢 Crear un pedido y sus detalles (productos del catálogo + personalizados)
 exports.crearPedido = async (req, res) => {
   const {
     id_usuario,
@@ -18,6 +18,7 @@ exports.crearPedido = async (req, res) => {
 
   const t = await db.transaction();
   try {
+    // Crear pedido principal
     const [pedidoResult] = await db.query(
       `
       INSERT INTO pedido (id_usuario, estado, total, fecha_pedido, codigo_descuento, fecha_entrega)
@@ -38,6 +39,7 @@ exports.crearPedido = async (req, res) => {
 
     const id_pedido = pedidoResult[0].id_pedido;
 
+    // 🧁 Guardar los productos del catálogo
     if (Array.isArray(detalle) && detalle.length) {
       const items = detalle
         .map(it => ({
@@ -78,6 +80,7 @@ exports.crearPedido = async (req, res) => {
       }
     }
 
+    // 🎂 Guardar los postres personalizados
     if (Array.isArray(personalizados) && personalizados.length) {
       for (const p of personalizados) {
         await db.query(
@@ -94,6 +97,7 @@ exports.crearPedido = async (req, res) => {
               p.relleno || null,
               p.cobertura || null,
               p.toppings || null,
+              p.mensaje || null,
             ],
             transaction: t,
           }
@@ -101,6 +105,7 @@ exports.crearPedido = async (req, res) => {
       }
     }
 
+    // 💰 Calcular total
     const [sumRows] = await db.query(
       `
       SELECT COALESCE(SUM(d.cantidad * d.precio_unitario), 0)::numeric AS total_calc
@@ -130,29 +135,98 @@ exports.crearPedido = async (req, res) => {
   }
 };
 
-// Obtener pedidos de un usuario
+// 🟡 Obtener todos los pedidos de un usuario con sus productos y personalizados
 exports.obtenerPedidosUsuario = async (req, res) => {
   const { id_usuario } = req.params;
 
   try {
+    console.log("🟢 Buscando pedidos del usuario:", id_usuario);
+
+    if (!id_usuario) {
+      return res.status(400).json({ message: "Falta el ID del usuario." });
+    }
+
+    // 1️⃣ Obtener pedidos
     const [pedidos] = await db.query(
-      `SELECT * FROM pedido WHERE id_usuario = ? ORDER BY fecha_pedido DESC`,
+      `
+      SELECT 
+        p.id_pedido,
+        p.id_usuario,
+        p.estado,
+        p.total,
+        p.fecha_pedido,
+        p.codigo_descuento,
+        p.fecha_entrega
+      FROM pedido p
+      WHERE p.id_usuario = ?
+      ORDER BY p.fecha_pedido DESC
+      `,
       { replacements: [id_usuario] }
     );
 
-    res.json(pedidos);
+    if (!pedidos.length) {
+      console.log("⚪ Sin pedidos para este usuario.");
+      return res.json({ pedidos: [] });
+    }
+
+    // 2️⃣ Obtener detalles de productos
+    const ids = pedidos.map(p => p.id_pedido);
+    const [detalles] = await db.query(
+      `
+      SELECT 
+        d.id_pedido,
+        d.cantidad,
+        d.precio_unitario,
+        p.nombre AS nombre_producto
+      FROM detalle_pedido d
+      JOIN producto p ON p.sku = d.sku
+      WHERE d.id_pedido IN (${ids.map(() => "?").join(",")})
+      ORDER BY d.id_pedido
+      `,
+      { replacements: ids }
+    );
+
+    // 3️⃣ Obtener postres personalizados
+    const [personalizados] = await db.query(
+      `
+      SELECT 
+        id_pedido,
+        tipo,
+        cantidad,
+        bizcocho,
+        relleno,
+        cobertura,
+        toppings,
+        mensaje
+      FROM postre_personalizado
+      WHERE id_pedido IN (${ids.map(() => "?").join(",")})
+      ORDER BY id_pedido
+      `,
+      { replacements: ids }
+    );
+
+    // 4️⃣ Asociar los detalles a cada pedido
+    for (const pedido of pedidos) {
+      pedido.detalle_productos = detalles.filter(
+        d => d.id_pedido === pedido.id_pedido
+      );
+      pedido.postres_personalizados = personalizados.filter(
+        p => p.id_pedido === pedido.id_pedido
+      );
+    }
+
+    res.json({ pedidos });
   } catch (error) {
-    console.error("❌ Error al obtener pedidos:", error);
+    console.error("❌ Error al obtener pedidos del usuario:", error);
     res.status(500).json({ message: "Error al obtener los pedidos." });
   }
 };
 
-// Obtener detalle de un pedido específico
+// 🔍 Obtener detalle completo de un pedido
 exports.obtenerDetallePedido = async (req, res) => {
   const { id_pedido } = req.params;
 
   try {
-    // 1️⃣ Productos del catálogo
     const [detalles] = await db.query(
       `
       SELECT d.*, p.nombre 
@@ -163,7 +237,6 @@ exports.obtenerDetallePedido = async (req, res) => {
       { replacements: [id_pedido] }
     );
 
-    // 2️⃣ Postres personalizados
     const [personalizados] = await db.query(
       `
       SELECT *
@@ -185,7 +258,7 @@ exports.obtenerDetallePedido = async (req, res) => {
   }
 };
 
-// Obtener TODOS los pedidos (para la sección de gestión de pedidos)
+// 📋 Obtener todos los pedidos (administración)
 exports.obtenerTodosLosPedidos = async (req, res) => {
   try {
     const [pedido] = await db.query(`
@@ -212,7 +285,7 @@ exports.obtenerTodosLosPedidos = async (req, res) => {
   }
 };
 
-// Obtener pedido por id (para checkout/polling)
+// 🔎 Obtener pedido por ID
 exports.obtenerPedidoPorId = async (req, res) => {
   const { id_pedido } = req.params;
 

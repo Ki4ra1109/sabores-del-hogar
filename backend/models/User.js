@@ -1,72 +1,103 @@
 const { DataTypes } = require("sequelize");
 const db = require("../config/db");
-const bcrypt = require("bcrypt"); 
+const bcrypt = require("bcrypt");
+
+function cleanRut(r) {
+  return String(r || "").replace(/[.\-]/g, "").toUpperCase();
+}
 
 const User = db.define(
-  "User",
-  {
-    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  "User",
+  {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
 
     email: {
       type: DataTypes.STRING(150),
       allowNull: false,
       unique: true,
       field: "correo",
+      set(v) {
+        if (v == null) return;
+        this.setDataValue("email", String(v).toLowerCase().trim());
+      },
     },
 
-    password: {
-      type: DataTypes.STRING(100),
-      allowNull: true,
-      field: "contrasena",
-    },
+    correo: {
+      type: DataTypes.VIRTUAL,
+      get() {
+        return this.getDataValue("email");
+      },
+      set(v) {
+        if (v == null) return;
+        this.setDataValue("email", String(v).toLowerCase().trim());
+      },
+    },
 
-    nombre: { type: DataTypes.STRING(100), allowNull: false },
-    apellido: { type: DataTypes.STRING(100), allowNull: true }, 
-    rut: { type: DataTypes.STRING(12), allowNull: true, unique: true },
-    telefono: { type: DataTypes.STRING(15), allowNull: true },
-    fecha_nacimiento: { type: DataTypes.DATEONLY, allowNull: true },
-    direccion: { type: DataTypes.STRING(120), allowNull: true },
+    password: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      field: "contrasena",
+    },
 
-    rol: {
-      type: DataTypes.STRING(20),
-      allowNull: false,
-      defaultValue: "usuario",
-    },
+    nombre: { type: DataTypes.STRING(100), allowNull: false },
+    apellido: { type: DataTypes.STRING(100), allowNull: true },
+    rut: {
+      type: DataTypes.STRING(9),
+      allowNull: true,
+      unique: true,
+      set(v) {
+        if (v == null || String(v).trim() === "") {
+          this.setDataValue("rut", null);
+          return;
+        }
+        const norm = cleanRut(v).slice(0, 9);
+        this.setDataValue("rut", norm);
+      },
+    },
+    telefono: { type: DataTypes.STRING(15), allowNull: true },
+    fecha_nacimiento: { type: DataTypes.DATEONLY, allowNull: true },
+    direccion: { type: DataTypes.STRING(120), allowNull: true },
 
-    must_set_password: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
-    },
-    password_set_at: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
+    rol: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      defaultValue: "usuario",
+    },
 
-    fecha_creacion: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-      field: "creado_en",
-    },
-  },
-  {
-    tableName: "usuarios",
-    schema: "public",
-    timestamps: false,
-    hooks: {
-      beforeCreate: async (user) => {
-        if (user.password) {
-          user.password = await bcrypt.hash(user.password, 10);
-        }
-      },
-      beforeUpdate: async (user) => {
-        if (user.changed("password")) {
-          user.password = await bcrypt.hash(user.password, 10);
-        }
-      },
-    }
-  }
+    must_set_password: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    password_set_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+
+    fecha_creacion: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+      field: "creado_en",
+    },
+  },
+  {
+    tableName: "usuarios",
+    schema: "public",
+    timestamps: false,
+    hooks: {
+      beforeCreate: async (user) => {
+        if (user.password) {
+          user.password = await bcrypt.hash(user.password, 10);
+        }
+      },
+      beforeUpdate: async (user) => {
+        if (user.changed("password")) {
+          user.password = await bcrypt.hash(user.password, 10);
+        }
+      },
+    },
+  }
 );
 
 module.exports = User;

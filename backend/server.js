@@ -21,7 +21,7 @@ const pedidoRoutes = require("./Routes/pedidoRoutes");
 const gananciasRoutes = require("./Routes/gananciasRoutes");
 const mpRoutes = require("./Routes/mpRoutes");
 const uploadsRoutes = require("./Routes/uploads");
-
+const prediccionRoutes = require("./Routes/prediccionRoutes");
 const User = require("./models/User");
 require("./models/cupon");
 
@@ -43,6 +43,7 @@ app.use(
 );
 app.use(passport.initialize());
 
+// === Rutas API ===
 app.use("/api/usuarios", usersRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/cupones", cuponRoutes);
@@ -53,6 +54,8 @@ app.use("/api/pedidos", pedidoRoutes);
 app.use("/api/ganancias", gananciasRoutes);
 app.use("/api/mp", mpRoutes);
 app.use("/api/uploads", uploadsRoutes);
+app.use("/api/prediccion", prediccionRoutes);
+
 app.use(express.static(path.resolve(__dirname, "..", "frontend", "public")));
 
 app.get("/api/test", async (req, res) => {

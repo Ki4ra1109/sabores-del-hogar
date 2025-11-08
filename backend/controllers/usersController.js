@@ -37,25 +37,40 @@ async function patchUsuario(req, res) {
     if (!u) return res.status(404).json({ message: "Usuario no encontrado" });
 
     const {
-      nombre, apellido, rut, correo, telefono,
-      fecha_nacimiento, direccion, password, rol
+      nombre,
+      apellido,
+      rut,
+      correo,
+      email,
+      telefono,
+      fecha_nacimiento,
+      direccion,
+      password,
+      rol,
     } = req.body || {};
 
-    if (correo && correo !== u.correo) {
-      const exists = await User.findOne({ where: { correo } });
+    const correoIn = (correo ?? email)?.toString().toLowerCase().trim();
+
+    if (correoIn && correoIn !== u.correo) {
+      const exists = await User.findOne({ where: { correo: correoIn } });
       if (exists) return res.status(400).json({ message: "El correo ya está registrado" });
     }
 
+    const rutNorm =
+      typeof rut === "string" && rut.trim() ? cleanRut(rut).slice(0, 9) : null;
+
     if (rutNorm) {
-      const dup = await User.findOne({ where: { rut: rutNorm, id: { [Op.ne]: id } } });
+      const dup = await User.findOne({
+        where: { rut: rutNorm, id: { [Op.ne]: id } },
+      });
       if (dup) return res.status(409).json({ message: "RUT ya registrado" });
     }
 
     const data = {};
     if (nombre != null) data.nombre = nombre;
     if (apellido != null) data.apellido = apellido;
-    if (rut != null) data.rut = rut;
-    if (correo != null) data.correo = String(correo).toLowerCase().trim();
+    if (rut != null) data.rut = rutNorm || null;
+    if (correoIn != null) data.correo = correoIn;
     if (telefono != null) data.telefono = telefono;
     if (fecha_nacimiento != null) data.fecha_nacimiento = fecha_nacimiento;
     if (direccion != null) data.direccion = direccion;
@@ -95,8 +110,8 @@ async function updateMyPassword(req, res) {
         correo: u.correo,
         rol: u.rol,
         mustSetPassword: false,
-        passwordSetAt: u.password_set_at
-      }
+        passwordSetAt: u.password_set_at,
+      },
     });
   } catch (e) {
     console.error(e);
@@ -117,8 +132,8 @@ async function getMe(req, res) {
         correo: u.correo,
         rol: u.rol,
         mustSetPassword: !!u.must_set_password,
-        passwordSetAt: u.password_set_at
-      }
+        passwordSetAt: u.password_set_at,
+      },
     });
   } catch (e) {
     console.error(e);
