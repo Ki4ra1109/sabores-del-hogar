@@ -25,7 +25,6 @@ const UserNormal = () => {
 
   useEffect(() => { setUser(storedUser); }, [storedUser]);
 
-  // redirige a configuración de perfil con el menú abierto
   useEffect(() => {
     const q = new URLSearchParams(location.search);
     const section = q.get("section");
@@ -38,7 +37,6 @@ const UserNormal = () => {
     }
   }, [location.search]);
 
-  // se puede cerrar con ESC
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && setDrawerOpen(false);
     if (drawerOpen) window.addEventListener("keydown", onKey);
@@ -82,7 +80,6 @@ const UserNormal = () => {
     setDrawerOpen(false);
   };
 
-  // aplica layout sin padding cuando se muestra el Home
   const mainClass = `main-content ${activeSection === "home" ? "fullbleed" : ""}`;
 
   return (
@@ -94,7 +91,6 @@ const UserNormal = () => {
           className="udrawer-toggle"
           aria-label="Abrir menú"
           onClick={() => setDrawerOpen(true)}
-          // Abre el menú de navegación de la configuración del perfil
         >
           ☰
         </button>
@@ -180,22 +176,7 @@ const UserNormal = () => {
           {activeSection === "settings" && (
             <div className="configuracion">
               <h2>Configuración</h2>
-              <p>Aquí puedes cambiar ajustes visuales y de tu cuenta.</p>
-
-              <div className="config-item">
-                <label htmlFor="color-tema">Tema de color:</label>
-                <select id="color-tema" defaultValue="default">
-                  <option value="default">Café (default)</option>
-                  <option value="oscuro">Oscuro</option>
-                  <option value="claro">Claro</option>
-                  <option value="pastel">Pastel</option>
-                </select>
-              </div>
-
-              <div className="config-item">
-                <label htmlFor="modo-oscuro">Modo oscuro</label>
-                <input type="checkbox" id="modo-oscuro" />
-              </div>
+              <p>Ajustes de tu cuenta.</p>
 
               <div className="config-item">
                 <label htmlFor="notificaciones">Notificaciones</label>
