@@ -1,0 +1,129 @@
+.clientes-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.clientes-search {
+  min-height: 40px;
+  background: var(--input-bg, #ffffff);
+  color: var(--ink, #572420);
+  border: 1px solid var(--surface-bd, #f1e3da);
+  border-radius: 8px;
+  padding: 8px 12px;
+  outline: none;
+  width: 220px;
+}
+
+.clientes-search:focus {
+  border-color: var(--brand, #572420);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand), transparent 80%);
+}
+
+.clientes-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.cliente-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border: 1px solid #e6d4c9;
+  border-radius: 10px;
+  padding: 14px 18px;
+  transition: background .25s ease, transform .15s ease, box-shadow .18s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+
+.cliente-item:nth-child(odd) {
+  background: #f7ede4;
+}
+
+.cliente-item:hover {
+  background: #f0d8c6;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,.06);
+}
+
+.cliente-item.inactive {
+  opacity: .7;
+  filter: grayscale(.3);
+}
+
+.cliente-item .info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cliente-item h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink, #572420);
+}
+
+.cliente-item p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-2, #8b5e3c);
+}
+
+.cliente-item .actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Estilos de botones */
+.cliente-item .actions .btn {
+  background: var(--brand, #572420) !important;
+  color: #fff !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  padding: 6px 10px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  font-size: 13px !important;
+  transition: all 0.2s ease !important;
+  display: inline-block !important; /* ← CLAVE: forzar display */
+}
+
+.cliente-item .actions .btn:hover {
+  filter: brightness(0.92) !important;
+}
+
+.cliente-item .actions .btn.danger {
+  background-color: #a0372c !important;
+}
+
+.cliente-item .actions .btn.danger:hover {
+  background-color: #821f16 !important;
+  transform: scale(1.03) !important;
+}
+
+@media (max-width: 980px) {
+  .clientes-search {
+    width: 100%;
+  }
+  .cliente-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .cliente-item .actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

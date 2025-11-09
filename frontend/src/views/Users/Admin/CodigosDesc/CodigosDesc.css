@@ -1,0 +1,311 @@
+/* ============ CUPONES / CÓDIGOS DE DESCUENTO ============ */
+
+/* Formulario de cupón */
+.coupon-form {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+/* Tipos de cupón (botones de selección) */
+.coupon-types {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.ctype {
+  border: 1px solid var(--surface-bd, #f1e3da);
+  background: var(--surface, #fff8f0);
+  border-radius: 12px;
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ctype:hover {
+  border-color: var(--brand, #572420);
+  transform: translateY(-1px);
+}
+
+.ctype.on {
+  outline: 2px solid var(--brand, #572420);
+  background: rgba(111, 78, 55, .06);
+}
+
+.ctype-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--ink, #572420);
+}
+
+.ctype-desc {
+  font-size: 12px;
+  color: var(--ink-2, #8b5e3c);
+  line-height: 1.4;
+}
+
+/* Grid del formulario */
+.coupon-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.coupon-grid .field.field-span {
+  grid-column: 1 / -1;
+}
+
+/* Grupo input + botón */
+.input-group {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+/* Resumen del cupón */
+.coupon-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border: 1px dashed var(--surface-bd, #f1e3da);
+  border-radius: 12px;
+  background: var(--surface, #fff8f0);
+  margin-top: 8px;
+}
+
+.coupon-summary .hint {
+  color: var(--ink-2, #8b5e3c);
+  font-style: italic;
+}
+
+/* ============ LISTA DE CUPONES (TARJETAS) ============ */
+.discount {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  padding: 16px 20px;
+  border: 1px solid #e6d4c9;
+  border-radius: 12px;
+  background: #fff;
+  transition: all 0.2s ease;
+  align-items: start;
+}
+
+.discount:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+  border-color: #d8b59c;
+}
+
+/* Información del cupón */
+.discount > div:first-child {
+  display: grid;
+  gap: 8px;
+}
+
+.discount p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.discount strong {
+  font-weight: 600;
+  color: var(--ink, #572420);
+  min-width: 80px;
+}
+
+/* Botones de acción */
+.discount .row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* ============ BADGES MEJORADOS ============ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.badge.activos {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.badge.futuros {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+.badge.vencidos {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.badge.inactivos {
+  background-color: #e2e3e5;
+  color: #383d41;
+  border: 1px solid #d6d8db;
+}
+
+/* Amarillo sin borde para Envío, Uso único, %, Monto (los que usan .outline) */
+.badge.outline {
+  background: #ffe8a3;          /* amarillo suave */
+  color: #7a4d00;               /* texto café */
+  border: none;                 /* sin borde */
+  box-shadow: none;
+}
+
+/* Mantener el mismo estilo si aparece como segundo badge */
+.badge.outline:nth-of-type(2) {
+  background: #ffe8a3;
+  color: #7a4d00;
+  border: none;
+}
+
+/* Botones de acción con badge */
+.discount .badge.outline {
+  background: #ffe8a3;
+  color: #7a4d00;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none;
+}
+
+/* Skeleton loader */
+.skeleton {
+  height: 100px;
+  background: linear-gradient(90deg, #f7ede4 25%, #f0d8c6 50%, #f7ede4 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 12px;
+  border: 1px solid #e6d4c9;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ============ TABS DE FILTROS ============ */
+.tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tabs .tab {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #e6d4c9;
+  background: #fff;
+  color: var(--ink-2, #8b5e3c);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tabs .tab:hover {
+  background: #f7ede4;
+  border-color: #d8b59c;
+}
+
+.tabs .tab.on {
+  background: var(--brand, #572420);
+  color: white;
+  border-color: var(--brand, #572420);
+}
+
+/* ============ SELECT Y SEARCH ============ */
+.card-head select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #e6d4c9;
+  background: #fff;
+  color: var(--ink, #572420);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.card-head select:focus {
+  outline: none;
+  border-color: var(--brand, #572420);
+  box-shadow: 0 0 0 3px rgba(87, 36, 32, 0.1);
+}
+
+.card-head input[type="text"],
+.card-head input[placeholder*="Buscar"] {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #e6d4c9;
+  background: #fff;
+  color: var(--ink, #572420);
+  font-size: 14px;
+  min-width: 200px;
+  transition: all 0.2s ease;
+}
+
+.card-head input:focus {
+  outline: none;
+  border-color: var(--brand, #572420);
+  box-shadow: 0 0 0 3px rgba(87, 36, 32, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 980px) {
+  .coupon-types {
+    grid-template-columns: 1fr;
+  }
+
+  .coupon-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .coupon-summary {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .discount {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .discount .row {
+    justify-content: stretch;
+  }
+
+  .discount .row button {
+    flex: 1;
+  }
+
+  .card-head {
+    flex-wrap: wrap;
+  }
+
+  .card-head input,
+  .card-head select {
+    min-width: 100%;
+  }
+}
