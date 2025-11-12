@@ -287,7 +287,7 @@ export default function ResumenCompra() {
                 <div className="rc-actions">
                   <button type="button" className="rc-btn rc-btn-ghost" onClick={volver} disabled={procesando}>Seguir comprando</button>
                   <button type="button" className="rc-btn rc-btn-mp" onClick={confirmarYComprar} disabled={procesando}>
-                    {procesando ? "Procesando..." : "Pagar con Mercado Pago"}
+                    {procesando ? "Procesando el pago..." : "Pagar con Mercado Pago"}
                   </button>
                 </div>
               </div>
