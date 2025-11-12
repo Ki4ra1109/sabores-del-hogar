@@ -1,4 +1,3 @@
-// controllers/mp.controller.js
 const { MercadoPagoConfig, Preference } = require("mercadopago");
 const { QueryTypes } = require("sequelize");
 const sequelize = require("../config/db");
@@ -87,20 +86,20 @@ async function syncPagoYPedidoDesdePayment(payment) {
 
 async function createPreference(req, res) {
   try {
-    const { items, payerEmail, orderId } = req.body;
+    const { payerEmail, orderId } = req.body;
 
-    const cleanItems = Array.isArray(items)
-      ? items
-          .map(i => ({
-            title: String(i.title || "").slice(0, 255),
-            quantity: Number(i.quantity || 0),
-            unit_price: Number(i.unit_price || 0)
-          }))
-          .filter(i => i.title && i.quantity > 0 && i.unit_price > 0)
-      : [];
-
-    if (!cleanItems.length || !payerEmail || !orderId) {
+    if (!payerEmail || !orderId) {
       return res.status(400).json({ error: "Faltan datos requeridos" });
+    }
+
+    const rows = await sequelize.query(
+      "SELECT total FROM pedido WHERE id_pedido = :id LIMIT 1",
+      { replacements: { id: Number(orderId) }, type: QueryTypes.SELECT }
+    );
+
+    const monto = rows[0] ? Math.round(Number(rows[0].total || 0)) : 0;
+    if (monto <= 0) {
+      return res.status(400).json({ error: "Monto de pedido inválido" });
     }
 
     const API_URL = (process.env.API_URL || "http://localhost:5000").trim();
@@ -112,12 +111,12 @@ async function createPreference(req, res) {
     const pending = `${FRONTEND_URL.replace(/\/+$/,"")}/pedido-pendiente?orderId=${orderId}`;
 
     const preference = {
-      items: cleanItems.map(i => ({
-        title: i.title,
-        quantity: i.quantity,
-        unit_price: i.unit_price,
+      items: [{
+        title: `Pedido #${orderId}`,
+        quantity: 1,
+        unit_price: monto,
         currency_id: "CLP"
-      })),
+      }],
       payer: { email: String(payerEmail) },
       back_urls: { success, failure, pending },
       external_reference: String(orderId),

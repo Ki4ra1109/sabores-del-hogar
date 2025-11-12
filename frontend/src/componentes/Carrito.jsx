@@ -26,7 +26,7 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
     items.forEach((el) => el.classList.add("eliminando"));
     setTimeout(() => {
       setCarrito([]);
-      localStorage.removeItem("carrito");
+      sessionStorage.removeItem("carrito");
       window.dispatchEvent(new Event("carrito:actualizado"));
     }, 300);
   };
@@ -47,7 +47,7 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
       .filter((item) => (item.cantidad || 0) > 0);
 
     setCarrito(actualizado);
-    localStorage.setItem("carrito", JSON.stringify(actualizado));
+    sessionStorage.setItem("carrito", JSON.stringify(actualizado));
     window.dispatchEvent(new Event("carrito:actualizado"));
   };
 
@@ -57,7 +57,7 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
     setTimeout(() => {
       const actualizado = carrito.filter((item) => getKey(item) !== clave);
       setCarrito(actualizado);
-      localStorage.setItem("carrito", JSON.stringify(actualizado));
+      sessionStorage.setItem("carrito", JSON.stringify(actualizado));
       window.dispatchEvent(new Event("carrito:actualizado"));
     }, 250);
   };
@@ -83,7 +83,7 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
 
     try {
       setProcesando(true);
-      localStorage.setItem("carrito", JSON.stringify(carrito));
+      sessionStorage.setItem("carrito", JSON.stringify(carrito));
       window.dispatchEvent(new Event("carrito:actualizado"));
       setAbrir(false);
       navigate("/resumen-compra", { state: { carrito } });
@@ -185,3 +185,4 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
     </>
   );
 }
+6

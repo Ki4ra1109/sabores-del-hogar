@@ -1,6 +1,6 @@
 const db = require("../config/db");
 
-// 🟢 Crear un pedido y sus detalles (productos del catálogo + personalizados)
+// Crear un pedido y sus detalles (productos del catálogo + personalizados)
 exports.crearPedido = async (req, res) => {
   const {
     id_usuario,
@@ -18,7 +18,21 @@ exports.crearPedido = async (req, res) => {
 
   const t = await db.transaction();
   try {
-    // Crear pedido principal
+    let codigo_fk = null;
+    if ((codigo_descuento || "").trim()) {
+      const code = String(codigo_descuento).trim().toUpperCase();
+      const [cupRowsFK] = await db.query(
+        `
+        SELECT id_descuento
+        FROM descuentos
+        WHERE UPPER(codigo) = ?
+        LIMIT 1
+        `,
+        { replacements: [code], transaction: t }
+      );
+      if (cupRowsFK.length) codigo_fk = cupRowsFK[0].id_descuento;
+    }
+
     const [pedidoResult] = await db.query(
       `
       INSERT INTO pedido (id_usuario, estado, total, fecha_pedido, codigo_descuento, fecha_entrega)
@@ -29,7 +43,7 @@ exports.crearPedido = async (req, res) => {
         replacements: [
           id_usuario,
           estado || "pendiente",
-          codigo_descuento || null,
+          codigo_fk,
           fecha_entrega || null,
         ],
         type: db.QueryTypes.INSERT,
@@ -39,7 +53,6 @@ exports.crearPedido = async (req, res) => {
 
     const id_pedido = pedidoResult[0].id_pedido;
 
-    // 🧁 Guardar los productos del catálogo
     if (Array.isArray(detalle) && detalle.length) {
       const items = detalle
         .map(it => ({
@@ -80,7 +93,6 @@ exports.crearPedido = async (req, res) => {
       }
     }
 
-    // 🎂 Guardar los postres personalizados
     if (Array.isArray(personalizados) && personalizados.length) {
       for (const p of personalizados) {
         await db.query(
@@ -105,7 +117,6 @@ exports.crearPedido = async (req, res) => {
       }
     }
 
-    // 💰 Calcular total
     const [sumRows] = await db.query(
       `
       SELECT COALESCE(SUM(d.cantidad * d.precio_unitario), 0)::numeric AS total_calc
@@ -116,9 +127,54 @@ exports.crearPedido = async (req, res) => {
     );
     const total_calc = Number(sumRows[0].total_calc || 0);
 
+    let total_final = total_calc;
+
+    if ((codigo_descuento || "").trim()) {
+      const code = String(codigo_descuento).trim().toUpperCase();
+
+      const [cupRows] = await db.query(
+        `
+        SELECT id_descuento, codigo, porcentaje, fecha_inicio, fecha_fin, uso_unico
+        FROM descuentos
+        WHERE UPPER(codigo) = ?
+        LIMIT 1
+        `,
+        { replacements: [code], transaction: t }
+      );
+
+      if (cupRows.length) {
+        const c = cupRows[0];
+        const today = new Date().toISOString().slice(0, 10);
+        const vigente =
+          (!c.fecha_inicio || String(c.fecha_inicio) <= today) &&
+          (!c.fecha_fin || String(c.fecha_fin) >= today);
+
+        if (vigente) {
+          if (c.uso_unico && codigo_fk) {
+            const [used] = await db.query(
+              `
+              SELECT 1 FROM pedido
+              WHERE id_usuario = ? AND codigo_descuento = ?
+              LIMIT 1
+              `,
+              { replacements: [id_usuario, codigo_fk], transaction: t }
+            );
+            if (used.length) {
+              await t.rollback();
+              return res.status(409).json({ message: "Cupón ya utilizado por este usuario." });
+            }
+          }
+
+          const pct = Math.max(0, Math.min(100, Number(c.porcentaje || 0)));
+          const desc = Math.floor(total_calc * (pct / 100));
+          total_final = Math.max(0, total_calc - desc);
+        }
+      }
+    }
+
     await db.query(
       `UPDATE pedido SET total = ?, estado = COALESCE(?, estado) WHERE id_pedido = ?`,
-      { replacements: [total_calc, estado || "pendiente", id_pedido], transaction: t }
+      { replacements: [total_final, estado || "pendiente", id_pedido], transaction: t }
     );
 
     await t.commit();
@@ -135,94 +191,24 @@ exports.crearPedido = async (req, res) => {
   }
 };
 
-// 🟡 Obtener todos los pedidos de un usuario con sus productos y personalizados
+// Obtener pedidos de un usuario
 exports.obtenerPedidosUsuario = async (req, res) => {
   const { id_usuario } = req.params;
 
   try {
-    console.log("🟢 Buscando pedidos del usuario:", id_usuario);
-
-    if (!id_usuario) {
-      return res.status(400).json({ message: "Falta el ID del usuario." });
-    }
-
-    // 1️⃣ Obtener pedidos
     const [pedidos] = await db.query(
-      `
-      SELECT 
-        p.id_pedido,
-        p.id_usuario,
-        p.estado,
-        p.total,
-        p.fecha_pedido,
-        p.codigo_descuento,
-        p.fecha_entrega
-      FROM pedido p
-      WHERE p.id_usuario = ?
-      ORDER BY p.fecha_pedido DESC
-      `,
+      `SELECT * FROM pedido WHERE id_usuario = ? ORDER BY fecha_pedido DESC`,
       { replacements: [id_usuario] }
     );
 
-    if (!pedidos.length) {
-      console.log("⚪ Sin pedidos para este usuario.");
-      return res.json({ pedidos: [] });
-    }
-
-    // 2️⃣ Obtener detalles de productos
-    const ids = pedidos.map(p => p.id_pedido);
-    const [detalles] = await db.query(
-      `
-      SELECT 
-        d.id_pedido,
-        d.cantidad,
-        d.precio_unitario,
-        p.nombre AS nombre_producto
-      FROM detalle_pedido d
-      JOIN producto p ON p.sku = d.sku
-      WHERE d.id_pedido IN (${ids.map(() => "?").join(",")})
-      ORDER BY d.id_pedido
-      `,
-      { replacements: ids }
-    );
-
-    // 3️⃣ Obtener postres personalizados
-    const [personalizados] = await db.query(
-      `
-      SELECT 
-        id_pedido,
-        tipo,
-        cantidad,
-        bizcocho,
-        relleno,
-        cobertura,
-        toppings,
-        mensaje
-      FROM postre_personalizado
-      WHERE id_pedido IN (${ids.map(() => "?").join(",")})
-      ORDER BY id_pedido
-      `,
-      { replacements: ids }
-    );
-
-    // 4️⃣ Asociar los detalles a cada pedido
-    for (const pedido of pedidos) {
-      pedido.detalle_productos = detalles.filter(
-        d => d.id_pedido === pedido.id_pedido
-      );
-      pedido.postres_personalizados = personalizados.filter(
-        p => p.id_pedido === pedido.id_pedido
-      );
-    }
-
-    res.json({ pedidos });
+    res.json(pedidos);
   } catch (error) {
-    console.error("❌ Error al obtener pedidos del usuario:", error);
+    console.error("❌ Error al obtener pedidos:", error);
     res.status(500).json({ message: "Error al obtener los pedidos." });
   }
 };
 
-// 🔍 Obtener detalle completo de un pedido
+// Obtener detalle de un pedido específico
 exports.obtenerDetallePedido = async (req, res) => {
   const { id_pedido } = req.params;
 
@@ -258,7 +244,7 @@ exports.obtenerDetallePedido = async (req, res) => {
   }
 };
 
-// 📋 Obtener todos los pedidos (administración)
+// Obtener TODOS los pedidos (para la sección de gestión de pedidos)
 exports.obtenerTodosLosPedidos = async (req, res) => {
   try {
     const [pedido] = await db.query(`
@@ -285,7 +271,7 @@ exports.obtenerTodosLosPedidos = async (req, res) => {
   }
 };
 
-// 🔎 Obtener pedido por ID
+// Obtener pedido por id (para checkout/polling)
 exports.obtenerPedidoPorId = async (req, res) => {
   const { id_pedido } = req.params;
 
