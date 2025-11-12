@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { FaUser, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaUser, FaEye, FaEyeSlash, FaHome } from "react-icons/fa";
 import "./HeaderAdmin.css";
 
 export const HeaderAdmin = () => {
@@ -57,7 +57,7 @@ export const HeaderAdmin = () => {
         alignItems: "center",
         justifyContent: "center",
         gap: 10,
-        color: "#fff"
+        color: "#fff",
       }}
     >
       <span style={{ opacity: busy ? 0 : 1, transition: "opacity .15s" }}>{label}</span>
@@ -105,7 +105,7 @@ export const HeaderAdmin = () => {
           setAuthOpen(false);
           setEmail(""); setPwd("");
           setTimeout(() => {
-            navigate("/Useradmin");
+            navigate("/UserAdmin");
             setLoginBusy(false);
             setPanelFading(false);
           }, 30);
@@ -138,11 +138,11 @@ export const HeaderAdmin = () => {
   return (
     <header className="admin-header">
       <div className="mensaje-banner">
-        <p>🎉 Bienvenido a mi Sabores del Hogar — Ofertas especiales todo el mes 🎉</p>
+        <p>🎉 Bienvenido a Sabores del Hogar — Ofertas especiales todo el mes 🎉</p>
       </div>
 
       <nav className="Header-nav">
-        <Link to="/Useradmin" className="logo-wrap" aria-label="Inicio administrador">
+        <Link to="/UserAdmin" className="logo-wrap" aria-label="Inicio administrador">
           <img src="/logoFondoBlanco.svg" className="Header-icon" alt="Logo Sabores del Hogar" />
         </Link>
 
@@ -175,7 +175,7 @@ export const HeaderAdmin = () => {
                 opacity: panelFading ? 0 : 1,
                 transform: panelFading ? "translateY(-6px)" : "translateY(0)",
                 transition: "opacity .28s ease, transform .28s ease",
-                willChange: "opacity, transform"
+                willChange: "opacity, transform",
               }}
             >
               {!user ? (
@@ -230,19 +230,34 @@ export const HeaderAdmin = () => {
                   <p className="auth-hello">
                     Sesión iniciada como <strong>{user.nombre}</strong>
                   </p>
-                  
-                  {location.pathname !== "/Useradmin" && (
+
+                  {/* 🔹 Si está en /UserAdmin -> mostrar "Ir al Home" */}
+                  {location.pathname === "/UserAdmin" ? (
                     <button
                       className="auth-primary"
-                      onClick={() => navigate("/Useradmin")}
+                      onClick={() => navigate("/")}
+                      disabled={logoutBusy}
+                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                    >
+                      <FaHome size={18} />
+                      Ir al Home
+                    </button>
+                  ) : (
+                    <button
+                      className="auth-primary"
+                      onClick={() => navigate("/UserAdmin")}
                       disabled={logoutBusy}
                     >
-                      Ir al panel
+                      Ir al Panel
                     </button>
                   )}
 
-                  <div style={{ height: 44, display: "flex", alignItems: "center" }}>
-                    <ButtonWithLoader label="Cerrar sesión" busy={logoutBusy} onClick={onLogoutClick} />
+                  <div style={{ height: 44, display: "flex", alignItems: "center", marginTop: 8 }}>
+                    <ButtonWithLoader
+                      label="Cerrar sesión"
+                      busy={logoutBusy}
+                      onClick={onLogoutClick}
+                    />
                   </div>
                 </>
               )}
