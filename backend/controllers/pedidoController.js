@@ -18,6 +18,21 @@ exports.crearPedido = async (req, res) => {
 
   const t = await db.transaction();
   try {
+    let codigo_fk = null;
+    if ((codigo_descuento || "").trim()) {
+      const code = String(codigo_descuento).trim().toUpperCase();
+      const [cupRowsFK] = await db.query(
+        `
+        SELECT id_descuento
+        FROM descuentos
+        WHERE UPPER(codigo) = ?
+        LIMIT 1
+        `,
+        { replacements: [code], transaction: t }
+      );
+      if (cupRowsFK.length) codigo_fk = cupRowsFK[0].id_descuento;
+    }
+
     const [pedidoResult] = await db.query(
       `
       INSERT INTO pedido (id_usuario, estado, total, fecha_pedido, codigo_descuento, fecha_entrega)
@@ -28,7 +43,7 @@ exports.crearPedido = async (req, res) => {
         replacements: [
           id_usuario,
           estado || "pendiente",
-          codigo_descuento || null,
+          codigo_fk,
           fecha_entrega || null,
         ],
         type: db.QueryTypes.INSERT,
@@ -94,6 +109,7 @@ exports.crearPedido = async (req, res) => {
               p.relleno || null,
               p.cobertura || null,
               p.toppings || null,
+              p.mensaje || null,
             ],
             transaction: t,
           }
@@ -111,9 +127,54 @@ exports.crearPedido = async (req, res) => {
     );
     const total_calc = Number(sumRows[0].total_calc || 0);
 
+    let total_final = total_calc;
+
+    if ((codigo_descuento || "").trim()) {
+      const code = String(codigo_descuento).trim().toUpperCase();
+
+      const [cupRows] = await db.query(
+        `
+        SELECT id_descuento, codigo, porcentaje, fecha_inicio, fecha_fin, uso_unico
+        FROM descuentos
+        WHERE UPPER(codigo) = ?
+        LIMIT 1
+        `,
+        { replacements: [code], transaction: t }
+      );
+
+      if (cupRows.length) {
+        const c = cupRows[0];
+        const today = new Date().toISOString().slice(0, 10);
+        const vigente =
+          (!c.fecha_inicio || String(c.fecha_inicio) <= today) &&
+          (!c.fecha_fin || String(c.fecha_fin) >= today);
+
+        if (vigente) {
+          if (c.uso_unico && codigo_fk) {
+            const [used] = await db.query(
+              `
+              SELECT 1 FROM pedido
+              WHERE id_usuario = ? AND codigo_descuento = ?
+              LIMIT 1
+              `,
+              { replacements: [id_usuario, codigo_fk], transaction: t }
+            );
+            if (used.length) {
+              await t.rollback();
+              return res.status(409).json({ message: "Cupón ya utilizado por este usuario." });
+            }
+          }
+
+          const pct = Math.max(0, Math.min(100, Number(c.porcentaje || 0)));
+          const desc = Math.floor(total_calc * (pct / 100));
+          total_final = Math.max(0, total_calc - desc);
+        }
+      }
+    }
+
     await db.query(
       `UPDATE pedido SET total = ?, estado = COALESCE(?, estado) WHERE id_pedido = ?`,
-      { replacements: [total_calc, estado || "pendiente", id_pedido], transaction: t }
+      { replacements: [total_final, estado || "pendiente", id_pedido], transaction: t }
     );
 
     await t.commit();
@@ -152,7 +213,6 @@ exports.obtenerDetallePedido = async (req, res) => {
   const { id_pedido } = req.params;
 
   try {
-    // 1️⃣ Productos del catálogo
     const [detalles] = await db.query(
       `
       SELECT d.*, p.nombre 
@@ -163,7 +223,6 @@ exports.obtenerDetallePedido = async (req, res) => {
       { replacements: [id_pedido] }
     );
 
-    // 2️⃣ Postres personalizados
     const [personalizados] = await db.query(
       `
       SELECT *

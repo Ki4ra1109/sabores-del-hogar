@@ -1013,12 +1013,37 @@ function DescuentosSection() {
   const [editingId, setEditingId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
-
   const [estado, setEstado] = useState("activos");
   const [tipoFiltro, setTipoFiltro] = useState("todos");
   const [q, setQ] = useState("");
-
+  const [busy, setBusy] = useState({});
+  const [msg, setMsg] = useState(null);
   const API_BASE = import.meta.env?.VITE_API_URL || "http://localhost:5000";
+
+  const ThreeDot = ({ size = 12 }) => (
+    <span className="three-dot" style={{ fontSize: size }}>
+      <i />
+      <i />
+      <i />
+    </span>
+  );
+
+  const BusyButton = ({ label, onClick, className, disabled, busy, type = "button" }) => (
+    <button
+      type={type}
+      className={`${className || ""} has-loader ${busy ? "busy" : ""}`}
+      onClick={onClick}
+      disabled={disabled}
+      aria-busy={busy}
+    >
+      <span className="label">{label}</span>
+      {busy ? (
+        <span className="loader">
+          <ThreeDot />
+        </span>
+      ) : null}
+    </button>
+  );
 
   const [form, setForm] = useState({
     codigo: "",
@@ -1035,7 +1060,7 @@ function DescuentosSection() {
   const load = async () => {
     try {
       setLoading(true);
-      const r = await fetch(`${API_BASE}/api/cupones`);
+      const r = await fetch(`${API_BASE}/api/cupones`, { credentials: "include" });
       const j = await r.json();
       setCoupons(Array.isArray(j.items) ? j.items : []);
     } finally {
@@ -1044,31 +1069,46 @@ function DescuentosSection() {
   };
   useEffect(() => { load(); }, []);
 
+  const flash = (text, type = "ok") => {
+    setMsg({ text, type });
+    setTimeout(() => setMsg(null), 1200);
+  };
+
   const toggleForm = () => setShowForm(v => !v);
+
+  const clampPercent = (v) => {
+    const n = Math.trunc(Number(String(v).replace(/[^\d-]/g, "")));
+    if (!Number.isFinite(n)) return "";
+    return Math.min(60, Math.max(1, n));
+  };
 
   const onChange = (e) => {
     const { name, value, type, checked } = e.target;
-    if (name === "valor" && form.tipo === "percent") {
-      const v = String(value).replace(/[^\d]/g, "");
-      if (v === "") { setForm(prev => ({ ...prev, valor: "" })); setErrors({}); return; }
-      let n = Number(v);
-      if (!Number.isFinite(n)) n = 1;
-      n = Math.max(1, Math.min(60, n));
-      setForm(prev => ({ ...prev, valor: String(n) }));
-      setErrors({});
-      return;
+    if (name === "codigo") {
+      const base = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      const up = String(value).toUpperCase().split("").filter(ch => base.includes(ch)).join("").slice(0, 15);
+      setForm(prev => ({ ...prev, codigo: up }));
+    } else if (name === "valor" && form.tipo === "percent") {
+      if (value === "" || /^[0-9]{0,2}$/.test(value)) {
+        setForm(prev => ({ ...prev, valor: value }));
+      }
+    } else {
+      setForm(prev => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
     }
-    setForm(prev => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
     setErrors({});
+  };
+
+  const onPercentBlur = () => {
+    if (form.tipo !== "percent") return;
+    const n = clampPercent(form.valor);
+    setForm(prev => ({ ...prev, valor: n === "" ? "" : String(n) }));
   };
 
   const onChangeTipo = (t) => {
     setForm(prev => ({
       ...prev,
       tipo: t,
-      valor: t === "free_shipping"
-        ? ""
-        : (t === "percent" ? String(Math.min(Number(prev.valor || 10), 60)) : (prev.valor || 1000)),
+      valor: t === "free_shipping" ? "" : (prev.valor || (t === "percent" ? 10 : 1000)),
       minimo_compra: t === "percent" ? "" : (prev.minimo_compra || 0)
     }));
     setErrors({});
@@ -1086,26 +1126,26 @@ function DescuentosSection() {
   const validate = () => {
     const e = {};
     const code = (form.codigo || "").trim().toUpperCase();
-    if (!code) e.codigo = "Ingresa un código";
-    const exists = coupons.some(c => c.codigo === code && c.id_descuento !== editingId);
+    if (!/^[A-Z0-9]{4,15}$/.test(code)) e.codigo = "Código alfanumérico de 4 a 15";
+    const exists = coupons.some(c => String(c.codigo).toUpperCase() === code && c.id_descuento !== editingId);
     if (code && exists) e.codigo = "El código ya existe";
-
     if (form.fecha_inicio && form.fecha_fin && new Date(form.fecha_inicio) > new Date(form.fecha_fin)) {
-      e.fecha_fin = "La fecha fin debe ser mayor o igual a inicio";
+      e.fecha_fin = "Fin debe ser ≥ inicio";
     }
     if (form.tipo === "percent") {
-      const n = Number(form.valor);
-      if (!form.valor || Number.isNaN(n) || n < 1 || n > 60) e.valor = "Porcentaje entre 1 y 60";
-    }
-    if (form.tipo === "free_shipping") {
-      const min = Number(form.minimo_compra);
-      if (Number.isNaN(min) || min <= 0) e.minimo_compra = "Mínimo de compra (> 0)";
+      const n = Math.trunc(Number(form.valor));
+      if (!Number.isFinite(n) || n < 1 || n > 60) e.valor = "Porcentaje entre 1 y 60";
     }
     if (form.tipo === "amount") {
       const n = Number(form.valor);
       const min = Number(form.minimo_compra);
-      if (!form.valor || Number.isNaN(n) || n <= 0) e.valor = "Monto del descuento (> 0)";
-      if (Number.isNaN(min) || min <= 0) e.minimo_compra = "Mínimo de compra (> 0)";
+      if (!Number.isFinite(n) || n <= 0) e.valor = "Monto > 0";
+      if (!Number.isFinite(min) || min <= 0) e.minimo_compra = "Mínimo > 0";
+      if (Number.isFinite(n) && Number.isFinite(min) && n >= min) e.valor = "Monto < mínimo";
+    }
+    if (form.tipo === "free_shipping") {
+      const min = Number(form.minimo_compra);
+      if (!Number.isFinite(min) || min <= 0) e.minimo_compra = "Mínimo > 0";
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -1126,10 +1166,15 @@ function DescuentosSection() {
     setEditingId(null);
   };
 
+  const cancelEdit = () => {
+    reset();
+    setShowForm(false);
+  };
+
   const genCode = () => {
     const base = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    const r = Array.from({ length: 8 }, () => base[Math.floor(Math.random() * base.length)]).join("");
-    setForm(prev => ({ ...prev, codigo: r }));
+    const r = Array.from({ length: 15 }, () => base[Math.floor(Math.random() * base.length)]).join("");
+    setForm(prev => ({ ...prev, codigo: r.slice(0, 15) }));
   };
 
   const summary = (() => {
@@ -1151,38 +1196,44 @@ function DescuentosSection() {
   const ready =
     (form.codigo || "").trim() &&
     ((form.tipo === "percent" && Number(form.valor) >= 1 && Number(form.valor) <= 60) ||
-      (form.tipo === "amount" && Number(form.valor) > 0 && Number(form.minimo_compra) > 0) ||
+      (form.tipo === "amount" && Number(form.valor) > 0 && Number(form.minimo_compra) > 0 && Number(form.valor) < Number(form.minimo_compra)) ||
       (form.tipo === "free_shipping" && Number(form.minimo_compra) > 0));
 
   const onSubmit = async (e) => {
     e.preventDefault();
     if (!validate() || submitting) return;
     setSubmitting(true);
-
+    const isPercent = form.tipo === "percent";
+    const isAmount = form.tipo === "amount";
+    const v = Math.trunc(Number(form.valor));
     const payload = {
       codigo: form.codigo.trim().toUpperCase(),
       tipo: form.tipo,
-      valor: form.tipo === "free_shipping" ? null : Number(form.valor),
-      minimo_compra: form.tipo === "percent" ? null : Number(form.minimo_compra),
+      porcentaje: isPercent ? v : null,
+      valor: isPercent ? v : (isAmount ? Number(form.valor) : null),
+      minimo_compra: isPercent ? null : Number(form.minimo_compra),
       fecha_inicio: form.fecha_inicio || null,
       fecha_fin: form.fecha_fin || null,
       uso_unico: !!form.uso_unico,
       activo: !!form.activo
     };
-
     try {
       const url = editingId ? `${API_BASE}/api/cupones/${editingId}` : `${API_BASE}/api/cupones`;
       const method = editingId ? "PUT" : "POST";
       const r = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        credentials: "include",
         body: JSON.stringify(payload)
       });
       const j = await r.json();
-      if (!j.ok) { alert(j.message || "Error al guardar"); return; }
+      if (!j.ok) { setErrors(j.errors || {}); flash(j.message || "Error al guardar", "err"); setSubmitting(false); return; }
       await load();
       reset();
       setShowForm(false);
+      flash(editingId ? "Cupón actualizado" : "Cupón creado", "ok");
+    } catch {
+      flash("Error de red", "err");
     } finally {
       setSubmitting(false);
     }
@@ -1193,7 +1244,7 @@ function DescuentosSection() {
     const valor = c.valor ?? (c.porcentaje != null ? Number(c.porcentaje) : "");
     setEditingId(c.id_descuento);
     setForm({
-      codigo: c.codigo,
+      codigo: (c.codigo || "").toUpperCase(),
       tipo,
       valor: tipo === "free_shipping" ? "" : String(valor ?? ""),
       minimo_compra: c.minimo_compra ?? "",
@@ -1206,32 +1257,61 @@ function DescuentosSection() {
     setErrors({});
   };
 
-  const removeCoupon = async (id) => {
-    if (!window.confirm("¿Eliminar el cupón?")) return;
+  const setBusyFor = (id, action) => setBusy(prev => ({ ...prev, [id]: action }));
+  const clearBusy = (id) => setBusy(prev => ({ ...prev, [id]: null }));
+  const isBusy = (id, action) => busy[id] === action;
+
+  const onCopy = async (c) => {
+    setBusyFor(c.id_descuento, "copy");
     try {
-      const r = await fetch(`${API_BASE}/api/cupones/${id}`, { method: "DELETE" });
-      const j = await r.json();
-      if (!j.ok) { alert(j.message || "Error al eliminar"); return; }
-      await load(); if (editingId === id) reset();
-    } catch { alert("No se pudo eliminar"); }
+      await navigator.clipboard.writeText(String(c.codigo || "").toUpperCase());
+    } finally {
+      setTimeout(() => clearBusy(c.id_descuento), 500);
+    }
   };
 
-  const copyCode = async (code) => { try { await navigator.clipboard.writeText(code); } catch {} };
-  const toggleActive = async (c) => {
+  const onEdit = async (c) => {
+    setBusyFor(c.id_descuento, "edit");
+    setTimeout(() => {
+      startEdit(c);
+      clearBusy(c.id_descuento);
+    }, 250);
+  };
+
+  const onToggle = async (c) => {
+    setBusyFor(c.id_descuento, "toggle");
     try {
       await fetch(`${API_BASE}/api/cupones/${c.id_descuento}`, {
-        method: "PUT", headers: { "Content-Type": "application/json" },
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        credentials: "include",
         body: JSON.stringify({ activo: !c.activo })
       });
       await load();
-    } catch { alert("No se pudo actualizar el estado"); }
+      flash(c.activo ? "Cupón desactivado" : "Cupón activado", "ok");
+    } catch {
+      flash("No se pudo actualizar", "err");
+    } finally {
+      clearBusy(c.id_descuento);
+    }
+  };
+
+  const removeCoupon = async (id) => {
+    if (!window.confirm("¿Eliminar el cupón?")) return;
+    try {
+      const r = await fetch(`${API_BASE}/api/cupones/${id}`, { method: "DELETE", credentials: "include", headers: { "X-Requested-With": "XMLHttpRequest" } });
+      const j = await r.json();
+      if (!j.ok) { flash(j.message || "Error al eliminar", "err"); return; }
+      await load(); if (editingId === id) reset();
+      flash("Cupón eliminado", "ok");
+    } catch { flash("No se pudo eliminar", "err"); }
   };
 
   const data = coupons
     .map(c => ({ ...c, _status: getStatus(c), _tipo: normTipo(c) }))
     .filter(c => (estado === "todos" || c._status === estado))
     .filter(c => (tipoFiltro === "todos" || c._tipo === tipoFiltro))
-    .filter(c => (q ? c.codigo.toUpperCase().includes(q.trim().toUpperCase()) : true))
+    .filter(c => (q ? String(c.codigo).toUpperCase().includes(q.trim().toUpperCase()) : true))
     .sort((a, b) => {
       const rank = s => ({ activos: 0, futuros: 1, vencidos: 2, inactivos: 3 }[s] ?? 9);
       const r = rank(a._status) - rank(b._status);
@@ -1245,8 +1325,23 @@ function DescuentosSection() {
     </span>
   );
 
+  const clearSearch = () => setQ("");
+
   return (
     <div className="card">
+      <style>{`
+        @keyframes fadeUp { from { opacity:.0; transform: translateY(4px) } to { opacity:1; transform: translateY(0) } }
+        .anim-in { animation: fadeUp .18s ease-out both; }
+        @keyframes dotPulse { 0%{ transform: translateY(0); opacity:.5 } 50%{ transform: translateY(-2px); opacity:1 } 100%{ transform: translateY(0); opacity:.5 } }
+        .three-dot { display:inline-flex; align-items:center; gap:4px; line-height:1; vertical-align:middle }
+        .three-dot i { width:6px; height:6px; border-radius:50%; background: currentColor; animation: dotPulse 1s infinite; }
+        .three-dot i:nth-child(2){ animation-delay:.15s }
+        .three-dot i:nth-child(3){ animation-delay:.3s }
+        .btn.has-loader { position: relative }
+        .btn.has-loader .loader { position:absolute; inset:0; display:flex; align-items:center; justify-content:center }
+        .btn.busy .label { visibility:hidden }
+      `}</style>
+
       <div className="card-head" style={{ gap: 12, alignItems: "center" }}>
         <h2 style={{ marginRight: "auto" }}>Códigos de descuento</h2>
         <div className="tabs sm" role="tablist" aria-label="Filtros por estado">
@@ -1262,46 +1357,42 @@ function DescuentosSection() {
           <option value="amount">Monto fijo</option>
           <option value="free_shipping">Envío gratis</option>
         </select>
-        <input value={q} onChange={e => setQ(e.target.value)} placeholder="Buscar código…" style={{ minWidth: 180 }} />
+        <div role="search" style={{ display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 6, minWidth: 260, background: "var(--input-bg)", border: "1px solid var(--surface-bd)", borderRadius: 999, padding: "0 6px" }}>
+          <input value={q} onChange={e => setQ(e.target.value)} placeholder="Buscar por código" style={{ height: 38, border: 0, outline: "none", background: "transparent", padding: "0 8px" }} />
+          <div style={{ display: "flex", gap: 6, paddingRight: 4 }}>
+            <button type="button" className="btn sm" onClick={() => setQ(q.trim().toUpperCase())}>Buscar</button>
+            <button type="button" className="btn sm" onClick={clearSearch} disabled={!q}>Limpiar</button>
+          </div>
+        </div>
         <button className="btn" onClick={toggleForm}>
           {showForm ? "Cerrar formulario" : "Agregar nuevo código"}
         </button>
       </div>
 
+      {msg && <div className={`notice ${msg.type} anim-in`}>{msg.text}</div>}
+
       {showForm && (
-        <form className="coupon-form" onSubmit={onSubmit} noValidate>
+        <form className="coupon-form anim-in" onSubmit={onSubmit} noValidate>
           <div className="coupon-types">
-            <button
-              type="button"
-              className={`ctype ${form.tipo === "percent" ? "on" : ""}`}
-              onClick={() => onChangeTipo("percent")}
-            >
+            <button type="button" className={`ctype ${form.tipo === "percent" ? "on" : ""}`} onClick={() => onChangeTipo("percent")}>
               <div className="ctype-title">% Porcentaje</div>
               <div className="ctype-desc">Descuento sobre subtotal</div>
             </button>
-            <button
-              type="button"
-              className={`ctype ${form.tipo === "amount" ? "on" : ""}`}
-              onClick={() => onChangeTipo("amount")}
-            >
+            <button type="button" className={`ctype ${form.tipo === "amount" ? "on" : ""}`} onClick={() => onChangeTipo("amount")}>
               <div className="ctype-title">$ Monto fijo</div>
               <div className="ctype-desc">Requiere mínimo de compra</div>
             </button>
-            <button
-              type="button"
-              className={`ctype ${form.tipo === "free_shipping" ? "on" : ""}`}
-              onClick={() => onChangeTipo("free_shipping")}
-            >
+            <button type="button" className={`ctype ${form.tipo === "free_shipping" ? "on" : ""}`} onClick={() => onChangeTipo("free_shipping")}>
               <div className="ctype-title">Envío gratis</div>
               <div className="ctype-desc">Con mínimo de compra</div>
             </button>
           </div>
 
-          <div className="coupon-grid">
-            <div className="field">
+          <div className="form-grid">
+            <div className="field field-span">
               <label>Código</label>
               <div className="input-group">
-                <input name="codigo" value={form.codigo} onChange={onChange} placeholder="Ej: BIENVENIDA10" />
+                <input name="codigo" value={form.codigo} onChange={onChange} placeholder="Ej: BIENVENI" maxLength={15} />
                 <button type="button" className="btn sm" onClick={genCode}>Auto</button>
               </div>
               {errors.codigo && <span className="err">{errors.codigo}</span>}
@@ -1313,18 +1404,14 @@ function DescuentosSection() {
                 <input
                   name="valor"
                   type="number"
+                  inputMode="numeric"
                   min="1"
                   max="60"
                   step="1"
                   value={form.valor}
                   onChange={onChange}
-                  onBlur={(e) => {
-                    let n = Number(e.target.value);
-                    if (!Number.isFinite(n)) n = 1;
-                    n = Math.max(1, Math.min(60, n));
-                    setForm(prev => ({ ...prev, valor: String(n) }));
-                  }}
-                  placeholder="Ej: 10 = 10%"
+                  onBlur={onPercentBlur}
+                  placeholder="Ej: 10"
                 />
                 {errors.valor && <span className="err">{errors.valor}</span>}
               </div>
@@ -1362,65 +1449,93 @@ function DescuentosSection() {
               <input name="fecha_fin" type="date" value={form.fecha_fin} onChange={onChange} />
               {errors.fecha_fin && <span className="err">{errors.fecha_fin}</span>}
             </div>
-
-            <div className="field check">
-              <label><input type="checkbox" name="uso_unico" checked={form.uso_unico} onChange={onChange} /> Uso único</label>
-            </div>
-            <div className="field check">
-              <label><input type="checkbox" name="activo" checked={form.activo} onChange={onChange} /> Activo</label>
-            </div>
           </div>
 
           <div className="coupon-summary">
             <div className="hint">{summary}</div>
+            <div className="row" style={{ gap: 12 }}>
+              <label className="check"><input type="checkbox" name="uso_unico" checked={form.uso_unico} onChange={onChange} /> Uso único</label>
+              <label className="check"><input type="checkbox" name="activo" checked={form.activo} onChange={onChange} /> Activo</label>
+            </div>
             <div className="row" style={{ gap: 8 }}>
-              <button type="submit" className="btn primary" disabled={!ready || submitting}>
-                {submitting ? "Guardando..." : editingId ? "Guardar cambios" : "Crear código"}
-              </button>
-              <button type="button" className="btn" onClick={reset} disabled={submitting}>Limpiar</button>
+              <BusyButton
+                className="btn primary"
+                type="submit"
+                label={submitting ? (editingId ? "Guardando cambios" : "Creando") : (editingId ? "Guardar cambios" : "Crear código")}
+                onClick={undefined}
+                disabled={!ready || submitting}
+                busy={submitting}
+              />
+              {editingId && (
+                <button type="button" className="btn" onClick={cancelEdit} disabled={submitting}>
+                  <span className="label">Cancelar cambios</span>
+                </button>
+              )}
             </div>
           </div>
         </form>
       )}
 
-      <div className="list">
-        {loading && (
-          <>
-            <div className="skeleton" />
-            <div className="skeleton" />
-          </>
-        )}
-        {!loading && data.length === 0 && (
-          <div className="empty"><p>No hay códigos para los filtros seleccionados.</p></div>
-        )}
+      <div className={`list ${loading ? "anim-in" : ""}`}>
+        {loading && (<><div className="skeleton" /><div className="skeleton" /></>)}
+        {!loading && data.length === 0 && (<div className="empty anim-in"><p>No hay códigos para los filtros seleccionados.</p></div>)}
         {!loading && data.map(c => (
-          <div key={c.id_descuento} className="discount">
-            <div>
-              <p style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <strong>Código:</strong> {c.codigo}
+          <div
+            key={c.id_descuento}
+            className="discount anim-in"
+            style={{ display: "grid", gridTemplateColumns: "minmax(220px,0.9fr) 1.1fr auto", gap: 12, alignItems: "center" }}
+            onDoubleClick={() => startEdit(c)}
+            role="group"
+            aria-label={`Cupón ${String(c.codigo).toUpperCase()}`}
+          >
+            <div style={{ display: "grid", gap: 6 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <div style={{ fontWeight: 700, fontSize: 16 }}>{String(c.codigo).toUpperCase()}</div>
                 <StatusBadge s={c._status} />
-                <span className="badge outline">{c._tipo === "percent" ? "%" : c._tipo === "amount" ? "Monto" : "Envío"}</span>
+                <span className="badge outline">{c._tipo === "percent" ? "% Porcentaje" : c._tipo === "amount" ? "Monto fijo" : "Envío gratis"}</span>
                 {c.uso_unico || c.limite_uso === 1 ? <span className="badge outline">Uso único</span> : null}
-              </p>
-              <p>
-                <strong>Tipo:</strong>{" "}
+                {c.activo ? null : <span className="badge outline">Inactivo</span>}
+              </div>
+              <div style={{ color: "var(--text-2)" }}>
                 {c._tipo === "percent"
-                  ? `${c.valor ?? c.porcentaje}%`
+                  ? `Descuento ${c.valor ?? c.porcentaje}% sobre subtotal`
                   : c._tipo === "amount"
-                    ? `$${Number(c.valor || 0).toLocaleString("es-CL")} sobre $${Number(c.minimo_compra || 0).toLocaleString("es-CL")}`
-                    : `Envío gratis sobre $${Number(c.minimo_compra || 0).toLocaleString("es-CL")}`}
-              </p>
-              {(c.fecha_inicio || c.fecha_fin) && (
-                <p><strong>Vigencia:</strong> {c.fecha_inicio || "—"} {c.fecha_fin ? `→ ${c.fecha_fin}` : ""}</p>
-              )}
+                    ? `Descuento $${Number(c.valor || 0).toLocaleString("es-CL")} desde $${Number(c.minimo_compra || 0).toLocaleString("es-CL")}`
+                    : `Envío gratis desde $${Number(c.minimo_compra || 0).toLocaleString("es-CL")}`}
+              </div>
             </div>
-            <div className="row" style={{ gap: 8 }}>
-              <button className="btn sm" title="Copiar código" onClick={() => copyCode(c.codigo)}>Copiar</button>
-              <button className="btn sm" onClick={() => startEdit(c)}>Modificar</button>
-              <button className="btn sm" onClick={() => toggleActive(c)}>
-                {c.activo === false ? "Activar" : "Desactivar"}
-              </button>
-              <button className="btn sm danger" onClick={() => removeCoupon(c.id_descuento)}>Eliminar</button>
+
+            <div style={{ display: "grid", gap: 4 }}>
+              <div><strong>Vigencia:</strong> {c.fecha_inicio || "—"} {c.fecha_fin ? `→ ${c.fecha_fin}` : ""}</div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", color: "var(--text-2)" }}>
+                <span>Estado: {c._status === "activos" ? "Activo" : c._status === "futuros" ? "Futuro" : c._status === "vencidos" ? "Vencido" : "Inactivo"}</span>
+                <span>Uso: {c.uso_unico || c.limite_uso === 1 ? "Único" : "Múltiple"}</span>
+              </div>
+            </div>
+
+            <div className="row" style={{ gap: 8, justifyContent: "flex-end", flexWrap: "wrap" }}>
+              <BusyButton
+                className="btn sm"
+                label="Modificar"
+                onClick={() => onEdit(c)}
+                disabled={!!busy[c.id_descuento]}
+                busy={isBusy(c.id_descuento, "edit")}
+              />
+              <BusyButton
+                className="btn sm"
+                label="Copiar"
+                onClick={() => onCopy(c)}
+                disabled={!!busy[c.id_descuento]}
+                busy={isBusy(c.id_descuento, "copy")}
+              />
+              <BusyButton
+                className={`btn sm toggle ${c.activo ? "on" : "off"}`}
+                label={c.activo ? "Desactivar" : "Activar"}
+                onClick={() => onToggle(c)}
+                disabled={!!busy[c.id_descuento]}
+                busy={isBusy(c.id_descuento, "toggle")}
+              />
+              <button className="btn sm danger" onClick={() => removeCoupon(c.id_descuento)}><span className="label">Eliminar</span></button>
             </div>
           </div>
         ))}
@@ -1428,6 +1543,7 @@ function DescuentosSection() {
     </div>
   );
 }
+
 
 //SECCION USER ADMIN
 const UserAdmin = () => {

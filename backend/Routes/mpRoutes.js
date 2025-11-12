@@ -10,6 +10,7 @@ const client = new MercadoPagoConfig({
 });
 const preferenceAPI = new Preference(client);
 
+// Sincroniza pago con tablas pago/pedido
 async function syncPagoYPedidoDesdePayment(payment) {
   const existe = await sequelize.query(
     "SELECT 1 FROM pago WHERE id_pago_mp = :id LIMIT 1",
@@ -93,16 +94,22 @@ router.post("/preference", express.json(), async (req, res) => {
       return res.status(400).json({ error: "Faltan datos requeridos" });
     }
 
-    // URLs absolutas del front con fallback al Origin
-    const FE =
+    // Resuelve URL base del frontend
+    let fe =
       (process.env.FRONTEND_URL && process.env.FRONTEND_URL.trim()) ||
-      (req.headers.origin && /^https?:\/\//i.test(req.headers.origin) ? req.headers.origin.trim() : "http://127.0.0.1:5174");
-    const base = FE.replace(/\/+$/, "");
+      (req.get("origin") && req.get("origin").trim()) ||
+      (req.headers.referer && String(req.headers.referer).trim()) ||
+      "";
+    if (!/^https?:\/\//i.test(fe)) fe = "http://127.0.0.1:5174";
+    const base = fe.replace(/\/+$/, "");
+    const isHttps = /^https:\/\//i.test(base);
+
+    // URLs de retorno
     const success = `${base}/pedido-exitoso?orderId=${orderId}`;
     const failure = `${base}/pedido-fallido?orderId=${orderId}`;
     const pending = `${base}/pedido-pendiente?orderId=${orderId}`;
 
-    // Recalcula desde BD si ya existen ítems del pedido. Si no, usa los del cliente como respaldo.
+    // Ítems desde BD o respaldo del cliente
     const itemsDb = await sequelize.query(
       `SELECT d.sku, d.cantidad, d.precio_unitario, p.nombre
          FROM detalle_pedido d
@@ -121,7 +128,7 @@ router.post("/preference", express.json(), async (req, res) => {
           .filter(i => i.title && i.quantity > 0 && i.unit_price > 0)
       : [];
 
-    const mpItems =
+    let mpItems =
       itemsDb.length > 0
         ? itemsDb.map(i => ({
             title: (i.nombre || i.sku).slice(0, 255),
@@ -136,6 +143,18 @@ router.post("/preference", express.json(), async (req, res) => {
             currency_id: "CLP"
           }));
 
+    // Cobro por total del pedido (incluye descuentos)
+    const rowTotal = await sequelize.query(
+      "SELECT total FROM pedido WHERE id_pedido = :id LIMIT 1",
+      { replacements: { id: Number(orderId) }, type: QueryTypes.SELECT }
+    );
+    const monto = rowTotal[0] ? Math.round(Number(rowTotal[0].total || 0)) : 0;
+    if (monto > 0) {
+      mpItems = [
+        { title: `Pedido #${orderId}`, quantity: 1, unit_price: monto, currency_id: "CLP" }
+      ];
+    }
+
     if (!mpItems.length) return res.status(404).json({ error: "pedido_sin_items" });
 
     const API_URL = (process.env.API_URL || "http://localhost:5000").trim();
@@ -148,6 +167,7 @@ router.post("/preference", express.json(), async (req, res) => {
       external_reference: String(orderId),
       statement_descriptor: "Sabores del Hogar",
       binary_mode: true,
+      ...(isHttps ? { auto_return: "approved" } : {}),
       ...(puedeWebhook ? { notification_url: `${API_URL.replace(/\/+$/,"")}/api/mp/webhook` } : {})
     };
 
@@ -157,7 +177,7 @@ router.post("/preference", express.json(), async (req, res) => {
     });
     if (!response?.id) throw new Error("No se pudo crear la preferencia");
 
-    // Traza de preferencia
+    // Guarda id preferencia
     try {
       await sequelize.query(
         "UPDATE pedido SET mp_preference_id = :prefId WHERE id_pedido = :orderId",
@@ -205,6 +225,7 @@ router.post("/webhook", express.json(), async (req, res) => {
     const topic = req.query.type || req.body.type || req.query.topic;
     const paymentId = req.query["data.id"] || req.query.id || req.body?.data?.id;
 
+    // Traza de eventos
     try {
       await sequelize.query(
         `INSERT INTO webhook_events (provider, event_type, event_id, raw_body, headers, received_at)
