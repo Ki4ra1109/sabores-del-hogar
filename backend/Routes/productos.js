@@ -1,26 +1,28 @@
 const express = require("express");
 const router = express.Router();
-const sequelize = require("../config/db");
-const controller = require("../controllers/productoController");
+const productoCtrl = require("../controllers/productoController");
 
-// Todos los productos activos (usado por el catálogo)
-router.get("/", async (req, res) => {
-  try {
-    const [productos] = await sequelize.query(
-      "SELECT * FROM producto WHERE estado = 'activo'"
-    );
-    res.json(productos);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// =======================================================
+// 🛍️ RUTA PÚBLICA (catálogo)
+// =======================================================
+router.get("/catalogo", productoCtrl.obtenerProductosActivos);
 
-// ✅ Producto por SKU (usa el controlador con variantes)
-router.get("/:sku", controller.obtenerProductoPorSku);
+// =======================================================
+// 🧱 CRUD ADMIN
+// =======================================================
+router.get("/", productoCtrl.obtenerProductos);
+router.post("/", productoCtrl.crearProducto);
+router.put("/:id", productoCtrl.actualizarProducto);
+router.delete("/:id", productoCtrl.eliminarProducto);
 
-//  NUEVAS RUTAS ADMIN
-router.post("/", controller.crearProducto);
-router.put("/:sku", controller.actualizarProducto);
-router.delete("/:sku", controller.eliminarProducto);
+// =======================================================
+// 🖼️ SUBIDA DE IMÁGENES
+// =======================================================
+router.post("/upload", productoCtrl.subirImagen);
+
+// =======================================================
+// 🎯 PRODUCTO POR SKU (para página de detalle)
+// =======================================================
+router.get("/:sku", productoCtrl.obtenerProductoPorSku);
 
 module.exports = router;

@@ -36,19 +36,33 @@ export default function ProductoDetalle() {
       });
   }, [sku]);
 
-  // Regla:
-  // - 12 personas => usar precio base de la BD (ya incluye ganancia)
-  // - >=18 personas => precio = porciones*1000 + ganancia_fija
-  //   donde ganancia_fija = max(0, precioBase - 12000)
+  // Precio calculado:
+  // 1) Si vienen variantes desde la BD, usar el precio de la variante que coincide con "porcion".
+  // 2) Si no hay variantes, usar tu regla original:
+  //    - 12 personas => precio base de la BD (incluye ganancia)
+  //    - >= 18 personas => porciones*1000 + ganancia_fija, donde ganancia_fija = max(0, precioBase - 12000)
   const precioCalculado = useMemo(() => {
     if (!producto) return 0;
-    const precioBase = Number(producto.precio) || 0;
-    const gananciaFija = Math.max(0, precioBase - 12000);
+
+    // 1) Intentar usar variantes de la BD
+    const variantes = Array.isArray(producto.variantes) ? producto.variantes : [];
+    const match = variantes.find((v) => Number(v.personas) === Number(porcion));
+    if (match && Number.isFinite(Number(match.precio))) {
+      return Math.round(Number(match.precio));
+    }
+
+    // 2) Fallback a tu fórmula original
+    // precio base puede venir como "precio", "precioMin" (según endpoint)
+    const precioBase =
+      Number(producto.precio) ||
+      Number(producto.precioMin) ||
+      0;
 
     if (Number(porcion) === 12) {
       return Math.round(precioBase);
     }
-    const total = (Number(porcion) * 1000) + gananciaFija;
+    const gananciaFija = Math.max(0, precioBase - 12000);
+    const total = Number(porcion) * 1000 + gananciaFija;
     return Math.round(total);
   }, [producto, porcion]);
 
@@ -167,7 +181,6 @@ export default function ProductoDetalle() {
               ${precioCalculado.toLocaleString("es-CL")}
             </p>
           </div>
-
 
           <button className="btn-comprar" onClick={handleAgregarCarrito} style={{ marginTop: 12 }}>
             🛒 Agregar al Carrito
