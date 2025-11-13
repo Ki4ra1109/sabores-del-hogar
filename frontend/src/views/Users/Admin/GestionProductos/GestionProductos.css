@@ -144,3 +144,74 @@
   .prod-grid { grid-template-columns: 1fr; }
   .productos-search { min-width: 100%; }
 }
+
+/* ==== Forzar visibilidad de acciones en las cards del gestor ==== */
+
+.product-card-admin {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: visible !important;
+}
+
+.product-card-admin .product-card-actions {
+  position: static !important;
+  display: flex !important;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 14px;
+  padding-top: 6px;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* ===========================================
+   BOTÓN MODIFICAR — estilo café oficial
+   =========================================== */
+.btn-card-modificar {
+  background: var(--brand) !important;   /* café */
+  color: #fff !important;
+  border: none !important;
+  padding: 8px 14px !important;
+  border-radius: 8px;
+  font-weight: 700;
+  transition: filter .2s ease;
+}
+
+.btn-card-modificar:hover {
+  filter: brightness(.92) !important;
+}
+
+/* ===========================================
+   BOTÓN ELIMINAR — rojo oscuro sin volverse blanco
+   =========================================== */
+.btn-card-eliminar {
+  background: #a0372c !important;     /* rojo oscuro */
+  color: #fff !important;
+  border: none !important;
+  padding: 8px 14px !important;
+  border-radius: 8px;
+  font-weight: 700;
+  transition: background .2s ease, transform .1s ease;
+}
+
+.btn-card-eliminar:hover {
+  background: #821f16 !important;     /* más oscuro */
+  transform: scale(1.03);
+}
+
+.btn-card-eliminar:active {
+  transform: scale(0.97);
+}
+
+/* Botón de eliminar dentro del formulario */
+.btn-eliminar-form-producto {
+  background: #a0372c !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+.btn-eliminar-form-producto:hover {
+  background: #821f16 !important;
+}

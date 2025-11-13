@@ -13,6 +13,34 @@ export default function Catalogo() {
 
   const cat = new URLSearchParams(location.search).get('cat'); // "tortas", "dulces"
 
+  // 🔹 Helper: obtener un precio “mostrable” desde variantes o campos legacy
+  const getPrecioMostrar = (p) => {
+    try {
+      const variantes = Array.isArray(p.variantes) ? p.variantes : [];
+
+      // 1) preferir variante de 12 personas
+      const v12 = variantes.find(v => Number(v.personas) === 12 && Number.isFinite(Number(v.precio)));
+      if (v12) return Number(v12.precio);
+
+      // 2) si no hay 12p, tomar el mínimo precio disponible entre variantes
+      if (variantes.length > 0) {
+        const min = variantes
+          .map(v => Number(v?.precio))
+          .filter(n => Number.isFinite(n))
+          .reduce((a, b) => Math.min(a, b), Infinity);
+        if (Number.isFinite(min)) return min;
+      }
+
+      // 3) fallback a campos simples del producto
+      if (Number.isFinite(Number(p.precio))) return Number(p.precio);
+      if (Number.isFinite(Number(p.precioMin))) return Number(p.precioMin);
+
+      return 0;
+    } catch {
+      return 0;
+    }
+  };
+
   // Filtrar por categoría
   const lista = useMemo(() => {
     if (!cat) return productos;
@@ -37,17 +65,22 @@ export default function Catalogo() {
         </h1>
 
         <div className="productos-grid">
-          {lista.map(producto => (
-            <div
-              key={producto.sku}
-              className="producto-card"
-              onClick={() => irAlProducto(producto.sku)}
-            >
-              <img src={producto.imagen_url} alt={producto.nombre} />
-              <h2>{producto.nombre}</h2>
-              <p className="precio">${producto.precio}</p>
-            </div>
-          ))}
+          {lista.map(producto => {
+            const precio = getPrecioMostrar(producto);
+            return (
+              <div
+                key={producto.sku}
+                className="producto-card"
+                onClick={() => irAlProducto(producto.sku)}
+              >
+                <img src={producto.imagen_url} alt={producto.nombre} />
+                <h2>{producto.nombre}</h2>
+                <p className="precio">
+                  {precio > 0 ? `$${precio.toLocaleString("es-CL")}` : "$"}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
       <Footer />

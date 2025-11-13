@@ -1,267 +1,338 @@
-// controllers/productoController.js
-const sequelize = require("../config/db");
-const fs = require("fs");
 const path = require("path");
+const fs = require("fs");
+const sequelize = require("../config/db");
 
-// carpeta pública donde se guardan las imágenes del frontend
+// 📁 Directorio donde se guardan imágenes
 const UPLOAD_DIR = path.resolve(__dirname, "..", "..", "frontend", "public", "catalogo");
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
-// Guarda una data URI (base64) como archivo y devuelve la ruta pública (/catalogo/...)
-const saveDataUriToFile = async (dataUri, skuHint = "") => {
+// Utilidad segura para números
+const num = (v, f = 0) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : f;
+};
+
+// Generador de SKU aleatorio
+const generarSku = () => {
+  const base = Date.now().toString(36);
+  const rand = Math.random().toString(36).substring(2, 6);
+  return `P-${base}-${rand}`.toUpperCase();
+};
+
+// ===========================================================
+// 📦 OBTENER TODOS LOS PRODUCTOS (ADMIN)
+// ===========================================================
+exports.obtenerProductos = async (req, res) => {
   try {
-    const m = String(dataUri).match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
-    if (!m) throw new Error("No es una data URI válida");
-    const mime = m[1];
-    const b64 = m[2];
-    const ext = mime.split("/")[1] || "jpg";
-    const safeSku = (skuHint || generateSku()).replace(/[^A-Za-z0-9\-_]/g, "").slice(0, 20);
-    const filename = `${safeSku}-${Date.now()}.${ext}`;
-    const filepath = path.join(UPLOAD_DIR, filename);
-    const buffer = Buffer.from(b64, "base64");
-    await fs.promises.writeFile(filepath, buffer);
-    return `/catalogo/${filename}`;
-  } catch (err) {
-    console.error("saveDataUriToFile error:", err);
-    throw err;
+    const [rows] = await sequelize.query(`
+      SELECT p.sku, p.nombre, p.descripcion, p.categoria, p.precio,
+             p.stock, p.imagen_url, p.estado,
+             po.personas, po.precio AS precio_porcion
+      FROM producto p
+      LEFT JOIN porciones po ON po.sku_producto = p.sku
+      ORDER BY p.nombre ASC, po.personas ASC
+    `);
+
+    const productos = Object.values(
+      rows.reduce((acc, r) => {
+        if (!acc[r.sku]) {
+          acc[r.sku] = {
+            id: r.sku,
+            sku: r.sku,
+            nombre: r.nombre,
+            descripcion: r.descripcion,
+            categoria: r.categoria,
+            precioMin: r.precio,
+            precioMax: r.precio,
+            stock: r.stock,
+            imagen_url: r.imagen_url || "",
+            activo: r.estado === "activo",
+            variantes: [],
+          };
+        }
+        if (r.personas) {
+          acc[r.sku].variantes.push({
+            personas: r.personas,
+            precio: r.precio_porcion,
+          });
+        }
+        return acc;
+      }, {})
+    );
+
+    return res.json(productos);
+  } catch (error) {
+    console.error("❌ Error obtenerProductos:", error);
+    return res.status(500).json({ error: "Error al obtener productos" });
   }
 };
 
-const toNumber = (v, fallback = null) => {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : fallback;
-};
-
-const generateSku = () => {
-  const t = Date.now().toString(36);
-  const r = Math.random().toString(36).slice(2, 8);
-  return `P-${t}-${r}`.toUpperCase();
-};
-
-// Crear producto
-exports.crearProducto = async (req, res) => {
+// ===========================================================
+// 🛍️ OBTENER SOLO PRODUCTOS ACTIVOS (CATÁLOGO PÚBLICO)
+// ===========================================================
+exports.obtenerProductosActivos = async (req, res) => {
   try {
-    const { sku: bodySku, nombre, categoria, precioMin, precioMax, imagen, imagen_url, descripcion, variantes, activo } = req.body;
+    const [rows] = await sequelize.query(`
+      SELECT p.sku, p.nombre, p.descripcion, p.categoria, p.precio,
+             p.stock, p.imagen_url, p.estado,
+             po.personas, po.precio AS precio_porcion
+      FROM producto p
+      LEFT JOIN porciones po ON po.sku_producto = p.sku
+      WHERE p.estado = 'activo'
+      ORDER BY p.nombre ASC, po.personas ASC
+    `);
 
-    let precio = null;
-    const min = toNumber(precioMin);
-    const max = toNumber(precioMax);
-    if (min != null && max != null) {
-      precio = (min + max) / 2;
-    } else if (Array.isArray(variantes) && variantes.length > 0 && toNumber(variantes[0].precio) != null) {
-      precio = toNumber(variantes[0].precio, 0);
-    } else if (min != null) {
-      precio = min;
-    } else if (max != null) {
-      precio = max;
-    } else {
-      precio = 0;
+    const productos = Object.values(
+      rows.reduce((acc, r) => {
+        if (!acc[r.sku]) {
+          acc[r.sku] = {
+            id: r.sku,
+            sku: r.sku,
+            nombre: r.nombre,
+            descripcion: r.descripcion,
+            categoria: r.categoria,
+            precioMin: r.precio,
+            precioMax: r.precio,
+            imagen_url: r.imagen_url || "",
+            variantes: [],
+          };
+        }
+        if (r.personas) {
+          acc[r.sku].variantes.push({
+            personas: r.personas,
+            precio: r.precio_porcion,
+          });
+        }
+        return acc;
+      }, {})
+    );
+
+    return res.json(productos);
+  } catch (error) {
+    console.error("❌ Error obtenerProductosActivos:", error);
+    return res.status(500).json({ error: "Error al obtener productos activos" });
+  }
+};
+
+// ===========================================================
+// 🎯 OBTENER PRODUCTO POR SKU (para página de detalle)
+// ===========================================================
+exports.obtenerProductoPorSku = async (req, res) => {
+  try {
+    const { sku } = req.params;
+
+    const [[producto]] = await sequelize.query(
+      `
+      SELECT sku, nombre, descripcion, categoria, precio, stock,
+             puntuacion_promedio, imagen_url, estado
+      FROM producto
+      WHERE sku = :sku
+      `,
+      { replacements: { sku } }
+    );
+
+    if (!producto) {
+      return res.status(404).json({ ok: false, message: "Producto no encontrado" });
     }
 
-    const img = (imagen_url || imagen || "").trim();
-    const sku = (bodySku && String(bodySku).trim()) ? String(bodySku).trim().toUpperCase() : generateSku();
+    // Obtener porciones asociadas
+    const [porciones] = await sequelize.query(
+      `
+      SELECT personas, precio
+      FROM porciones
+      WHERE sku_producto = :sku
+      ORDER BY personas ASC
+      `,
+      { replacements: { sku } }
+    );
 
-    let imgPath = img;
-    if (imgPath && imgPath.startsWith("data:")) {
-      try {
-        imgPath = await saveDataUriToFile(imgPath, sku);
-      } catch (err) {
-        return res.status(400).json({ ok: false, message: "Imagen inválida o no se pudo procesar" });
-      }
-    }
+    const variantes = Array.isArray(porciones) && porciones.length
+      ? porciones.map(p => ({
+          personas: p.personas,
+          precio: Number(p.precio)
+        }))
+      : [
+          { personas: 12, precio: producto.precio },
+          { personas: 18, precio: producto.precio + 6000 },
+          { personas: 24, precio: producto.precio + 12000 },
+          { personas: 30, precio: producto.precio + 18000 },
+          { personas: 50, precio: producto.precio + 24000 },
+        ];
 
-    const [result] = await sequelize.query(
-      `INSERT INTO producto (sku, nombre, descripcion, precio, categoria, stock, puntuacion_promedio, imagen_url, estado)
-       VALUES (:sku, :nombre, :descripcion, :precio, :categoria, :stock, :puntuacion_promedio, :imagen_url, :estado)
-       RETURNING sku`,
+    return res.json({
+      ...producto,
+      precioMin: producto.precio,
+      precioMax: Math.max(...variantes.map(v => v.precio)),
+      variantes,
+    });
+  } catch (error) {
+    console.error("❌ Error obtenerProductoPorSku:", error);
+    return res.status(500).json({ ok: false, message: "Error al obtener producto por SKU" });
+  }
+};
+
+// ===========================================================
+// 🧱 CREAR PRODUCTO (con imagen y porciones)
+// ===========================================================
+exports.crearProducto = async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const { sku, nombre, descripcion, categoria, precioMin, imagen_url, activo, variantes } = req.body;
+
+    const finalSku = sku && sku.trim() ? sku.trim().toUpperCase() : generarSku();
+    const precio = num(precioMin, 0);
+
+    // Crear producto base
+    await sequelize.query(
+      `
+      INSERT INTO producto (sku, nombre, descripcion, precio, categoria, stock, imagen_url, estado)
+      VALUES (:sku, :nombre, :descripcion, :precio, :categoria, 0, :imagen_url, :estado)
+      `,
       {
         replacements: {
-          sku,
+          sku: finalSku,
           nombre,
           descripcion: descripcion || null,
           precio,
-          categoria: categoria || null,
-          stock: 0,
-          puntuacion_promedio: null,
-          imagen_url: imgPath || null,
-          estado: activo ? "activo" : "inactivo"
+          categoria,
+          imagen_url: imagen_url || null,
+          estado: activo ? "activo" : "inactivo",
         },
+        transaction: t,
       }
     );
 
-    const savedSku = result && result[0] && result[0].sku ? result[0].sku : sku;
+    // Si el front no envía porciones personalizadas, usamos fórmula +6000
+    const basePorciones = [12, 18, 24, 30, 50];
+    const porciones =
+      Array.isArray(variantes) && variantes.length > 0
+        ? variantes
+        : basePorciones.map((p, i) => ({
+            personas: p,
+            precio: precio + i * 6000,
+          }));
 
-    if (savedSku && Array.isArray(variantes)) {
-      try {
-        await sequelize.query(`DELETE FROM variante WHERE sku_producto = :sku`, { replacements: { sku: savedSku } });
-        for (const v of variantes) {
-          const personas = v.personas ?? v.porciones ?? null;
-          const precioVar = toNumber(v.precio, 0);
-          await sequelize.query(
-            `INSERT INTO variante (sku_producto, porciones, precio)
-             VALUES (:sku, :porciones, :precio)`,
-            {
-              replacements: {
-                sku: savedSku,
-                porciones: personas,
-                precio: precioVar
-              }
-            }
-          );
+    // Insertar las porciones
+    for (const p of porciones) {
+      await sequelize.query(
+        `INSERT INTO porciones (sku_producto, personas, precio)
+         VALUES (:sku, :personas, :precio)`,
+        {
+          replacements: { sku: finalSku, personas: p.personas, precio: num(p.precio, 0) },
+          transaction: t,
         }
-      } catch (err) {
-        if (err && err.original && err.original.code === "42P01") {
-          console.warn("Tabla 'variante' no existe — omitiendo manejo de variantes:", err.message);
-        } else {
-          throw err;
-        }
-      }
+      );
     }
 
-    return res.status(201).json({ ok: true, message: "Producto creado con éxito", sku: savedSku });
+    await t.commit();
+    return res.json({ ok: true, message: "✅ Producto creado con éxito", sku: finalSku });
   } catch (error) {
-    console.error("Error crearProducto:", error);
-    return res.status(500).json({ ok: false, message: "Error interno del servidor" });
+    await t.rollback();
+    console.error("❌ Error crearProducto:", error);
+    if (error.code === "23505") {
+      return res.status(400).json({ ok: false, message: "El SKU ya existe" });
+    }
+    return res.status(500).json({ ok: false, message: "Error al crear producto" });
   }
 };
 
-// Actualizar producto
+// ===========================================================
+// 🧱 ACTUALIZAR PRODUCTO (con actualización de porciones)
+// ===========================================================
 exports.actualizarProducto = async (req, res) => {
+  const t = await sequelize.transaction();
   try {
-    const { sku } = req.params;
-    const { nombre, categoria, precioMin, precioMax, imagen, imagen_url, descripcion, variantes, activo } = req.body;
+    const { id } = req.params; // id = sku
+    const { nombre, descripcion, categoria, precioMin, imagen_url, activo, variantes } = req.body;
 
-    // Calcular precio principal
-    let precio = null;
-    const min = toNumber(precioMin);
-    const max = toNumber(precioMax);
-    if (min != null && max != null) {
-      precio = (min + max) / 2;
-    } else if (Array.isArray(variantes) && variantes.length > 0 && toNumber(variantes[0].precio) != null) {
-      precio = toNumber(variantes[0].precio, 0);
-    } else if (min != null) {
-      precio = min;
-    } else if (max != null) {
-      precio = max;
-    } else {
-      precio = 0;
-    }
+    const precio = num(precioMin, 0);
 
-    const img = (imagen_url || imagen || "").trim();
-
-    let imgPath = img;
-    if (imgPath && imgPath.startsWith("data:")) {
-      try {
-        imgPath = await saveDataUriToFile(imgPath, sku);
-      } catch (err) {
-        return res.status(400).json({ ok: false, message: "Imagen inválida o no se pudo procesar" });
-      }
-    }
-
+    // Actualizar producto
     await sequelize.query(
-      `UPDATE producto
-       SET nombre = :nombre,
-           descripcion = :descripcion,
-           precio = :precio,
-           categoria = :categoria,
-           imagen_url = :imagen_url,
-           estado = :estado
-       WHERE sku = :sku`,
+      `
+      UPDATE producto
+      SET nombre = :nombre,
+          descripcion = :descripcion,
+          precio = :precio,
+          categoria = :categoria,
+          imagen_url = :imagen_url,
+          estado = :estado
+      WHERE sku = :sku
+      `,
       {
         replacements: {
           nombre,
           descripcion: descripcion || null,
           precio,
           categoria,
-          imagen_url: imgPath || null,
+          imagen_url: imagen_url || null,
           estado: activo ? "activo" : "inactivo",
-          sku,
+          sku: id,
         },
+        transaction: t,
       }
     );
 
-    try {
-      await sequelize.query(`DELETE FROM variante WHERE sku_producto = :sku`, { replacements: { sku } });
-      if (Array.isArray(variantes)) {
-        for (const v of variantes) {
-          const personas = v.personas ?? v.porciones ?? null;
-          const precioVar = toNumber(v.precio, 0);
-          await sequelize.query(
-            `INSERT INTO variante (sku_producto, porciones, precio)
-             VALUES (:sku, :porciones, :precio)`,
-            {
-              replacements: { sku, porciones: personas, precio: precioVar },
-            }
-          );
-        }
-      }
-    } catch (err) {
-      if (err && err.original && err.original.code === "42P01") {
-        console.warn("Tabla 'variante' no existe — omitiendo manejo de variantes en update:", err.message);
-      } else {
-        throw err;
+    // Actualizar o insertar porciones
+    if (Array.isArray(variantes) && variantes.length) {
+      for (const v of variantes) {
+        await sequelize.query(
+          `
+          INSERT INTO porciones (sku_producto, personas, precio)
+          VALUES (:sku_producto, :personas, :precio)
+          ON CONFLICT (sku_producto, personas)
+          DO UPDATE SET precio = EXCLUDED.precio
+          `,
+          {
+            replacements: {
+              sku_producto: id,
+              personas: v.personas,
+              precio: num(v.precio, 0),
+            },
+            transaction: t,
+          }
+        );
       }
     }
 
-    return res.json({ ok: true, message: "Producto actualizado correctamente" });
+    await t.commit();
+    return res.json({ ok: true, message: "✅ Producto actualizado correctamente" });
   } catch (error) {
-    console.error("Error actualizarProducto:", error);
-    return res.status(500).json({ ok: false, message: "Error interno del servidor" });
+    await t.rollback();
+    console.error("❌ Error actualizarProducto:", error);
+    return res.status(500).json({ ok: false, message: "Error al actualizar producto" });
   }
 };
 
-// Eliminar producto
+// ===========================================================
+// 🗑️ ELIMINAR PRODUCTO
+// ===========================================================
 exports.eliminarProducto = async (req, res) => {
   try {
-    const { sku } = req.params;
-    await sequelize.query(`DELETE FROM variante WHERE sku_producto = :sku`, {
-      replacements: { sku },
-    });
-    await sequelize.query(`DELETE FROM producto WHERE sku = :sku`, {
-      replacements: { sku },
-    });
-    return res.json({ ok: true, message: "Producto eliminado correctamente" });
+    const { id } = req.params; // id = sku
+    await sequelize.query(`DELETE FROM producto WHERE sku = :sku`, { replacements: { sku: id } });
+    return res.json({ ok: true, message: "🗑️ Producto eliminado correctamente" });
   } catch (error) {
-    console.error("Error eliminarProducto:", error);
-    return res.status(500).json({ ok: false, message: "Error interno del servidor" });
+    console.error("❌ Error eliminarProducto:", error);
+    return res.status(500).json({ ok: false, message: "Error al eliminar producto" });
   }
 };
 
-// ✅ NUEVA FUNCIÓN: Obtener producto por SKU con variantes (para frontend)
-exports.obtenerProductoPorSku = async (req, res) => {
-  const { sku } = req.params;
+// ===========================================================
+// 🖼️ SUBIR IMAGEN DE PRODUCTO
+// ===========================================================
+exports.subirImagen = async (req, res) => {
   try {
-    const [rows] = await sequelize.query(
-      "SELECT * FROM producto WHERE sku = :sku",
-      { replacements: { sku } }
-    );
-    if (!rows.length)
-      return res.status(404).json({ message: "Producto no encontrado" });
+    if (!req.file) return res.status(400).json({ message: "No se recibió archivo" });
 
-    const producto = rows[0];
+    const filename = Date.now() + "_" + req.file.originalname.replace(/\s+/g, "_");
+    const dest = path.join(UPLOAD_DIR, filename);
+    fs.writeFileSync(dest, req.file.buffer);
 
-    // Intentar obtener las variantes (si existen)
-    try {
-      const [variantes] = await sequelize.query(
-        `
-        SELECT 
-          porciones AS personas,
-          precio
-        FROM variante
-        WHERE sku_producto = :sku
-        ORDER BY porciones ASC
-        `,
-        { replacements: { sku } }
-      );
-      producto.variantes = variantes || [];
-    } catch (err) {
-      console.warn("⚠️ Tabla 'variante' no existe o error al consultar:", err.message);
-      producto.variantes = [];
-    }
-
-    res.json(producto);
-  } catch (err) {
-    console.error("❌ Error obtenerProductoPorSku:", err);
-    res.status(500).json({ message: "Error al obtener producto." });
+    const relativePath = `/catalogo/${filename}`;
+    return res.json({ ok: true, imagen_url: relativePath });
+  } catch (error) {
+    console.error("Error subirImagen:", error);
+    return res.status(500).json({ ok: false, message: "Error al subir imagen" });
   }
 };
