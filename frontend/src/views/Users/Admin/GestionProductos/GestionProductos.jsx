@@ -119,11 +119,52 @@ function GestionProductos() {
     }
   };
 
+  const validateImageUrl = (url) =>
+    new Promise((resolve) => {
+      try {
+        const img = new Image();
+        const t = setTimeout(() => {
+          img.onload = img.onerror = null;
+          resolve(false);
+        }, 5000);
+        img.onload = () => {
+          clearTimeout(t);
+          resolve(true);
+        };
+        img.onerror = () => {
+          clearTimeout(t);
+          resolve(false);
+        };
+        img.src = url;
+      } catch {
+        resolve(false);
+      }
+    });
+
+  const onValidateUrlClick = async () => {
+    const url = (form.imagen || "").trim();
+    if (!url) {
+      alert("Pega primero la URL en el campo de imagen.");
+      return;
+    }
+    if (!/^https?:\/\//i.test(url) && !url.startsWith("/")) {
+      alert("La URL debe comenzar con http(s) o con /");
+      return;
+    }
+    const ok = await validateImageUrl(url);
+    alert(
+      ok
+        ? "La URL parece válida y carga una imagen."
+        : "No se pudo cargar la imagen desde esa URL."
+    );
+  };
+
   const validate = () => {
     const e = {};
     if (!form.nombre.trim()) e.nombre = "Ingresa un nombre";
     const min = num(form.precioMin);
-    if (!Number.isFinite(min) || min <= 0) e.precioMin = "Ingresa un precio válido";
+    if (!Number.isFinite(min) || min <= 0)
+      e.precioMin = "Ingresa un precio válido";
     if (!isValidUrl(form.imagen)) e.imagen = "URL de imagen no válida";
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -152,7 +193,10 @@ function GestionProductos() {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const resp = await fetch(`${API_BASE}/api/uploads`, { method: "POST", body: fd });
+      const resp = await fetch(`${API_BASE}/api/uploads`, {
+        method: "POST",
+        body: fd,
+      });
       const j = await resp.json();
       if (!resp.ok) throw new Error("No se pudo subir la imagen");
       setForm((prev) => ({ ...prev, imagen: j.imagen_url || j.path || "" }));
@@ -234,7 +278,9 @@ function GestionProductos() {
   const removeItem = async (id) => {
     if (!window.confirm("¿Eliminar el producto?")) return;
     try {
-      const res = await fetch(`${API_BASE}/api/productos/${id}`, { method: "DELETE" });
+      const res = await fetch(`${API_BASE}/api/productos/${id}`, {
+        method: "DELETE",
+      });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.message || "Error al eliminar");
       await fetchProducts();
@@ -248,7 +294,10 @@ function GestionProductos() {
   const viewItems = items.filter((p) => {
     if (!q.trim()) return true;
     const s = q.toLowerCase();
-    return (p.nombre || "").toLowerCase().includes(s);
+    return (
+      (p.nombre || "").toLowerCase().includes(s) ||
+      String(p.sku || "").toLowerCase().includes(s)
+    );
   });
 
   return (
@@ -265,7 +314,13 @@ function GestionProductos() {
           <button className="btn sm" onClick={refrescar}>
             Refrescar
           </button>
-          <button className="btn sm" onClick={() => { reset(); setShowForm((v) => !v); }}>
+          <button
+            className="btn sm"
+            onClick={() => {
+              reset();
+              setShowForm((v) => !v);
+            }}
+          >
             {showForm ? "Cerrar formulario" : "Añadir producto"}
           </button>
         </div>
@@ -277,7 +332,7 @@ function GestionProductos() {
             <div style={{ textAlign: "right", marginBottom: "10px" }}>
               <button
                 type="button"
-                className="btn danger"
+                className="btn danger btn-eliminar-form-producto"
                 onClick={() => removeItem(editingId)}
               >
                 Eliminar producto
@@ -299,27 +354,81 @@ function GestionProductos() {
 
             <div className="field">
               <label>Categoría</label>
-              <select name="categoria" value={form.categoria} onChange={onChange}>
+              <select
+                name="categoria"
+                value={form.categoria}
+                onChange={onChange}
+              >
                 <option value="tortas">Tortas</option>
                 <option value="dulces">Dulces</option>
               </select>
             </div>
 
             <div className="field">
-              <label>Precio base</label>
+              <label>Precio base (12 personas)</label>
               <input
                 name="precioMin"
                 type="number"
                 value={form.precioMin}
                 onChange={onChange}
               />
-              {errors.precioMin && <span className="err">{errors.precioMin}</span>}
+              {errors.precioMin && (
+                <span className="err">{errors.precioMin}</span>
+              )}
             </div>
 
+            {/* IMAGEN + URL + PREVIEW */}
             <div className="field field-span">
               <label>Imagen del producto</label>
-              <input name="imagen" value={form.imagen} onChange={onChange} />
-              <input type="file" accept="image/*" onChange={onUploadImage} />
+              <div
+                style={{ display: "flex", gap: 8, alignItems: "center" }}
+              >
+                <input
+                  name="imagen"
+                  value={form.imagen}
+                  onChange={onChange}
+                  placeholder="Pega una URL (https://...) o deja vacío y sube un archivo"
+                  style={{ flex: 1 }}
+                />
+                <button
+                  type="button"
+                  className="btn sm"
+                  onClick={onValidateUrlClick}
+                >
+                  Validar URL
+                </button>
+              </div>
+              <div
+                className="row"
+                style={{ gap: 8, marginTop: 8, alignItems: "center" }}
+              >
+                <input type="file" accept="image/*" onChange={onUploadImage} />
+                {form.imagen && (
+                  <>
+                    <img
+                      src={safeThumb(form.imagen)}
+                      alt="preview"
+                      style={{
+                        width: 56,
+                        height: 56,
+                        objectFit: "cover",
+                        borderRadius: 6,
+                        border: "1px solid #ddd",
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="btn sm danger"
+                      onClick={() =>
+                        setForm((prev) => ({ ...prev, imagen: "" }))
+                      }
+                    >
+                      Quitar
+                    </button>
+                  </>
+                )}
+              </div>
+              {errors.imagen && <span className="err">{errors.imagen}</span>}
             </div>
 
             <div className="field field-span">
@@ -345,14 +454,20 @@ function GestionProductos() {
                 const sug = suggestions[p];
                 const val = form.porcionPrecios[p] ?? "";
                 return (
-                  <div key={p} className="row" style={{ alignItems: "center", gap: "8px" }}>
+                  <div
+                    key={p}
+                    className="row"
+                    style={{ alignItems: "center", gap: "8px" }}
+                  >
                     <label style={{ width: "80px" }}>{p} personas</label>
                     <input
                       type="number"
                       min="0"
                       step="1"
                       value={val}
-                      onChange={(e) => onChangePrecioPorcion(p, e.target.value)}
+                      onChange={(e) =>
+                        onChangePrecioPorcion(p, e.target.value)
+                      }
                       placeholder={sug ? String(sug) : ""}
                       style={{ width: 160 }}
                     />
@@ -398,9 +513,14 @@ function GestionProductos() {
         )}
 
         {viewItems.map((p) => {
-          const variantes = (p.variantes || []).slice().sort((a, b) => a.personas - b.personas);
+          const variantes = (p.variantes || [])
+            .slice()
+            .sort((a, b) => a.personas - b.personas);
           return (
-            <article key={p.sku ?? p.id} className="product modern">
+            <article
+              key={p.sku ?? p.id}
+              className="product modern product-card-admin"
+            >
               <div className="thumb">
                 <img
                   src={safeThumb(getProductImage(p))}
@@ -425,19 +545,26 @@ function GestionProductos() {
                     {variantes.map((v) => (
                       <div key={v.personas} className="pill">
                         <span>{v.personas}p</span>
-                        <strong>${v.precio.toLocaleString("es-CL")}</strong>
+                        <strong>
+                          ${Number(v.precio || 0).toLocaleString("es-CL")}
+                        </strong>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
 
-              <div className="card-actions">
-                <button className="btn sm" onClick={() => startEdit(p)}>
+              <div className="card-actions product-card-actions">
+                <button
+                  type="button"
+                  className="btn sm btn-card-modificar"
+                  onClick={() => startEdit(p)}
+                >
                   Modificar
                 </button>
                 <button
-                  className="btn sm danger"
+                  type="button"
+                  className="btn sm btn-card-eliminar"
                   onClick={() => removeItem(p.sku ?? p.id)}
                 >
                   Eliminar
