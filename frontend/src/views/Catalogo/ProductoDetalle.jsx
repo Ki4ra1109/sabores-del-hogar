@@ -20,6 +20,8 @@ export default function ProductoDetalle() {
   useEffect(() => {
     const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
     setLoading(true);
+    setError(null);
+
     fetch(`${baseUrl}/api/productos/${sku}`)
       .then((res) => {
         if (!res.ok) throw new Error("Producto no encontrado");
@@ -36,23 +38,18 @@ export default function ProductoDetalle() {
       });
   }, [sku]);
 
-  // Precio calculado:
-  // 1) Si vienen variantes desde la BD, usar el precio de la variante que coincide con "porcion".
-  // 2) Si no hay variantes, usar tu regla original:
-  //    - 12 personas => precio base de la BD (incluye ganancia)
-  //    - >= 18 personas => porciones*1000 + ganancia_fija, donde ganancia_fija = max(0, precioBase - 12000)
   const precioCalculado = useMemo(() => {
     if (!producto) return 0;
 
-    // 1) Intentar usar variantes de la BD
     const variantes = Array.isArray(producto.variantes) ? producto.variantes : [];
-    const match = variantes.find((v) => Number(v.personas) === Number(porcion));
+    const match = variantes.find(
+      (v) => Number(v.personas) === Number(porcion)
+    );
+
     if (match && Number.isFinite(Number(match.precio))) {
       return Math.round(Number(match.precio));
     }
 
-    // 2) Fallback a tu fórmula original
-    // precio base puede venir como "precio", "precioMin" (según endpoint)
     const precioBase =
       Number(producto.precio) ||
       Number(producto.precioMin) ||
@@ -61,20 +58,24 @@ export default function ProductoDetalle() {
     if (Number(porcion) === 12) {
       return Math.round(precioBase);
     }
+
     const gananciaFija = Math.max(0, precioBase - 12000);
     const total = Number(porcion) * 1000 + gananciaFija;
     return Math.round(total);
   }, [producto, porcion]);
 
-  const handleAgregarCarrito = async () => {
+  const handleAgregarCarrito = () => {
     try {
       const rawUser = localStorage.getItem("sdh_user");
       if (!rawUser) {
         setMensaje("Debes iniciar sesión para agregar al carrito");
         return;
       }
+
       const user = JSON.parse(rawUser);
-      const id_usuario = user.id_usuario ?? user.id ?? user.userId ?? user.idUser;
+      const id_usuario =
+        user.id_usuario ?? user.id ?? user.userId ?? user.idUser;
+
       if (!id_usuario) {
         setMensaje("Usuario inválido, inicia sesión nuevamente");
         return;
@@ -89,7 +90,10 @@ export default function ProductoDetalle() {
         imagen: producto.imagen_url || "/placeholder.jpg",
       };
 
-      const carritoActual = JSON.parse(localStorage.getItem("carrito") || "[]");
+      const carritoActual = JSON.parse(
+        localStorage.getItem("carrito") || "[]"
+      );
+
       const existe = carritoActual.findIndex(
         (p) => p.sku === nuevoItem.sku && p.porcion === nuevoItem.porcion
       );
@@ -109,20 +113,53 @@ export default function ProductoDetalle() {
     }
   };
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="detalle-page">
+        <Header />
+        <main className="detalle-main">
+          <div className="detalle-wrap">
+            <div className="detalle-img">
+              <div className="skeleton-img skeleton-box" />
+            </div>
+
+            <div className="detalle-info">
+              <div className="skeleton-title skeleton-line" />
+              <div className="skeleton-text skeleton-line" />
+              <div className="skeleton-text skeleton-line" />
+
+              <div className="skeleton-group">
+                <div className="skeleton-label skeleton-line" />
+                <div className="skeleton-select skeleton-box" />
+              </div>
+
+              <div className="skeleton-price skeleton-line" />
+              <div className="skeleton-btn skeleton-box" />
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (error || !producto) {
     return (
-      <>
+      <div className="detalle-page">
         <Header />
-        <div className="detalle-fallback">
-          <h2>{error || "Producto no encontrado"}</h2>
-          <button className="btn-volver" onClick={() => navigate("/catalogo")}>
-            Volver al catálogo
-          </button>
-        </div>
+        <main className="detalle-main">
+          <div className="detalle-fallback">
+            <h2>{error || "Producto no encontrado"}</h2>
+            <button
+              className="btn-volver"
+              onClick={() => navigate("/catalogo")}
+            >
+              Volver al catálogo
+            </button>
+          </div>
+        </main>
         <Footer />
-      </>
+      </div>
     );
   }
 
@@ -136,63 +173,74 @@ export default function ProductoDetalle() {
   return (
     <div className="detalle-page">
       <Header />
-      <div className="detalle-wrap">
-        <div className="detalle-img">
-          <img
-            src={safeSrc}
-            alt={producto.nombre}
-            loading="lazy"
-            onError={(e) => (e.currentTarget.src = "/placeholder.jpg")}
-          />
-        </div>
+      <main className="detalle-main">
+        <div className="detalle-wrap">
+          <div className="detalle-img">
+            <img
+              src={safeSrc}
+              alt={producto.nombre}
+              loading="lazy"
+              onError={(e) => {
+                e.currentTarget.src = "/placeholder.jpg";
+              }}
+            />
+          </div>
 
-        <div className="detalle-info">
-          <h1 className="detalle-title">{producto.nombre.toUpperCase()}</h1>
+          <div className="detalle-info">
+            <h1 className="detalle-title">{producto.nombre.toUpperCase()}</h1>
 
-          <p className="detalle-desc">
-            {producto.descripcion ||
-              "Torta elaborada artesanalmente. Selecciona el tamaño al comprar."}
-          </p>
+            <p className="detalle-desc">
+              {producto.descripcion ||
+                "Torta elaborada artesanalmente. Selecciona el tamaño al comprar."}
+            </p>
 
-          <div className="selector-porciones">
-            <label htmlFor="select-porciones" className="selector-label">
-              Cantidad de personas
-            </label>
-            <select
-              id="select-porciones"
-              className="selector-select"
-              value={porcion}
-              onChange={(e) => setPorcion(Number(e.target.value))}
-            >
-              {PORCIONES_VALIDAS.map((p) => (
-                <option key={p} value={p}>
-                  {p} personas
-                </option>
-              ))}
-            </select>
-            <div className="selector-resumen">
-              Seleccionaste: <strong>{porcion} personas</strong>
+            <div className="detalle-actions">
+              <div className="selector-porciones">
+                <label
+                  htmlFor="select-porciones"
+                  className="selector-label"
+                >
+                  Cantidad de personas
+                </label>
+
+                <select
+                  id="select-porciones"
+                  className="selector-select"
+                  value={porcion}
+                  onChange={(e) => setPorcion(Number(e.target.value))}
+                >
+                  {PORCIONES_VALIDAS.map((p) => (
+                    <option key={p} value={p}>
+                      {p} personas
+                    </option>
+                  ))}
+                </select>
+
+                <div className="selector-resumen">
+                  Seleccionaste: <strong>{porcion} personas</strong>
+                </div>
+              </div>
+
+              <div className="detalle-precios">
+                <span className="detalle-precios-label">Precio total:</span>
+                <span className="detalle-precios-valor">
+                  ${precioCalculado.toLocaleString("es-CL")}
+                </span>
+              </div>
+
+              <button className="btn-comprar" onClick={handleAgregarCarrito}>
+                🛒 Agregar al Carrito
+              </button>
+
+              {mensaje && <p className="detalle-mensaje">{mensaje}</p>}
+
+              <p className="detalle-safe">
+                Venta segura a través de la plataforma
+              </p>
             </div>
           </div>
-
-          <div className="detalle-precios">
-            <p>
-              <strong>Precio Total:</strong>{" "}
-              ${precioCalculado.toLocaleString("es-CL")}
-            </p>
-          </div>
-
-          <button className="btn-comprar" onClick={handleAgregarCarrito} style={{ marginTop: 12 }}>
-            🛒 Agregar al Carrito
-          </button>
-
-          {mensaje && (
-            <p style={{ marginTop: "10px", color: "#663f13" }}>{mensaje}</p>
-          )}
-
-          <p className="detalle-safe">Venta segura a través de la plataforma</p>
         </div>
-      </div>
+      </main>
       <Footer />
     </div>
   );
