@@ -6,7 +6,6 @@
   align-items: center;
 }
 
-/* Contenedor principal */
 .catalogo-body {
   width: 100%;
   max-width: 1200px;
@@ -14,6 +13,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  flex: 1;
+  gap: 2rem;
 }
 
 .catalogo-body h1 {
@@ -24,67 +25,143 @@
   text-align: center;
 }
 
-/* Grid de los productos */
 .productos-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 2rem;
+  flex: 1;
   width: 100%;
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-/* Cards de los productos */
 .producto-card {
   background: #fff;
   border-radius: 1rem;
   box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-  padding: 1rem;
+  padding: 1.2rem 1.2rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
   cursor: pointer;
+  opacity: 0;
+  animation: producto-fade-in 0.45s ease-out forwards;
 }
 
 .producto-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
 }
 
 .producto-card img {
   width: 100%;
-  height: 200px;
+  height: 210px;
   object-fit: cover;
   border-radius: 0.7rem;
   margin-bottom: 1rem;
-  transition: transform 0.3s ease;
+  transition: transform 0.25s ease;
 }
 
 .producto-card:hover img {
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
 
 .producto-card h2 {
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: #333;
-  margin-bottom: 0.3rem;
-  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .producto-card .precio {
-  font-weight: bold;
-  font-size: 1.1rem;
+  font-weight: 700;
+  font-size: 1.02rem;
   color: #E63946;
-  background: rgba(230, 57, 70, 0.1);
-  padding: 0.3rem 0.6rem;
-  border-radius: 8px;
-  display: inline-block;
+  margin-top: auto;
 }
 
-/* Media Queries Responsivas */
+.productos-loader-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.productos-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.skeleton-card {
+  pointer-events: none;
+}
+
+.skeleton-thumb {
+  width: 100%;
+  height: 210px;
+  border-radius: 0.7rem;
+  margin-bottom: 1rem;
+  background-color: #f5e6dc;
+  animation: skeleton-pulse 1.9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.skeleton-line {
+  height: 10px;
+  border-radius: 999px;
+  margin-bottom: 0.5rem;
+  background-color: #f5e6dc;
+  animation: skeleton-pulse 1.9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.skeleton-line-lg {
+  width: 70%;
+}
+
+.skeleton-line-sm {
+  width: 40%;
+}
+
+@keyframes skeleton-pulse {
+  0% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes producto-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (min-width: 1280px) {
+  .productos-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 1024px) {
   .catalogo-body h1 {
     font-size: 2.2rem;
   }
   .producto-card img {
-    height: 180px;
+    height: 190px;
+  }
+  .productos-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -93,14 +170,13 @@
     font-size: 2rem;
   }
   .producto-card img {
-    height: 160px;
+    height: 170px;
   }
   .producto-card h2 {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
   }
   .producto-card .precio {
-    font-size: 1rem;
-    padding: 0.25rem 0.5rem;
+    font-size: 0.98rem;
   }
 }
 
@@ -109,13 +185,15 @@
     font-size: 1.6rem;
   }
   .producto-card img {
-    height: 140px;
+    height: 150px;
   }
   .producto-card h2 {
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
   .producto-card .precio {
     font-size: 0.95rem;
-    padding: 0.2rem 0.4rem;
+  }
+  .productos-grid {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
   }
 }

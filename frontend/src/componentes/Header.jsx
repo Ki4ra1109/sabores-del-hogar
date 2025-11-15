@@ -1,9 +1,8 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import "./Header.css";
-import { FaSearch, FaShoppingCart, FaUser, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaSearch, FaShoppingCart, FaUser, FaEye, FaEyeSlash, FaBars, FaTimes } from "react-icons/fa";
 import Carrito from './Carrito';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-
 
 export const Header = () => {
   const [abrirCarrito, setAbrirCarrito] = useState(false);
@@ -42,6 +41,7 @@ export const Header = () => {
   const [showFgP2, setShowFgP2] = useState(false);
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const buscadorRef = useRef(null);
   const authRef = useRef(null);
@@ -128,7 +128,8 @@ export const Header = () => {
       const c = items.reduce((acc, it) => acc + Number(it.cantidad || 0), 0);
       setCartCount(c);
     } catch {
-      setCarrito([]); setCartCount(0);
+      setCarrito([]);
+      setCartCount(0);
     }
   };
 
@@ -170,7 +171,13 @@ export const Header = () => {
       if (authRef.current && !authRef.current.contains(e.target)) setAuthOpen(false);
       if (submenuRef.current && !submenuRef.current.contains(e.target)) setMenuOpen(false);
     };
-    const onEsc = (e) => { if (e.key === 'Escape') { setAuthOpen(false); setMenuOpen(false); } };
+    const onEsc = (e) => {
+      if (e.key === 'Escape') {
+        setAuthOpen(false);
+        setMenuOpen(false);
+        setMobileMenuOpen(false);
+      }
+    };
     document.addEventListener("mousedown", onDocClick);
     document.addEventListener("keydown", onEsc);
     return () => {
@@ -183,14 +190,24 @@ export const Header = () => {
     if (authOpen) setTimeout(() => emailInputRef.current?.focus(), 0);
   }, [authOpen]);
 
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
   const onAuthPanelKeyDown = (e) => {
     if (e.key !== "Tab" || !authPanelRef.current) return;
     const selectors = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
     const nodes = Array.from(authPanelRef.current.querySelectorAll(selectors)).filter(el => el.offsetParent !== null);
-    const first = nodes[0]; const last = nodes[nodes.length - 1];
+    const first = nodes[0];
+    const last = nodes[nodes.length - 1];
     if (!nodes.length) return;
-    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
   };
 
   const irADetalle = (id) => {
@@ -226,7 +243,8 @@ export const Header = () => {
       requestAnimationFrame(() => {
         setTimeout(() => {
           setAuthOpen(false);
-          setEmail(""); setPwd("");
+          setEmail("");
+          setPwd("");
           const role = String(data.user.rol || "").toLowerCase();
           const to = role === "admin" ? "/UserAdmin" : "/";
           setTimeout(() => {
@@ -256,8 +274,12 @@ export const Header = () => {
   };
 
   const sendCode = async () => {
-    setFgErr(""); setFgMsg("");
-    if (!/\S+@\S+\.\S+/.test(fgEmail)) { setFgErr("Ingresa un correo válido"); return; }
+    setFgErr("");
+    setFgMsg("");
+    if (!/\S+@\S+\.\S+/.test(fgEmail)) {
+      setFgErr("Ingresa un correo válido");
+      return;
+    }
     const t0 = Date.now();
     const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     try {
@@ -283,10 +305,20 @@ export const Header = () => {
   };
 
   const doReset = async () => {
-    setFgErr(""); setFgMsg("");
-    if (!/^\d{6}$/.test(fgCode)) { setFgErr("Código de 6 dígitos"); return; }
-    if (fgP1 !== fgP2) { setFgErr("Las contraseñas no coinciden"); return; }
-    if (!(fgP1.length >= 9 && /[A-Za-z]/.test(fgP1) && /\d/.test(fgP1))) { setFgErr("Mínimo 9, con letras y números"); return; }
+    setFgErr("");
+    setFgMsg("");
+    if (!/^\d{6}$/.test(fgCode)) {
+      setFgErr("Código de 6 dígitos");
+      return;
+    }
+    if (fgP1 !== fgP2) {
+      setFgErr("Las contraseñas no coinciden");
+      return;
+    }
+    if (!(fgP1.length >= 9 && /[A-Za-z]/.test(fgP1) && /\d/.test(fgP1))) {
+      setFgErr("Mínimo 9, con letras y números");
+      return;
+    }
     const t0 = Date.now();
     const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     try {
@@ -332,9 +364,16 @@ export const Header = () => {
     });
   };
 
-  const autoShow = (setter) => { setter(true); setTimeout(() => setter(false), 2000); };
-  const onP1Blur = () => { if (fgP2 && fgP1 !== fgP2) setFgErr("Las contraseñas no coinciden"); };
-  const onP2Blur = () => { if (fgP1 && fgP1 !== fgP2) setFgErr("Las contraseñas no coinciden"); };
+  const autoShow = (setter) => {
+    setter(true);
+    setTimeout(() => setter(false), 2000);
+  };
+  const onP1Blur = () => {
+    if (fgP2 && fgP1 !== fgP2) setFgErr("Las contraseñas no coinciden");
+  };
+  const onP2Blur = () => {
+    if (fgP1 && fgP1 !== fgP2) setFgErr("Las contraseñas no coinciden");
+  };
 
   return (
     <header>
@@ -343,6 +382,15 @@ export const Header = () => {
       </div>
 
       <nav className="Header-nav">
+        <button
+          type="button"
+          className="header-menu-toggle"
+          onClick={() => setMobileMenuOpen(true)}
+          aria-label="Abrir menú de navegación"
+        >
+          <FaBars size={20} />
+        </button>
+
         <Link to="/"><img src="/logoFondoBlanco.svg" className="Header-icon" alt="Logo Sabores del Hogar" /></Link>
         <h1 className="NombreEmpresa">Sabores del hogar</h1>
 
@@ -651,7 +699,7 @@ export const Header = () => {
               Catálogo
             </Link>
             <ul className="submenu">
-              <li><Link to="/catalogo?cat=tortas" onClick={() => setMenuOpen(false)}>Tortas</Link></li>
+              <li><Link to="/catalogo" onClick={() => setMenuOpen(false)}>Tortas</Link></li>
               <li><Link to="/catalogo?cat=dulces" onClick={() => setMenuOpen(false)}>Dulces</Link></li>
               <li><Link to="/postre" onClick={() => setMenuOpen(false)}>Arma tu Postre</Link></li>
             </ul>
@@ -661,6 +709,34 @@ export const Header = () => {
           <li><Link to="/contacto">Contacto</Link></li>
         </ul>
       </nav>
+
+      {mobileMenuOpen && (
+        <div className="mobile-menu-backdrop" onClick={() => setMobileMenuOpen(false)}>
+          <div className="mobile-menu" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="mobile-menu-close"
+              aria-label="Cerrar menú"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <FaTimes size={18} />
+            </button>
+
+            <ul className="mobile-menu-list">
+              <li><Link to="/" onClick={() => setMobileMenuOpen(false)}>Inicio</Link></li>
+
+              <li className="mobile-menu-section-title">Catálogo</li>
+              <li><Link to="/catalogo" onClick={() => setMobileMenuOpen(false)}>Tortas</Link></li>
+              <li><Link to="/catalogo?cat=dulces" onClick={() => setMobileMenuOpen(false)}>Dulces</Link></li>
+              <li><Link to="/postre" onClick={() => setMobileMenuOpen(false)}>Arma tu Postre</Link></li>
+
+              <li className="mobile-menu-section-title">Información</li>
+              <li><Link to="/nosotros" onClick={() => setMobileMenuOpen(false)}>Nosotros</Link></li>
+              <li><Link to="/contacto" onClick={() => setMobileMenuOpen(false)}>Contacto</Link></li>
+            </ul>
+          </div>
+        </div>
+      )}
 
       <Carrito carrito={carrito} setCarrito={setCarrito} abrir={abrirCarrito} setAbrir={setAbrirCarrito} />
     </header>

@@ -1,87 +1,116 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Header } from '../../componentes/Header';
-import { Footer } from '../../componentes/Footer';
-import './Catalogo.css';
+import { Header } from "../../componentes/Header";
+import { Footer } from "../../componentes/Footer";
+import "./Catalogo.css";
 
 export default function Catalogo() {
   const [productos, setProductos] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
   const irAlProducto = (sku) => navigate(`/catalogo/${sku}`);
 
-  const cat = new URLSearchParams(location.search).get('cat'); // "tortas", "dulces"
+  const cat = new URLSearchParams(location.search).get("cat");
 
-  // 🔹 Helper: obtener un precio “mostrable” desde variantes o campos legacy
-  const getPrecioMostrar = (p) => {
+  const getRangoPrecios = (p) => {
     try {
-      const variantes = Array.isArray(p.variantes) ? p.variantes : [];
+      const variantesBase = Array.isArray(p.variantes) ? p.variantes : [];
+      const porcionesBase = Array.isArray(p.porciones) ? p.porciones : [];
+      const variantes = variantesBase.length ? variantesBase : porcionesBase;
 
-      // 1) preferir variante de 12 personas
-      const v12 = variantes.find(v => Number(v.personas) === 12 && Number.isFinite(Number(v.precio)));
-      if (v12) return Number(v12.precio);
+      let precios = variantes
+        .map((v) => Number(v?.precio))
+        .filter((n) => Number.isFinite(n));
 
-      // 2) si no hay 12p, tomar el mínimo precio disponible entre variantes
-      if (variantes.length > 0) {
-        const min = variantes
-          .map(v => Number(v?.precio))
-          .filter(n => Number.isFinite(n))
-          .reduce((a, b) => Math.min(a, b), Infinity);
-        if (Number.isFinite(min)) return min;
+      if (!precios.length) {
+        if (Number.isFinite(Number(p.precio))) precios.push(Number(p.precio));
+        if (Number.isFinite(Number(p.precioMin))) precios.push(Number(p.precioMin));
       }
 
-      // 3) fallback a campos simples del producto
-      if (Number.isFinite(Number(p.precio))) return Number(p.precio);
-      if (Number.isFinite(Number(p.precioMin))) return Number(p.precioMin);
+      if (!precios.length) return { min: 0, max: 0 };
 
-      return 0;
+      const min = Math.min(...precios);
+      const max = Math.max(...precios);
+      return { min, max };
     } catch {
-      return 0;
+      return { min: 0, max: 0 };
     }
   };
 
-  // Filtrar por categoría
   const lista = useMemo(() => {
     if (!cat) return productos;
-    return productos.filter(p => p.categoria === cat);
+    return productos.filter((p) => p.categoria === cat);
   }, [cat, productos]);
 
   useEffect(() => {
+    setLoading(true);
     fetch("http://127.0.0.1:5000/api/productos")
-      .then(res => res.json())
-      .then(data => setProductos(data))
-      .catch(err => console.error("Error al cargar productos:", err));
+      .then((res) => res.json())
+      .then((data) => setProductos(data))
+      .catch((err) => console.error("Error al cargar productos:", err))
+      .finally(() => setLoading(false));
   }, []);
+
+  const formatoCLP = (n) =>
+    typeof n === "number" && Number.isFinite(n)
+      ? `$${n.toLocaleString("es-CL")}`
+      : "$";
 
   return (
     <div className="productos-container">
       <Header />
       <div className="catalogo-body">
         <h1>
-          {cat === 'tortas' ? 'Nuestro Catálogo de Tortas'
-            : cat === 'dulces' ? 'Nuestro Catálogo de Dulces'
-            : 'Nuestro Catálogo'}
+          {cat === "tortas"
+            ? "Nuestro Catálogo de Tortas"
+            : cat === "dulces"
+            ? "Nuestro Catálogo de Dulces"
+            : "Nuestro Catálogo"}
         </h1>
 
-        <div className="productos-grid">
-          {lista.map(producto => {
-            const precio = getPrecioMostrar(producto);
-            return (
-              <div
-                key={producto.sku}
-                className="producto-card"
-                onClick={() => irAlProducto(producto.sku)}
-              >
-                <img src={producto.imagen_url} alt={producto.nombre} />
-                <h2>{producto.nombre}</h2>
-                <p className="precio">
-                  {precio > 0 ? `$${precio.toLocaleString("es-CL")}` : "$"}
-                </p>
+        {loading ? (
+          <div className="productos-grid">
+            {Array.from({ length: 12 }).map((_, index) => (
+              <div key={index} className="producto-card skeleton-card">
+                <div className="skeleton-thumb" />
+                <div className="skeleton-line skeleton-line-lg" />
+                <div className="skeleton-line skeleton-line-sm" />
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        ) : lista.length === 0 ? (
+          <div className="productos-empty">
+            No hay productos disponibles en esta categoría.
+          </div>
+        ) : (
+          <div className="productos-grid">
+            {lista.map((producto) => {
+              const { min, max } = getRangoPrecios(producto);
+              const textoPrecio =
+                min && max && min !== max
+                  ? `${formatoCLP(min)} - ${formatoCLP(max)}`
+                  : formatoCLP(min || max);
+
+              return (
+                <div
+                  key={producto.sku}
+                  className="producto-card"
+                  onClick={() => irAlProducto(producto.sku)}
+                >
+                  <img
+                    src={producto.imagen_url}
+                    alt={producto.nombre}
+                    loading="lazy"
+                  />
+                  <h2>{producto.nombre}</h2>
+                  <p className="precio">{textoPrecio}</p>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
       <Footer />
     </div>
