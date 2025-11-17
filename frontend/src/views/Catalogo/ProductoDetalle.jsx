@@ -18,24 +18,47 @@ export default function ProductoDetalle() {
   const [cantidad, setCantidad] = useState(1);
 
   useEffect(() => {
-    const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
-    setLoading(true);
-    setError(null);
+    if (!sku) {
+      setProducto(null);
+      setError("Producto no encontrado");
+      setLoading(false);
+      return;
+    }
 
-    fetch(`${baseUrl}/api/productos/${sku}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Producto no encontrado");
-        return res.json();
-      })
-      .then((data) => {
+    let cancelado = false;
+
+    const cargarProducto = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
+        const res = await fetch(`${baseUrl}/api/productos/${sku}`);
+
+        if (!res.ok) {
+          throw new Error("Producto no encontrado");
+        }
+
+        const data = await res.json();
+        if (cancelado) return;
+
         setProducto(data);
-        setLoading(false);
-      })
-      .catch((err) => {
+      } catch (err) {
+        if (cancelado) return;
         console.error("Error cargando producto:", err);
-        setError(err.message);
-        setLoading(false);
-      });
+        setError(err.message || "Error al cargar el producto");
+      } finally {
+        if (!cancelado) {
+          setLoading(false);
+        }
+      }
+    };
+
+    cargarProducto();
+
+    return () => {
+      cancelado = true;
+    };
   }, [sku]);
 
   const precioCalculado = useMemo(() => {
@@ -87,7 +110,7 @@ export default function ProductoDetalle() {
         precio: precioCalculado,
         cantidad,
         porcion,
-        imagen: producto.imagen_url || "/placeholder.jpg",
+        imagen: producto.imagen_url || producto.imagen || "/placeholder.jpg",
       };
 
       const carritoActual = JSON.parse(
@@ -164,9 +187,21 @@ export default function ProductoDetalle() {
   }
 
   const safeSrc = (() => {
-    const img = (producto.imagen_url || "").trim();
+    const posibles = [
+      producto.imagen_url,
+      producto.imagen,
+      producto.imagenUrl,
+      producto.url_imagen,
+    ]
+      .map((v) => (v || "").trim())
+      .filter(Boolean);
+
+    const img = posibles[0] || "";
+
     if (img.startsWith("http://") || img.startsWith("https://")) return img;
     if (img.startsWith("/")) return img;
+    if (img) return `/${img}`;
+
     return "/placeholder.jpg";
   })();
 

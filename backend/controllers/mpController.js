@@ -119,6 +119,7 @@ async function createPreference(req, res) {
       }],
       payer: { email: String(payerEmail) },
       back_urls: { success, failure, pending },
+      auto_return: "approved",
       external_reference: String(orderId),
       statement_descriptor: "Sabores del Hogar",
       binary_mode: true,
