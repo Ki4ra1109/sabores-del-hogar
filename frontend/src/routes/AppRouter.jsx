@@ -53,6 +53,7 @@ export default function AppRouter() {
           <Route path="/UserNormal" element={<RequireAuth><UserNormal /></RequireAuth>} />
           <Route path="/perfil"     element={<RequireAuth><Perfil /></RequireAuth>} />
           <Route path="/UserAdmin"  element={<RequireAdmin><UserAdmin /></RequireAdmin>} />
+          <Route path="/UserAdmin/dashboard" element={<RequireAdmin><UserAdmin view="dashboard" /></RequireAdmin>}/>
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
