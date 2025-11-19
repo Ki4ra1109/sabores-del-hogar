@@ -1,6 +1,6 @@
 // controllers/prediccionController.js
 // Predicción con estacionalidad mensual + tendencia lineal
-// Compatible con Supabase y filtro por categoría
+// Compatible con Supabase
 
 const db = require("../config/db");
 
@@ -27,16 +27,13 @@ const num = (v, f = 0) => {
 };
 
 // ==============================================
-// Serie mensual (ventas + órdenes) con filtro de categoría
+// 📌 Serie mensual (ventas + órdenes) SIN categorías
 // ==============================================
 exports.timeseriesMensual = async (req, res) => {
   try {
-    const { from, to, categoria } = req.query;
-    const where = [];
+    const { from, to } = req.query;
+    const where = [`p.total > 0`, `p.fecha_pedido IS NOT NULL`];
     const repl = {};
-
-    where.push(`p.total > 0`);
-    where.push(`p.fecha_pedido IS NOT NULL`);
 
     if (from) {
       where.push(`p.fecha_pedido >= :from`);
@@ -45,10 +42,6 @@ exports.timeseriesMensual = async (req, res) => {
     if (to) {
       where.push(`p.fecha_pedido < :to`);
       repl.to = to;
-    }
-    if (categoria) {
-      where.push(`LOWER(p.categoria) = LOWER(:categoria)`);
-      repl.categoria = categoria;
     }
 
     const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
@@ -82,7 +75,7 @@ exports.timeseriesMensual = async (req, res) => {
 };
 
 // ==============================================
-// Pronóstico próximos meses (lineal + estacional)
+// 📌 Pronóstico próximos meses (lineal + estacional)
 // ==============================================
 exports.forecast = async (req, res) => {
   try {

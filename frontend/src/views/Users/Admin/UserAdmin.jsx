@@ -3,11 +3,13 @@ import { Footer } from "../../../componentes/Footer";
 import { HeaderAdmin } from "./HeaderAdmin";
 import "./UserAdmin.css";
 import CuentaPanel from "../../../componentes/CuentaPanel";
+import Dashboard from "./Dashboard";
 import {
   BarChart, Bar, XAxis,
   YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
 } from "recharts";
+
 
 const THEMES = {
   cafe: { brand: "#6f4e37", btn: "#8a5a44" },
@@ -1723,14 +1725,8 @@ const UserAdmin = () => {
   };
 
 
-  const renderInteractivo = () => (
-    <div className="card">
-      <h2>Dashboard interactivo</h2>
-      <p style={{ color: "#555" }}>
-        Cuando conectes tu base de datos, este panel mostrará KPIs reales.
-      </p>
-    </div>
-  );
+  const renderInteractivo = () => <Dashboard />;
+
 
   // Cuenta conectada
   const renderAccount = () => <CuentaPanel />;
