@@ -136,6 +136,22 @@ body {
   color: #444;
 }
 
+.bullets .leve {
+  background: #fff6c1;
+  border-left: 4px solid #ffd600;
+  padding-left: 8px;
+}
+.bullets .media {
+  background: #ffe0b2;
+  border-left: 4px solid #ff9800;
+  padding-left: 8px;
+}
+.bullets .grave {
+  background: #ffd6d6;
+  border-left: 4px solid #e53935;
+  padding-left: 8px;
+}
+
 .orders {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -1175,6 +1191,19 @@ body {
   filter: brightness(.95);
 }
 
+.field.check label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field.check input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--brand, #6f4e37);
+  margin: 0;
+}
+
 @media (max-width: 900px) {
   .coupon-types {
     grid-template-columns: 1fr;
@@ -1193,4 +1222,12 @@ body {
     justify-content: flex-start;
     flex-wrap: wrap;
   }
+}
+
+.main-content .account-bar {
+  display: none;
+  background: none;
+  margin: 0;
+  padding: 0;
+  height: 0;
 }

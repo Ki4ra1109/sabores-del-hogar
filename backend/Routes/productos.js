@@ -25,4 +25,7 @@ router.post("/upload", productoCtrl.subirImagen);
 // =======================================================
 router.get("/:sku", productoCtrl.obtenerProductoPorSku);
 
+// 🔎 Productos por stock (ejemplo: /api/productos/stock/0)
+router.get("/stock/:stock", productoCtrl.obtenerProductosPorStock);
+
 module.exports = router;

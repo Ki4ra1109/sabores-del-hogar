@@ -64,7 +64,8 @@
   border-radius: 12px;
   box-shadow: 0 6px 14px rgba(0,0,0,.05);
   text-align: center;
-  padding: 18px 8px;
+  padding: 32px 64px; /* antes: 18px 8px */
+  width: auto;
 }
 .kpi-card h3 {
   color: #572420;
@@ -82,7 +83,8 @@
   background: var(--surface);
   border: 1px solid var(--surface-bd);
   border-radius: 12px;
-  padding: 16px;
+  width: auto;
+  padding: 40px 48px; /* más espacio a los lados */
   box-shadow: var(--shadow);
   margin-bottom: 18px;
   transition: all 0.25s ease;

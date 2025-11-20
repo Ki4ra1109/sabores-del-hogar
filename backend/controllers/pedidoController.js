@@ -199,7 +199,7 @@ exports.obtenerPedidosUsuario = async (req, res) => {
       { replacements: [id_usuario] }
     );
 
-    res.json(pedidos);
+    res.json({ pedidos });
   } catch (error) {
     console.error("❌ Error al obtener pedidos:", error);
     res.status(500).json({ message: "Error al obtener los pedidos." });
@@ -254,7 +254,7 @@ exports.obtenerTodosLosPedidos = async (req, res) => {
         u.nombre AS nombre_cliente, 
         u.correo AS correo_cliente
       FROM pedido p
-      INNER JOIN usuarios u ON u.id = p.id_usuario
+      JOIN usuarios u ON u.id = p.id_usuario
       ORDER BY p.fecha_pedido DESC
     `);
 

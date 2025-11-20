@@ -4,6 +4,7 @@ import { Footer } from "../../../componentes/Footer";
 import { Header } from "../../../componentes/Header";
 import { useNavigate, useLocation } from "react-router-dom";
 import Home from "../../Home/Home";
+import Perfil from "./Perfil";
 
 const UserNormal = () => {
   const navigate = useNavigate();
@@ -18,6 +19,8 @@ const UserNormal = () => {
   const [activeSection, setActiveSection] = useState("home");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const firstFocusable = useRef(null);
+  const [orders, setOrders] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
 
   useEffect(() => {
     if (!storedUser) navigate("/login", { replace: true });
@@ -47,20 +50,25 @@ const UserNormal = () => {
     if (drawerOpen && firstFocusable.current) firstFocusable.current.focus();
   }, [drawerOpen]);
 
-  const orders = [
-    {
-      id: 1, date: "14 de septiembre de 2024", status: "Entregado",
-      deliveredDate: "17 de septiembre", title: "Cheesecake de Frambuesa",
-      quantity: 1, store: "Sabores del Hogar", seller: "Valor: $6.000",
-      img: "https://assets.tmecosys.com/image/upload/t_web_rdp_recipe_584x480/img/recipe/ras/Assets/FE68C7EE-020B-456D-BF9D-8F10D39DA6A6/Derivates/52175A9A-FAEF-44C1-B1F7-CAAA169F5771.jpg",
-    },
-    {
-      id: 2, date: "14 de septiembre de 2024", status: "Entregado",
-      deliveredDate: "17 de septiembre", title: "Muffin de Arándanos",
-      quantity: 3, store: "Sabores del Hogar", seller: "Valor: $7.000",
-      img: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgFvz1oTsnaZm-Tlk4fRH7LIUrDzbGECDHMcWGLBWeOTWw9N5hksZDdHyo47NWIyS71CwyS19MSncIQDovmbQin_Dq3PCs3HsJuUW1dd4Ls4HOc0C7W5G3FKLbpf89PebLuTGyR6c96Csw/s1600/muffins-caseros-de-maiz-arandanos-frescos.jpg",
-    },
-  ];
+  useEffect(() => {
+    // Solo cargar pedidos si está en la sección "orders" y hay usuario
+    if (activeSection === "orders" && user?.id) {
+      setLoadingOrders(true);
+      const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
+      console.log(`${baseUrl}/api/pedidos/usuario/${user.id}`);
+      fetch(`${baseUrl}/api/pedidos/usuario/${user.id}`)
+        .then(res => res.json())
+        .then(data => {
+          console.log("Respuesta pedidos:", data);
+          setOrders(data.pedidos || []);
+        })
+        .catch(err => {
+          console.error("Error al cargar pedidos:", err);
+          setOrders([]);
+        })
+        .finally(() => setLoadingOrders(false));
+    }
+  }, [activeSection, user?.id]);
 
   const logout = () => {
     localStorage.removeItem("sdh_user");
@@ -81,6 +89,104 @@ const UserNormal = () => {
   };
 
   const mainClass = `main-content ${activeSection === "home" ? "fullbleed" : ""}`;
+
+  const renderContent = () => {
+    switch (activeSection) {
+      case "account":
+        return (
+          <div className="datos-cuenta">
+            <h2>Datos de tu cuenta</h2>
+            <div className="campo"><strong>Correo electrónico:</strong><span>{correo || "—"}</span></div>
+            <div className="campo"><strong>Contraseña:</strong><span>•••••••••</span></div>
+            <div className="campo"><strong>Nombre:</strong><span>{nombre || "—"}</span></div>
+            <div className="campo"><strong>Apellido:</strong><span>{apellido || "—"}</span></div>
+            <div className="campo"><strong>RUT:</strong><span>{rut || "—"}</span></div>
+            <div className="campo"><strong>Teléfono:</strong><span>{telefono || "—"}</span></div>
+            <div className="campo"><strong>Fecha de Nacimiento:</strong><span>{fechaNac || "—"}</span></div>
+            <div className="campo"><strong>Dirección:</strong><span>{direccion || "—"}</span></div>
+          </div>
+        );
+      case "orders":
+        return (
+          <div className="orders-history">
+            <h2>Historial De Órdenes</h2>
+            {loadingOrders ? (
+              <p>Cargando órdenes...</p>
+            ) : orders.length === 0 ? (
+              <p>No tienes órdenes registradas</p>
+            ) : (
+              orders.map((order) => (
+                <div key={order.id_pedido} className="order-card">
+                  <div className="order-left">
+                    {/* Si tienes imagen, úsala. Si no, muestra un placeholder */}
+                    <img src={order.img || "/assets/home/pan.png"} alt={order.detalle_productos?.[0]?.nombre_producto || "Pedido"} />
+                    <div>
+                      <p className="order-status">{order.estado}</p>
+                      <p className="order-date">{new Date(order.fecha_pedido).toLocaleDateString()}</p>
+                      <p className="order-title">
+                        {order.detalle_productos?.map(p => p.nombre_producto).join(", ")}
+                      </p>
+                      <p className="order-quantity">
+                        {order.detalle_productos?.reduce((acc, p) => acc + p.cantidad, 0)} productos
+                      </p>
+                    </div>
+                  </div>
+                  <div className="order-right">
+                    <p className="order-store">Sabores del Hogar</p>
+                    <p className="order-seller">Total: ${order.total?.toLocaleString("es-CL")}</p>
+                    <button className="btn-primary">Ver compra</button>
+                    <button className="btn-secondary">Volver a comprar</button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        );
+      case "settings":
+        return (
+          <div className="configuracion">
+            <h2>Configuración</h2>
+            <p>Ajustes de tu cuenta.</p>
+
+            <div className="config-item">
+              <label htmlFor="notificaciones">Notificaciones</label>
+              <input type="checkbox" id="notificaciones" defaultChecked />
+            </div>
+
+            <div className="config-item">
+              <label htmlFor="fuente">Tamaño de fuente:</label>
+              <select id="fuente" defaultValue="media">
+                <option value="pequena">Pequeña</option>
+                <option value="media">Media</option>
+                <option value="grande">Grande</option>
+              </select>
+            </div>
+
+            <div className="config-item">
+              <label htmlFor="idioma">Idioma:</label>
+              <select id="idioma" defaultValue="es">
+                <option value="es">Español</option>
+                <option value="en">Inglés</option>
+                <option value="pt">Portugués</option>
+              </select>
+            </div>
+
+            <div className="config-item">
+              <label htmlFor="perfil">Mostrar foto de perfil</label>
+              <input type="checkbox" id="perfil" defaultChecked />
+            </div>
+
+            <div className="config-item">
+              <button className="logout-btn" onClick={logout}>Cerrar sesión</button>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  console.log("Usuario actual:", user);
 
   return (
     <div>
@@ -134,83 +240,7 @@ const UserNormal = () => {
             </div>
           )}
 
-          {activeSection === "account" && (
-            <div className="datos-cuenta">
-              <h2>Datos de tu cuenta</h2>
-              <div className="campo"><strong>Correo electrónico:</strong><span>{correo || "—"}</span></div>
-              <div className="campo"><strong>Contraseña:</strong><span>•••••••••</span></div>
-              <div className="campo"><strong>Nombre:</strong><span>{nombre || "—"}</span></div>
-              <div className="campo"><strong>Apellido:</strong><span>{apellido || "—"}</span></div>
-              <div className="campo"><strong>RUT:</strong><span>{rut || "—"}</span></div>
-              <div className="campo"><strong>Teléfono:</strong><span>{telefono || "—"}</span></div>
-              <div className="campo"><strong>Fecha de Nacimiento:</strong><span>{fechaNac || "—"}</span></div>
-              <div className="campo"><strong>Dirección:</strong><span>{direccion || "—"}</span></div>
-            </div>
-          )}
-
-          {activeSection === "orders" && (
-            <div className="orders-history">
-              <h2>Historial De Órdenes</h2>
-              {orders.map((order) => (
-                <div key={order.id} className="order-card">
-                  <div className="order-left">
-                    <img src={order.img} alt={order.title} />
-                    <div>
-                      <p className="order-status">{order.status}</p>
-                      <p className="order-date">Llegó el {order.deliveredDate}</p>
-                      <p className="order-title">{order.title}</p>
-                      <p className="order-quantity">{order.quantity} unidad</p>
-                    </div>
-                  </div>
-                  <div className="order-right">
-                    <p className="order-store">{order.store}</p>
-                    <p className="order-seller">{order.seller}</p>
-                    <button className="btn-primary">Ver compra</button>
-                    <button className="btn-secondary">Volver a comprar</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {activeSection === "settings" && (
-            <div className="configuracion">
-              <h2>Configuración</h2>
-              <p>Ajustes de tu cuenta.</p>
-
-              <div className="config-item">
-                <label htmlFor="notificaciones">Notificaciones</label>
-                <input type="checkbox" id="notificaciones" defaultChecked />
-              </div>
-
-              <div className="config-item">
-                <label htmlFor="fuente">Tamaño de fuente:</label>
-                <select id="fuente" defaultValue="media">
-                  <option value="pequena">Pequeña</option>
-                  <option value="media">Media</option>
-                  <option value="grande">Grande</option>
-                </select>
-              </div>
-
-              <div className="config-item">
-                <label htmlFor="idioma">Idioma:</label>
-                <select id="idioma" defaultValue="es">
-                  <option value="es">Español</option>
-                  <option value="en">Inglés</option>
-                  <option value="pt">Portugués</option>
-                </select>
-              </div>
-
-              <div className="config-item">
-                <label htmlFor="perfil">Mostrar foto de perfil</label>
-                <input type="checkbox" id="perfil" defaultChecked />
-              </div>
-
-              <div className="config-item">
-                <button className="logout-btn" onClick={logout}>Cerrar sesión</button>
-              </div>
-            </div>
-          )}
+          {renderContent()}
         </main>
       </div>
 

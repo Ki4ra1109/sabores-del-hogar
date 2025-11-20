@@ -14,30 +14,46 @@
   --sidebar-shift: -22px; 
 }
 
-body{background:var(--bg);color:var(--txt)}
+body, #root {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
 
 .perfil-shell{
-  max-width: 1200px;
-  margin: 24px auto 48px;
-  padding: 0 12px 0 8px;
-  display:grid;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
   grid-template-columns: var(--rail) 1fr;
   gap: var(--gap);
-  align-items:start;
-  box-sizing:border-box;
+  align-items: start;
+  box-sizing: border-box;
 }
 
 .perfil-sidebar{
   position: sticky;
   top: 96px;
-  height: calc(100vh - 140px);
+  height: 340px; /* <-- Cambia aquí el alto */
   overflow:auto;
   background: var(--surface);
   border:1px solid var(--bd);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 14px;
-  margin-left: var(--sidebar-shift);
+  margin-left: 0 !important; /* Quita el margen izquierdo */
 }
 
 .perfil-title{margin:6px 0 12px;font-weight:800;color:var(--brand)}
@@ -114,7 +130,7 @@ body{background:var(--bg);color:var(--txt)}
   .perfil-card form{grid-template-columns:1fr}
   .perfil-card{max-width:100%}
 }
-:root{ --brand:#572420; }                   
+:root{ --brand:#572420; }                  
 .perfil-shell{ padding-left:0 !important; } 
 .perfil-sidebar{ transform:translateX(-22px) !important; } 
 .btn.primary{ background:#572420 !important; border-color:#572420 !important; }
@@ -128,7 +144,7 @@ body{background:var(--bg);color:var(--txt)}
 .perfil-shell{
   max-width: 1200px;
   margin: 24px auto 48px;
-  padding: 0 16px 0 0;
+  padding: 0; /* Quita el padding izquierdo */
   display: grid;
   grid-template-columns: var(--rail) minmax(0,1fr);
   gap: var(--gap);
@@ -136,16 +152,16 @@ body{background:var(--bg);color:var(--txt)}
 }
 
 .perfil-sidebar{
-  position: sticky;
+  position: left;
   top: 96px;
-  height: calc(100vh - 140px);
+  height: 900px; /* <-- Cambia aquí el alto */
   overflow: auto;
-  margin-left: var(--sidebar-shift);
   background: #fffdfb;
   border: 1px solid #efdfd6;
   border-radius: 14px;
   box-shadow: 0 10px 24px rgba(0,0,0,.08);
   padding: 14px;
+  margin-left: 0 !important; /* Quita el margen izquierdo */
 }
 
 .perfil-content{

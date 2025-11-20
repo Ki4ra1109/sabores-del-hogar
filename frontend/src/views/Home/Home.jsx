@@ -7,7 +7,7 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 // carrusel
-import img1 from '../../assets/home/carrusel4.jpg';
+// import img1 from '../../assets/home/carrusel4.jpg';
 import img2 from '../../assets/home/carrusel5.jpg';
 import img3 from '../../assets/home/carrusel6.jpg';
 import img6 from '../../assets/home/carrusel7.jpg';
@@ -264,7 +264,7 @@ export default function Home() {
             >
               <img src={producto.imagen_url} alt={producto.nombre} />
               <h3>{producto.nombre}</h3>
-              <p className="precio">${producto.precio}</p>
+              <p className="precio">${producto.precioMin}</p>
             </div>
           ))}
         </div>

@@ -249,7 +249,7 @@ export default function Dashboard() {
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart
             data={filteredTimeseries}
-            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+            margin={{ top: 20, right: 50, left: 50, bottom: 20 }} // ← margen amplio
           >
             <defs>
               <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
@@ -278,7 +278,7 @@ export default function Dashboard() {
         <ResponsiveContainer width="100%" height={300}>
           <LineChart
             data={data?.forecast || []}
-            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+            margin={{ top: 20, right: 50, left: 50, bottom: 20 }} // ← margen amplio
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#e5d5cb" />
             <XAxis dataKey="mes" tickFormatter={fmtMonthName} />
@@ -333,7 +333,10 @@ export default function Dashboard() {
       <div className="dashboard-section">
         <h3>Comparativa de Ventas y Pedidos</h3>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={filteredTimeseries}>
+          <BarChart
+            data={filteredTimeseries}
+            margin={{ top: 20, right: 50, left: 50, bottom: 20 }} // ← margen amplio
+          >
             <CartesianGrid strokeDasharray="3 3" stroke="#e5d5cb" />
             <XAxis dataKey="mes" tickFormatter={fmtMonthKey} />
             <YAxis />
