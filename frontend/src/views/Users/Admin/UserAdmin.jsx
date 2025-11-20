@@ -353,9 +353,15 @@ const UserAdmin = () => {
         </aside>
 
         <main ref={mainRef} className="main-content" role="region" aria-live="polite">
-          {active === "inicio" && renderInicio()}
-          {active === "account" && renderAccount()}
-          {active === "settings" && renderSettings()}
+              {active === "inicio" && renderInicio()}
+              {active === "pedidos" && <GestionPedidos />}
+              {active === "productos" && <GestionProductos />}
+              {active === "clientes" && <GestionClientes />}
+              {active === "interactivo" && <Dashboard />}
+              {active === "descuentos" && <CodigosDesc />}
+              {active === "solicitudes" && <SolicitudesClientes />}
+              {active === "account" && renderAccount()}
+              {active === "settings" && renderSettings()}
         </main>
       </div>
       <Footer />
