@@ -1,4 +1,3 @@
-// server.js
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
@@ -22,6 +21,7 @@ const gananciasRoutes = require("./Routes/gananciasRoutes");
 const mpRoutes = require("./Routes/mpRoutes");
 const uploadsRoutes = require("./Routes/uploads");
 const prediccionRoutes = require("./Routes/prediccionRoutes");
+const contactoRoutes = require("./Routes/contactoRoutes");
 const User = require("./models/User");
 require("./models/cupon");
 
@@ -48,6 +48,7 @@ app.use("/api/usuarios", usersRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/cupones", cuponRoutes);
 app.use("/api/clientes", clientesRoutes);
+app.use("/api/contacto", contactoRoutes);
 app.use("/api/productos", productosRoutes);
 app.use("/api/carrito", carritoRoutes);
 app.use("/api/pedidos", pedidoRoutes);

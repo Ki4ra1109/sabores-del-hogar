@@ -4,6 +4,7 @@ import { HeaderAdmin } from "./HeaderAdmin";
 import Dashboard from "./Dashboard";
 import "./UserAdmin.css";
 import CuentaPanel from "../../../componentes/CuentaPanel";
+import SolicitudesClientes from "./SolicitudesClientes/SolicitudesClientes";
 import {
   BarChart, Bar, XAxis,
   YAxis, CartesianGrid, Tooltip,
@@ -163,6 +164,7 @@ const UserAdmin = () => {
     { id: "clientes", label: "Gestión de clientes" },
     { id: "interactivo", label: "Dashboard interactivo" },
     { id: "descuentos", label: "Códigos de descuento" },
+    { id: "solicitudes", label: "Solicitudes de contacto" },
     { id: "account", label: "Cuenta" },
     { id: "settings", label: "Configuración" },
   ];
@@ -352,11 +354,6 @@ const UserAdmin = () => {
 
         <main ref={mainRef} className="main-content" role="region" aria-live="polite">
           {active === "inicio" && renderInicio()}
-          {active === "pedidos" && <GestionPedidos />}
-          {active === "productos" && <GestionProductos />}
-          {active === "clientes" && <GestionClientes />}
-          {active === "interactivo" && <Dashboard />}
-          {active === "descuentos" && <CodigosDesc />}
           {active === "account" && renderAccount()}
           {active === "settings" && renderSettings()}
         </main>
