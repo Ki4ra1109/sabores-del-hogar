@@ -189,42 +189,43 @@ async function googleLoginToken(req, res) {
 }
 
 const googleCallback = async (req, res) => {
-    try {
-      const googleUser = req.user;
-      const usuario = await User.findOne({ where: { email: googleUser.email } });
-  
-      if (usuario) {
-        const payload = {
-          usuario: { id: usuario.id, rol: usuario.rol },
-        };
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
-        const userForFrontend = {
-          id: usuario.id,
-          nombre: usuario.nombre,
-          apellido: usuario.apellido,
-          email: usuario.email,
-          rol: usuario.rol,
-        };
-        const frontendUrl = `${process.env.FRONTEND_URL}/login?token=${token}&user=${encodeURIComponent(JSON.stringify(userForFrontend))}`;
-        return res.redirect(frontendUrl);
+  try {
+    const googleUser = req.user;
+    const usuario = await User.findOne({ where: { email: googleUser.email } });
 
-      } else {
-        const tempPayload = {
-          email: googleUser.email,
-          nombre: googleUser.nombre,
-          apellido: googleUser.apellido,
-          googleId: googleUser.id,
-        };
-        
-        const tempToken = jwt.sign(tempPayload, process.env.JWT_SECRET, { expiresIn: "10m" });
-  
-        const completionUrl = `${process.env.FRONTEND_URL}/login?action=completeGoogle&tempToken=${tempToken}`;
-        return res.redirect(completionUrl);
-      }
-    } catch (error) {
-      console.error("Error en el callback de Google:", error);
-      res.redirect(`${process.env.FRONTEND_URL}/login?error=google_failed`);
+    if (usuario) {
+      const payload = {
+        usuario: { id: usuario.id, rol: usuario.rol },
+      };
+      const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+      const userForFrontend = {
+        id: usuario.id,
+        nombre: usuario.nombre,
+        apellido: usuario.apellido,
+        email: usuario.email,
+        rol: usuario.rol,
+      };
+      const frontendUrl = `${process.env.FRONTEND_URL}/login?token=${token}&user=${encodeURIComponent(
+        JSON.stringify(userForFrontend)
+      )}`;
+      return res.redirect(frontendUrl);
+    } else {
+      const tempPayload = {
+        email: googleUser.email,
+        nombre: googleUser.nombre,
+        apellido: googleUser.apellido,
+        googleId: googleUser.id,
+      };
+
+      const tempToken = jwt.sign(tempPayload, process.env.JWT_SECRET, { expiresIn: "10m" });
+
+      const completionUrl = `${process.env.FRONTEND_URL}/login?action=completeGoogle&tempToken=${tempToken}`;
+      return res.redirect(completionUrl);
     }
+  } catch (error) {
+    console.error("Error en el callback de Google:", error);
+    res.redirect(`${process.env.FRONTEND_URL}/login?error=google_failed`);
+  }
 };
 
 async function googleComplete(req, res) {
@@ -232,7 +233,7 @@ async function googleComplete(req, res) {
 
   try {
     const decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
-    
+
     const existingUser = await User.findOne({ where: { email: decoded.email } });
     if (existingUser) {
       return res.status(400).json({ message: "Este correo ya fue registrado." });
@@ -240,7 +241,7 @@ async function googleComplete(req, res) {
 
     const newUser = await User.create({
       nombre: decoded.nombre,
-      apellido: decoded.apellido || "", 
+      apellido: decoded.apellido || "",
       email: decoded.email,
       password,
       googleId: decoded.googleId,
@@ -275,14 +276,61 @@ const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: parseInt(process.env.SMTP_PORT || "465", 10),
   secure: String(process.env.SMTP_SECURE || "true") === "true",
-  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
 });
 
-async function sendRecovery(to, code) {
+function buildRecoveryEmail(nombre, code) {
+  const safeName = String(nombre || "cliente").split(" ")[0];
+  const subject = "Código de recuperación - Sabores del Hogar";
+  const text = `Hola ${safeName}, tu código para recuperar tu contraseña es ${code}. Expira en 15 minutos.`;
+  const html = `<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Código de recuperación</title>
+<style>
+  body { margin:0; padding:0; background:#f7ebe1; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+  .wrapper { width:100%; padding:24px 0; }
+  .card { max-width:520px; margin:0 auto; background:#ffffff; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.08); overflow:hidden; }
+  .header { background:#5c2723; color:#fff7f0; padding:18px 28px; text-align:center; }
+  .header h1 { margin:0; font-size:20px; letter-spacing:1px; }
+  .body { padding:24px 28px 16px 28px; color:#3a2b25; font-size:14px; line-height:1.6; }
+  .code-box { margin:18px 0 12px 0; text-align:center; }
+  .code { display:inline-block; letter-spacing:6px; font-size:26px; font-weight:700; padding:14px 18px; border-radius:12px; background:#fff5ec; border:1px solid #f0c9aa; color:#5c2723; }
+  .pill { display:inline-block; margin-top:4px; padding:4px 10px; border-radius:999px; background:#ffe1c4; color:#8a5234; font-size:11px; text-transform:uppercase; letter-spacing:.08em; }
+  .footer { padding:16px 28px 22px 28px; color:#8a7b72; font-size:11px; border-top:1px solid #f3e1d2; text-align:center; }
+  a { color:#b5432a; text-decoration:none; }
+</style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="card">
+      <div class="header">
+        <h1>Sabores del Hogar</h1>
+      </div>
+      <div class="body">
+        <p>Hola ${safeName},</p>
+        <p>Recibimos una solicitud para recuperar tu contraseña. Usa el siguiente código en la página de recuperación:</p>
+        <div class="code-box">
+          <div class="code">${code}</div>
+          <div class="pill">Válido por 15 minutos</div>
+        </div>
+        <p>Si tú no solicitaste este código, puedes ignorar este correo. Tu cuenta seguirá protegida.</p>
+      </div>
+      <div class="footer">
+        <p>Este correo se generó automáticamente. Por favor, no respondas a este mensaje.</p>
+        <p>Sabores del Hogar</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+  return { subject, text, html };
+}
+
+async function sendRecovery(to, code, nombre) {
   const from = process.env.SMTP_FROM || process.env.SMTP_USER;
-  const subject = "Código de recuperación";
-  const text = `Tu código es ${code}. Expira en 15 minutos.`;
-  const html = `<p>Tu código es <b>${code}</b>. Expira en 15 minutos.</p>`;
+  const { subject, text, html } = buildRecoveryEmail(nombre, code);
   try {
     await transporter.sendMail({ from, to, subject, text, html });
   } catch (e) {
@@ -309,7 +357,7 @@ async function forgotPassword(req, res) {
     await PasswordReset.destroy({ where: { email } });
     await PasswordReset.create({ email, code: hashedCode, expires_at: exp, used: false });
 
-    await sendRecovery(email, code);
+    await sendRecovery(email, code, user.nombre);
     return res.json({ ok: true });
   } catch (e) {
     console.error(e);
@@ -353,4 +401,12 @@ async function resetPassword(req, res) {
   }
 }
 
-module.exports = { login, registerUser, googleLoginToken, forgotPassword, resetPassword, googleCallback, googleComplete };
+module.exports = {
+  login,
+  registerUser,
+  googleLoginToken,
+  forgotPassword,
+  resetPassword,
+  googleCallback,
+  googleComplete,
+};

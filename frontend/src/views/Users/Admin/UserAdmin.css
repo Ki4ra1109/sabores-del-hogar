@@ -9,7 +9,6 @@
   --bg: #faf7f3;
   --shadow: 0 4px 12px rgba(0, 0, 0, .06);
   --radius: 12px;
-
   --brand: #572420;
 }
 
@@ -960,3 +959,238 @@ body {
 
 [data-scheme="dark"] .discount { background: var(--surface); border-color: var(--surface-bd); }
 [data-scheme="dark"] .badge.outline { color: var(--ink); border-color: var(--surface-bd); }
+.card-head select {
+  min-height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--surface-bd);
+  background: var(--input-bg);
+  padding: 6px 12px;
+  font-size: 14px;
+}
+
+.tabs.sm .tab {
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.notice {
+  margin: 10px 0 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.notice.ok {
+  background: #e6f6eb;
+  border-color: #b5e2c1;
+  color: var(--ok);
+}
+
+.notice.err {
+  background: #fde8e7;
+  border-color: #f4b4b2;
+  color: var(--err);
+}
+
+.coupon-form {
+  margin-top: 8px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--surface-bd);
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 16px;
+}
+
+.coupon-types {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ctype {
+  border-radius: 12px;
+  border: 1px solid var(--surface-bd);
+  background: var(--surface);
+  padding: 12px 14px;
+  cursor: pointer;
+  text-align: left;
+  display: grid;
+  gap: 4px;
+  transition: border-color .15s ease, background-color .15s ease, transform .1s ease;
+}
+
+.ctype-title {
+  font-weight: 800;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.ctype-desc {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.ctype:hover {
+  border-color: color-mix(in oklab, var(--brand), transparent 70%);
+  background: color-mix(in oklab, var(--brand), transparent 95%);
+  transform: translateY(-1px);
+}
+
+.ctype.on {
+  border-color: var(--brand);
+  background: color-mix(in oklab, var(--brand), transparent 90%);
+}
+
+.ctype:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand), transparent 80%);
+}
+
+.coupon-form .form-grid {
+  margin-top: 4px;
+}
+
+.input-group {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.input-group .btn.sm {
+  align-self: stretch;
+}
+
+.coupon-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px dashed var(--surface-bd);
+  background: color-mix(in oklab, var(--brand), transparent 95%);
+  margin-top: 4px;
+}
+
+.coupon-summary .hint {
+  font-size: 13px;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.coupon-summary .row {
+  justify-content: flex-end;
+}
+
+.btn.has-loader {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn.has-loader .label {
+  position: relative;
+  z-index: 2;
+}
+
+.btn.has-loader .loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn.busy {
+  cursor: progress;
+}
+
+.list .discount {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) 1.1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.discount {
+  background: var(--surface);
+  border: 1px solid var(--surface-bd);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: var(--shadow);
+  transition: border-color .15s ease, transform .1s ease, background-color .15s ease;
+}
+
+.discount:hover {
+  border-color: color-mix(in oklab, var(--brand), transparent 70%);
+  transform: translateY(-1px);
+}
+
+.discount .badge {
+  font-size: 11px;
+}
+
+.badge.activos {
+  background: var(--ok);
+  color: #fff;
+}
+
+.badge.futuros {
+  background: var(--warn);
+  color: #fff;
+}
+
+.badge.vencidos {
+  background: var(--err);
+  color: #fff;
+}
+
+.badge.inactivos {
+  background: var(--muted);
+  color: #fff;
+}
+
+.badge.outline {
+  background: transparent;
+  border: 1px solid var(--surface-bd);
+  color: var(--ink);
+}
+
+.discount .row {
+  justify-content: flex-end;
+}
+
+.btn.toggle.on {
+  background: var(--brand);
+}
+
+.btn.toggle.off {
+  background: #6b7280;
+}
+
+.btn.toggle.off:hover {
+  filter: brightness(.95);
+}
+
+@media (max-width: 900px) {
+  .coupon-types {
+    grid-template-columns: 1fr;
+  }
+
+  .list .discount {
+    grid-template-columns: 1fr;
+  }
+
+  .coupon-summary {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .coupon-summary .row {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}

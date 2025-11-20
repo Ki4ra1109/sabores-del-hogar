@@ -9,20 +9,25 @@ const initial = {
   telefono: "",
   asunto: "",
   mensaje: "",
-  hp: "",
+  hp: ""
 };
 
-export default function Contacto() {
-  useEffect(() => {
-    document.body.classList.add("route-contacto");
-    return () => document.body.classList.remove("route-contacto");
-  }, []);
+const asuntoOptions = [
+  "Felicitaciones",
+  "Sugerencia",
+  "Reclamo",
+  "Otros"
+];
 
+export default function Contacto() {
   const [form, setForm] = useState(initial);
   const [sending, setSending] = useState(false);
   const [okMsg, setOkMsg] = useState("");
   const [errMsg, setErrMsg] = useState("");
   const [showErrors, setShowErrors] = useState(false);
+  const [asuntoOpen, setAsuntoOpen] = useState(false);
+  const [selectedAsunto, setSelectedAsunto] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   const baseUrl = useMemo(
     () => import.meta.env.VITE_API_URL ?? "http://localhost:5000",
@@ -39,6 +44,27 @@ export default function Contacto() {
     return e;
   }, [form]);
 
+  useEffect(() => {
+    document.body.classList.add("route-contacto");
+    setIsLoading(true);
+
+    const t = setTimeout(() => setIsLoading(false), 500);
+
+    const handleClickOutside = (ev) => {
+      if (!ev.target.closest(".asunto-select")) {
+        setAsuntoOpen(false);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+
+    return () => {
+      document.body.classList.remove("route-contacto");
+      clearTimeout(t);
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, []);
+
   const onChange = (ev) => {
     const { name, value } = ev.target;
     setForm((s) => ({ ...s, [name]: value }));
@@ -51,6 +77,12 @@ export default function Contacto() {
     setForm((s) => ({ ...s, telefono: digits }));
   };
 
+  const handleAsuntoSelect = (label) => {
+    setSelectedAsunto(label);
+    setForm((s) => ({ ...s, asunto: label }));
+    setAsuntoOpen(false);
+  };
+
   const onSubmit = async (ev) => {
     ev.preventDefault();
     setOkMsg("");
@@ -60,6 +92,7 @@ export default function Contacto() {
     if (form.hp) {
       setOkMsg("Mensaje recibido.");
       setForm(initial);
+      setSelectedAsunto("");
       setShowErrors(false);
       return;
     }
@@ -70,16 +103,16 @@ export default function Contacto() {
 
     setSending(true);
     try {
-      const res = await fetch(`${baseUrl}/api/contact`, {
+      const res = await fetch(`${baseUrl}/api/contacto`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nombre: form.nombre.trim(),
-          email: form.email.trim(),
+          correo: form.email.trim(),
           telefono: form.telefono ? `+56${form.telefono}` : "",
           asunto: form.asunto.trim(),
-          mensaje: form.mensaje.trim(),
-        }),
+          mensaje: form.mensaje.trim()
+        })
       });
 
       if (!res.ok) {
@@ -93,6 +126,7 @@ export default function Contacto() {
 
       setOkMsg("¡Gracias! Tu mensaje fue enviado correctamente.");
       setForm(initial);
+      setSelectedAsunto("");
       setShowErrors(false);
     } catch (err) {
       setErrMsg(err.message || "Error al enviar el mensaje.");
@@ -100,6 +134,49 @@ export default function Contacto() {
       setSending(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <>
+        <Header />
+        <section className="contacto">
+          <header className="contacto-hero">
+            <div className="contacto-hero-inner">
+              <h1>Contacto</h1>
+              <p className="contacto-sub">
+                Estamos para ayudarte. Escríbenos y te responderemos a la
+                brevedad.
+              </p>
+            </div>
+          </header>
+
+          <div className="contacto-wrap">
+            <aside className="contacto-aside" aria-label="Información de contacto">
+              <div className="card skeleton-card skeleton-aside">
+                <div className="skeleton-line skeleton-title w-60"></div>
+                <div className="skeleton-line w-90"></div>
+                <div className="skeleton-line w-80"></div>
+                <div className="skeleton-line w-70"></div>
+                <div className="skeleton-line w-50"></div>
+              </div>
+            </aside>
+
+            <article className="card contacto-card skeleton-card skeleton-form">
+              <div className="skeleton-line skeleton-title w-40"></div>
+              <div className="skeleton-line w-100"></div>
+              <div className="skeleton-line w-95"></div>
+              <div className="skeleton-line w-90"></div>
+              <div className="skeleton-line w-80"></div>
+              <div className="skeleton-line w-70"></div>
+              <div className="skeleton-line w-60"></div>
+              <div className="skeleton-line w-50"></div>
+            </article>
+          </div>
+        </section>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
@@ -209,12 +286,31 @@ export default function Contacto() {
 
                 <label>
                   <span>Asunto (opcional)</span>
-                  <input
-                    name="asunto"
-                    type="text"
-                    value={form.asunto}
-                    onChange={onChange}
-                  />
+                  <div className="asunto-select">
+                    <button
+                      type="button"
+                      className="asunto-trigger"
+                      onClick={() => setAsuntoOpen((o) => !o)}
+                    >
+                      <span>
+                        {selectedAsunto || "Seleccionar tipo de consulta"}
+                      </span>
+                    </button>
+                    <div
+                      className={`asunto-menu ${asuntoOpen ? "open" : ""}`}
+                    >
+                      {asuntoOptions.map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          className="asunto-option"
+                          onClick={() => handleAsuntoSelect(opt)}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </label>
               </div>
 

@@ -3,6 +3,7 @@ import { Footer } from "../../../componentes/Footer";
 import { HeaderAdmin } from "./HeaderAdmin";
 import "./UserAdmin.css";
 import CuentaPanel from "../../../componentes/CuentaPanel";
+import SolicitudesClientes from "./SolicitudesClientes/SolicitudesClientes";
 import {
   BarChart, Bar, XAxis,
   YAxis, CartesianGrid, Tooltip,
@@ -1611,6 +1612,7 @@ const UserAdmin = () => {
     { id: "ganancias", label: "Visualizar ganancias" },
     { id: "interactivo", label: "Dashboard interactivo" },
     { id: "descuentos", label: "Códigos de descuento" },
+    { id: "solicitudes", label: "Solicitudes de contacto" },
     { id: "account", label: "Cuenta" },
     { id: "settings", label: "Configuración" },
   ];
@@ -1818,11 +1820,8 @@ const UserAdmin = () => {
           {active === "clientes" && <RenderClientes />}
           {active === "ganancias" && <GananciasSection />}
           {active === "interactivo" && renderInteractivo()}
-
-          <section style={{ display: active === "descuentos" ? "block" : "none" }}>
-            <DescuentosSection />
-          </section>
-
+          <section style={{ display: active === "descuentos" ? "block" : "none" }}><DescuentosSection /></section>
+          {active === "solicitudes" && <SolicitudesClientes />}
           {active === "account" && renderAccount()}
           {active === "settings" && renderSettings()}
         </main>
