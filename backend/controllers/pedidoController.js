@@ -1,6 +1,4 @@
 const db = require("../config/db");
-
-// Crear un pedido y sus detalles (productos del catálogo + personalizados)
 exports.crearPedido = async (req, res) => {
   const {
     id_usuario,
@@ -271,7 +269,6 @@ exports.obtenerTodosLosPedidos = async (req, res) => {
   }
 };
 
-// Obtener pedido por id (para checkout/polling)
 exports.obtenerPedidoPorId = async (req, res) => {
   const { id_pedido } = req.params;
 
