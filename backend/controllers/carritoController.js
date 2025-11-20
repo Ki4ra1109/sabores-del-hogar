@@ -93,8 +93,6 @@ exports.agregarPersonalizado = async (req, res) => {
       const precioFinal = parseFloat(precio_unitario || 0);
       if (isNaN(precioFinal) || precioFinal <= 0)
         throw new Error("Precio del postre personalizado inválido");
-
-      // 1️⃣ Crear detalle en detalle_pedido (sin SKU)
       const descripcion = `Postre personalizado (${tipo})` +
         (bizcocho ? ` | Bizcocho: ${bizcocho}` : "") +
         (relleno ? ` | Relleno: ${relleno}` : "") +
@@ -111,8 +109,6 @@ exports.agregarPersonalizado = async (req, res) => {
       );
 
       const id_detalle = detalle[0].id_detalle;
-
-      // 2️⃣ Crear registro en postre_personalizado
       const [postre] = await db.query(
         `INSERT INTO postre_personalizado 
         (id_detalle, tipo, cantidad, bizcocho, relleno, cobertura, toppings, mensaje, decoracion, precio_unitario)
@@ -135,15 +131,11 @@ exports.agregarPersonalizado = async (req, res) => {
       );
 
       const id_postre = postre[0].id_postre;
-
-      // 3️⃣ Vincular el detalle con el postre personalizado
       await db.query(
         `UPDATE detalle_pedido SET id_postre_personalizado=$1 WHERE id_detalle=$2`,
         { bind: [id_postre, id_detalle] }
       );
     }
-
-    // 4️⃣ Actualizar total del pedido
     await db.query(
       `UPDATE pedido 
        SET total = (SELECT COALESCE(SUM(cantidad * precio_unitario),0) FROM detalle_pedido WHERE id_pedido=$1)

@@ -89,8 +89,6 @@ export default function Dashboard() {
         : [...prev, month]
     );
   };
-
-  // Helpers de formato y Tooltip uniforme
   const fmtCurrency = (v) =>
     typeof v === "number" ? `$${v.toLocaleString("es-CL")}` : "—";
   const fmtDateLong = (v) =>
@@ -145,7 +143,6 @@ export default function Dashboard() {
 
   const ChartTooltip = ({ active, label, payload, title }) => {
     if (!active || !payload?.length) return null;
-    // Usa categoria si existe (pie/radar) o la etiqueta (línea/área/barras)
     const header =
       payload[0]?.payload?.categoria ||
       (label && !isNaN(Date.parse(label)) ? fmtDateLong(label) : label) ||

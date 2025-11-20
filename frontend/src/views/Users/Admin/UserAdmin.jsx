@@ -49,31 +49,19 @@ function applyPrefs(prefs) {
     }
   };
   setScheme(prefs.scheme);
-
-  // Tamaño de fuente base (para que la opción funcione)
   root.setAttribute("data-font", prefs.font);
-  // ajustamos font-size en el root para que los textos escalen
   const fontMap = { sm: "14px", md: "16px", lg: "18px" };
   const fs = fontMap[prefs.font] || fontMap.md;
   root.style.fontSize = fs;
-
-  // Ajustes adicionales: texto e input background para mejorar contraste
-  // Si el esquema actual es oscuro, invertimos a colores de alto contraste
   const scheme = root.getAttribute("data-scheme") || "light";
   if (scheme === "dark") {
-    // para modo oscuro usar tonos claros en texto y fondo oscuro en inputs
     root.style.setProperty("--ink", "#f5ede6");
     root.style.setProperty("--ink-2", "#d8c8bf");
     root.style.setProperty("--input-bg", "#241d1a");
   } else {
-    // modo claro: usar colores seguros para lectura (no depender sólo del tema)
-    // preferimos variables de contraste; si el tema sólo tiene brand/btn, calculamos valores seguros
-    root.style.setProperty("--ink", "#3b2a26");
     root.style.setProperty("--ink-2", "#7b5a49");
     root.style.setProperty("--input-bg", "#ffffff");
   }
-
-  // Idioma persistido 
   try { localStorage.setItem(LS_LANG, prefs.lang); } catch { /* empty */ }
 }
 

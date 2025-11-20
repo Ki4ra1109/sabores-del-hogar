@@ -10,12 +10,13 @@ import { useNavigate } from "react-router-dom";
 import img1 from '../../assets/home/carrusel4.jpg';
 import img2 from '../../assets/home/carrusel5.jpg';
 import img3 from '../../assets/home/carrusel6.jpg';
+import img6 from '../../assets/home/carrusel7.jpg';
 
 // Sobre nosotros y trayectoria
 import img4 from '../../assets/nosotros/sobrenosotros.jpg';
 import img5 from '../../assets/nosotros/trayectoria.jpg';
 
-const imagenes = [img1, img2, img3];
+const imagenes = [img6, img2, img3];
 
 export default function Home() {
   const [actual, setActual] = useState(0);
