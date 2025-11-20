@@ -49,7 +49,7 @@ export default function Perfil() {
   }, [location.search]);
 
   useEffect(() => {
-    async function fetchUser() {
+    const fetchUser = async () => {
       if (!storedUser?.id) return;
       setLoading(true);
       try {
@@ -76,7 +76,7 @@ export default function Perfil() {
       } finally {
         setLoading(false);
       }
-    }
+    };
     fetchUser();
   }, [storedUser]);
 
@@ -127,9 +127,8 @@ export default function Perfil() {
     try {
       const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
       const res = await fetch(`${baseUrl}/api/pedidos/usuario/${user.id}`);
-      if (!res.ok) throw new Error("No se pudo obtener los pedidos");
       const data = await res.json();
-      setPedidos(data.pedidos || []);
+      setPedidos(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error al cargar pedidos:", error);
     } finally {
@@ -138,9 +137,10 @@ export default function Perfil() {
   };
 
   useEffect(() => {
-    if (tab === "orders") {
+    if (tab === "orders" && user?.id) {
       cargarPedidos();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, user?.id]);
 
   const handleSave = async () => {
@@ -186,10 +186,9 @@ export default function Perfil() {
   return (
     <>
       <Header />
-
-      <div className="user-container" style={{ paddingTop: 24 }}>
-        <aside className="sidebar" aria-hidden={false}>
-          <ul>
+      <div className="perfil-shell">
+        <aside className="perfil-sidebar">
+          <ul className="perfil-menu">
             <li
               className={tab === "account" ? "active" : ""}
               onClick={() => changeTab("account")}
@@ -210,11 +209,84 @@ export default function Perfil() {
             </li>
           </ul>
         </aside>
-
-        <main className="main-content">
-          {/* 🧾 TAB ÓRDENES */}
+        <section className="perfil-content">
+          {tab === "account" && (
+            <div className="perfil-card">
+              <h2>Datos de Cuenta</h2>
+              <form>
+                <div>
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={e => handleChange("email", e.target.value)}
+                    disabled
+                  />
+                </div>
+                <div>
+                  <label>Nombre</label>
+                  <input
+                    type="text"
+                    value={form.nombre}
+                    onChange={e => handleChange("nombre", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label>Apellido</label>
+                  <input
+                    type="text"
+                    value={form.apellido}
+                    onChange={e => handleChange("apellido", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label>RUT</label>
+                  <input
+                    type="text"
+                    value={form.rut}
+                    onChange={e => handleChange("rut", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label>Teléfono</label>
+                  <input
+                    type="text"
+                    value={form.telefono}
+                    onChange={e => handleChange("telefono", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label>Fecha de nacimiento</label>
+                  <input
+                    type="date"
+                    value={form.fecha_nacimiento}
+                    onChange={e => handleChange("fecha_nacimiento", e.target.value)}
+                  />
+                </div>
+                <div className="full">
+                  <label>Dirección</label>
+                  <input
+                    type="text"
+                    value={form.direccion}
+                    onChange={e => handleChange("direccion", e.target.value)}
+                  />
+                </div>
+                <div className="perfil-actions">
+                  <button type="button" className="btn primary" onClick={handleSave} disabled={saving}>
+                    Guardar cambios
+                  </button>
+                  <button type="button" className="btn ghost" onClick={handleReset}>
+                    Restablecer
+                  </button>
+                  <button type="button" className="btn ghost" onClick={logout}>
+                    Cerrar sesión
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
           {tab === "orders" && (
-            <div className="card">
+            <div className="perfil-card">
               <h3>Historial de Órdenes</h3>
               {loading ? (
                 <p>Cargando órdenes...</p>
@@ -225,7 +297,7 @@ export default function Perfil() {
                       <div className="order-info">
                         <strong>#{pedido.id_pedido}</strong>
                         <span>
-                          Fecha: {new Date(pedido.fecha_pedido).toLocaleDateString()}
+                          Fecha: {pedido.fecha_pedido ? new Date(pedido.fecha_pedido).toLocaleDateString() : "Sin fecha"}
                         </span>
                         <span>
                           Estado:{" "}
@@ -279,9 +351,18 @@ export default function Perfil() {
               )}
             </div>
           )}
-        </main>
+          {tab === "settings" && (
+            <div className="perfil-card">
+              <h2>Configuración</h2>
+              <p>Aquí puedes personalizar tus preferencias.</p>
+              {/* Puedes agregar más opciones si lo deseas */}
+              <button className="btn ghost" onClick={logout}>
+                Cerrar sesión
+              </button>
+            </div>
+          )}
+        </section>
       </div>
-
       {/* MODAL DETALLE */}
       {detallePedido && (
         <div className="modal-overlay" onClick={() => setDetallePedido(null)}>
@@ -289,7 +370,7 @@ export default function Perfil() {
             <h3>Detalle del Pedido #{detallePedido.id_pedido}</h3>
             <p>
               <b>Fecha:</b>{" "}
-              {new Date(detallePedido.fecha_pedido).toLocaleDateString()}
+              {detallePedido.fecha_pedido ? new Date(detallePedido.fecha_pedido).toLocaleDateString() : "Sin fecha"}
             </p>
             <p>
               <b>Estado:</b>{" "}
@@ -327,7 +408,6 @@ export default function Perfil() {
           </div>
         </div>
       )}
-
       <Footer />
     </>
   );

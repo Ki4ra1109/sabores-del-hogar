@@ -181,162 +181,162 @@ export default function Contacto() {
   return (
     <>
       <Header />
-
       <section className="contacto">
-        <header className="contacto-hero">
-          <div className="contacto-hero-inner">
-            <h1>Contacto</h1>
-            <p className="contacto-sub">
-              Estamos para ayudarte. Escríbenos y te responderemos a la
-              brevedad.
-            </p>
-          </div>
-        </header>
-
-        <div className="contacto-wrap">
-          <aside className="contacto-aside" aria-label="Información de contacto">
-            <div className="card info-card">
-              <h2>Datos de contacto</h2>
-              <ul>
-                <li>
-                  <span className="lbl">Email:</span>{" "}
-                  <a href="mailto:soporte@saboresdelhogar.cl">
-                    soporte@saboresdelhogar.cl
-                  </a>
-                </li>
-                <li>
-                  <span className="lbl">Teléfono:</span> +56 9 1234 5678
-                </li>
-                <li>
-                  <span className="lbl">Dirección:</span> Av. Libertad 1234,
-                  Santiago
-                </li>
-                <li>
-                  <span className="lbl">Horario:</span> Lun–Vie 09:00–18:00
-                </li>
-              </ul>
-              <div className="small-note">
-                ¿Dudas sobre pedidos o devoluciones? Incluye tu número de orden
-                para acelerar la gestión.
-              </div>
+        <div className="main-contacto-content">
+          <header className="contacto-hero">
+            <div className="contacto-hero-inner">
+              <h1>Contacto</h1>
+              <p className="contacto-sub">
+                Estamos para ayudarte. Escríbenos y te responderemos a la
+                brevedad.
+              </p>
             </div>
-          </aside>
+          </header>
 
-          <article className="card contacto-card">
-            <h2>Escríbenos</h2>
-
-            {okMsg && <div className="alert ok">{okMsg}</div>}
-            {errMsg && <div className="alert err">{errMsg}</div>}
-
-            <form onSubmit={onSubmit} noValidate>
-              <input
-                type="text"
-                name="hp"
-                value={form.hp}
-                onChange={onChange}
-                className="hp-field"
-                autoComplete="off"
-                tabIndex={-1}
-              />
-
-              <div className="grid">
-                <label>
-                  <span>Nombre</span>
-                  <input
-                    name="nombre"
-                    type="text"
-                    value={form.nombre}
-                    onChange={onChange}
-                    aria-invalid={showErrors && !!errors.nombre}
-                    required
-                  />
-                  {showErrors && errors.nombre && (
-                    <small className="fld-error">{errors.nombre}</small>
-                  )}
-                </label>
-
-                <label>
-                  <span>Correo</span>
-                  <input
-                    name="email"
-                    type="email"
-                    value={form.email}
-                    onChange={onChange}
-                    aria-invalid={showErrors && !!errors.email}
-                    required
-                  />
-                  {showErrors && errors.email && (
-                    <small className="fld-error">{errors.email}</small>
-                  )}
-                </label>
-
-                <label>
-                  <span>Teléfono (opcional)</span>
-                  <input
-                    name="telefono"
-                    type="tel"
-                    value={`+56 ${form.telefono}`}
-                    onChange={onPhoneChange}
-                    inputMode="numeric"
-                    pattern="\d*"
-                    maxLength={13}
-                    placeholder="+56 9XXXXXXXX"
-                  />
-                </label>
-
-                <label>
-                  <span>Asunto (opcional)</span>
-                  <div className="asunto-select">
-                    <button
-                      type="button"
-                      className="asunto-trigger"
-                      onClick={() => setAsuntoOpen((o) => !o)}
-                    >
-                      <span>
-                        {selectedAsunto || "Seleccionar tipo de consulta"}
-                      </span>
-                    </button>
-                    <div
-                      className={`asunto-menu ${asuntoOpen ? "open" : ""}`}
-                    >
-                      {asuntoOptions.map((opt) => (
-                        <button
-                          key={opt}
-                          type="button"
-                          className="asunto-option"
-                          onClick={() => handleAsuntoSelect(opt)}
-                        >
-                          {opt}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </label>
+          <div className="contacto-wrap">
+            <aside className="contacto-aside" aria-label="Información de contacto">
+              <div className="card info-card">
+                <h2>Datos de contacto</h2>
+                <ul>
+                  <li>
+                    <span className="lbl">Email:</span>{" "}
+                    <a href="mailto:soporte@saboresdelhogar.cl">
+                      soporte@saboresdelhogar.cl
+                    </a>
+                  </li>
+                  <li>
+                    <span className="lbl">Teléfono:</span> +56 9 1234 5678
+                  </li>
+                  <li>
+                    <span className="lbl">Dirección:</span> Av. Libertad 1234,
+                    Santiago
+                  </li>
+                  <li>
+                    <span className="lbl">Horario:</span> Lun–Vie 09:00–18:00
+                  </li>
+                </ul>
+                <div className="small-note">
+                  ¿Dudas sobre pedidos o devoluciones? Incluye tu número de orden
+                  para acelerar la gestión.
+                </div>
               </div>
+            </aside>
 
-              <label>
-                <span>Mensaje</span>
-                <textarea
-                  name="mensaje"
-                  rows={6}
-                  value={form.mensaje}
+            <article className="card contacto-card">
+              <h2>Escríbenos</h2>
+
+              {okMsg && <div className="alert ok">{okMsg}</div>}
+              {errMsg && <div className="alert err">{errMsg}</div>}
+
+              <form onSubmit={onSubmit} noValidate>
+                <input
+                  type="text"
+                  name="hp"
+                  value={form.hp}
                   onChange={onChange}
-                  aria-invalid={showErrors && !!errors.mensaje}
-                  required
+                  className="hp-field"
+                  autoComplete="off"
+                  tabIndex={-1}
                 />
-                {showErrors && errors.mensaje && (
-                  <small className="fld-error">{errors.mensaje}</small>
-                )}
-              </label>
 
-              <button className="btn-primary" type="submit" disabled={sending}>
-                {sending ? "Enviando..." : "Enviar mensaje"}
-              </button>
-            </form>
-          </article>
+                <div className="grid">
+                  <label>
+                    <span>Nombre</span>
+                    <input
+                      name="nombre"
+                      type="text"
+                      value={form.nombre}
+                      onChange={onChange}
+                      aria-invalid={showErrors && !!errors.nombre}
+                      required
+                    />
+                    {showErrors && errors.nombre && (
+                      <small className="fld-error">{errors.nombre}</small>
+                    )}
+                  </label>
+
+                  <label>
+                    <span>Correo</span>
+                    <input
+                      name="email"
+                      type="email"
+                      value={form.email}
+                      onChange={onChange}
+                      aria-invalid={showErrors && !!errors.email}
+                      required
+                    />
+                    {showErrors && errors.email && (
+                      <small className="fld-error">{errors.email}</small>
+                    )}
+                  </label>
+
+                  <label>
+                    <span>Teléfono (opcional)</span>
+                    <input
+                      name="telefono"
+                      type="tel"
+                      value={`+56 ${form.telefono}`}
+                      onChange={onPhoneChange}
+                      inputMode="numeric"
+                      pattern="\d*"
+                      maxLength={13}
+                      placeholder="+56 9XXXXXXXX"
+                    />
+                  </label>
+
+                  <label>
+                    <span>Asunto (opcional)</span>
+                    <div className="asunto-select">
+                      <button
+                        type="button"
+                        className="asunto-trigger"
+                        onClick={() => setAsuntoOpen((o) => !o)}
+                      >
+                        <span>
+                          {selectedAsunto || "Seleccionar tipo de consulta"}
+                        </span>
+                      </button>
+                      <div
+                        className={`asunto-menu ${asuntoOpen ? "open" : ""}`}
+                      >
+                        {asuntoOptions.map((opt) => (
+                          <button
+                            key={opt}
+                            type="button"
+                            className="asunto-option"
+                            onClick={() => handleAsuntoSelect(opt)}
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                <label>
+                  <span>Mensaje</span>
+                  <textarea
+                    name="mensaje"
+                    rows={6}
+                    value={form.mensaje}
+                    onChange={onChange}
+                    aria-invalid={showErrors && !!errors.mensaje}
+                    required
+                  />
+                  {showErrors && errors.mensaje && (
+                    <small className="fld-error">{errors.mensaje}</small>
+                  )}
+                </label>
+
+                <button className="btn-primary" type="submit" disabled={sending}>
+                  {sending ? "Enviando..." : "Enviar mensaje"}
+                </button>
+              </form>
+            </article>
+          </div>
         </div>
       </section>
-
       <Footer />
     </>
   );

@@ -87,6 +87,15 @@ const UserAdmin = () => {
   const [ganLoading, setGanLoading] = useState(true);
   const [ganError, setGanError] = useState(null);
 
+  // Estado para KPIs en Inicio
+  const [kpi, setKpi] = useState({
+    pedidosPendientes: null,
+    clientesNuevos: null,
+    sinStock: null,
+    alertas: null,
+  });
+  const [kpiLoading, setKpiLoading] = useState(false);
+
   useEffect(() => {
     applyPrefs(prefs);
   }, [prefs]);
@@ -125,6 +134,49 @@ const UserAdmin = () => {
 
     fetchGanancias();
   }, [active, period]);
+
+  useEffect(() => {
+    if (active !== "inicio") return;
+
+    const fetchKPIs = async () => {
+      setKpiLoading(true);
+      try {
+        // Pedidos pendientes
+        const pedidosRes = await fetch("http://localhost:5000/api/pedidos?estado=pendiente");
+        const pedidosData = await pedidosRes.json();
+
+        // Clientes nuevos (últimos 7 días)
+        const clientesRes = await fetch("http://localhost:5000/api/clientes?nuevos=true");
+        const clientesData = await clientesRes.json();
+
+        // Productos sin stock
+        const productosRes = await fetch("http://localhost:5000/api/productos/stock/0");
+        const productosData = await productosRes.json();
+
+        // Alertas: ejemplo, suma de sin stock + pedidos pendientes con error
+        const alertas = productosData.length + pedidosData.filter(p => p.error).length;
+
+        setKpi({
+          pedidosPendientes: pedidosData.length,
+          clientesNuevos: clientesData.length,
+          sinStock: productosData.length,
+          alertas,
+        });
+      } catch (error) {
+        console.error("Error al obtener KPIs:", error);
+        setKpi({
+          pedidosPendientes: "-",
+          clientesNuevos: "-",
+          sinStock: "-",
+          alertas: "-",
+        });
+      } finally {
+        setKpiLoading(false);
+      }
+    };
+
+    fetchKPIs();
+  }, [active]);
 
   const onChangePref = (e) => {
     const { name, type, checked, value } = e.target;
@@ -182,19 +234,19 @@ const UserAdmin = () => {
       {/* KPIs movidos al inicio */}
       <div className="card kpis">
         <div>
-          <strong>5</strong>
+          <strong>{kpiLoading ? "..." : kpi.pedidosPendientes ?? 0}</strong>
           <span>Pedidos pendientes</span>
         </div>
         <div>
-          <strong>12</strong>
+          <strong>{kpiLoading ? "..." : kpi.clientesNuevos ?? 0}</strong>
           <span>Clientes nuevos</span>
         </div>
         <div>
-          <strong>3</strong>
+          <strong>{kpiLoading ? "..." : kpi.sinStock ?? 0}</strong>
           <span>Sin stock</span>
         </div>
         <div>
-          <strong>2</strong>
+          <strong>{kpiLoading ? "..." : kpi.alertas ?? 0}</strong>
           <span>Alertas</span>
         </div>
       </div>
@@ -207,10 +259,14 @@ const UserAdmin = () => {
       <div className="card">
         <h3>Mensajes Importantes</h3>
         <ul className="bullets">
-          <li>Cliente "Juan Pérez" reporta retraso en entrega.</li>
-          <li>Error en la página de pagos detectado.</li>
-          <li>Pedido #1023 necesita revisión.</li>
-          <li>"Cheesecake de Frambuesa" sin stock.</li>
+          <li className="grave">Cliente "Juan Pérez" reporta retraso en entrega.</li>
+          <li className="media">Error en la página de pagos detectado.</li>
+          <li className="media">Pedido #1023 necesita revisión.</li>
+          <li className="grave">"Cheesecake de Frambuesa" sin stock.</li>
+          <li className="leve">Nuevo cliente registrado: "María López".</li>
+          <li className="media">Pedido #1045 con dirección incompleta.</li>
+          <li className="grave">Pago rechazado en pedido #1050.</li>
+          <li className="leve">Actualización de catálogo realizada correctamente.</li>
         </ul>
       </div>
 
@@ -353,15 +409,15 @@ const UserAdmin = () => {
         </aside>
 
         <main ref={mainRef} className="main-content" role="region" aria-live="polite">
-              {active === "inicio" && renderInicio()}
-              {active === "pedidos" && <GestionPedidos />}
-              {active === "productos" && <GestionProductos />}
-              {active === "clientes" && <GestionClientes />}
-              {active === "interactivo" && <Dashboard />}
-              {active === "descuentos" && <CodigosDesc />}
-              {active === "solicitudes" && <SolicitudesClientes />}
-              {active === "account" && renderAccount()}
-              {active === "settings" && renderSettings()}
+          {active === "inicio" && renderInicio()}
+          {active === "pedidos" && <GestionPedidos />}
+          {active === "productos" && <GestionProductos />}
+          {active === "clientes" && <GestionClientes />}
+          {active === "interactivo" && <Dashboard />}
+          {active === "descuentos" && <CodigosDesc />}
+          {active === "solicitudes" && <SolicitudesClientes />}
+          {active === "account" && renderAccount()}
+          {active === "settings" && renderSettings()}
         </main>
       </div>
       <Footer />

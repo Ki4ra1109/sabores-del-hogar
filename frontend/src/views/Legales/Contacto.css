@@ -12,8 +12,18 @@
   --err: #b44343;
 }
 
-.route-contacto .auth-panel {
-  z-index: 900;
+body.route-contacto {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.contacto {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 120px); /* asegura que empuje el footer */
+  padding-bottom: 40px; /* da espacio real bajo el contenido */
 }
 
 /* Vista general de contacto */
@@ -22,6 +32,9 @@
   color: var(--ink);
   font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue",
     Arial, "Noto Sans", sans-serif;
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Cabecera de contacto */
@@ -414,4 +427,8 @@
 .route-contacto .contacto-hero {
   position: relative;
   z-index: 0;
+}
+
+footer {
+  flex-shrink: 0;
 }

@@ -1,6 +1,7 @@
 const path = require("path");
 const fs = require("fs");
 const sequelize = require("../config/db");
+const Producto = require('../models/Producto');
 
 // 📁 Directorio donde se guardan imágenes
 const UPLOAD_DIR = path.resolve(__dirname, "..", "..", "frontend", "public", "catalogo");
@@ -148,16 +149,16 @@ exports.obtenerProductoPorSku = async (req, res) => {
 
     const variantes = Array.isArray(porciones) && porciones.length
       ? porciones.map(p => ({
-          personas: p.personas,
-          precio: Number(p.precio)
-        }))
+        personas: p.personas,
+        precio: Number(p.precio)
+      }))
       : [
-          { personas: 12, precio: producto.precio },
-          { personas: 18, precio: producto.precio + 6000 },
-          { personas: 24, precio: producto.precio + 12000 },
-          { personas: 30, precio: producto.precio + 18000 },
-          { personas: 50, precio: producto.precio + 24000 },
-        ];
+        { personas: 12, precio: producto.precio },
+        { personas: 18, precio: producto.precio + 6000 },
+        { personas: 24, precio: producto.precio + 12000 },
+        { personas: 30, precio: producto.precio + 18000 },
+        { personas: 50, precio: producto.precio + 24000 },
+      ];
 
     return res.json({
       ...producto,
@@ -208,9 +209,9 @@ exports.crearProducto = async (req, res) => {
       Array.isArray(variantes) && variantes.length > 0
         ? variantes
         : basePorciones.map((p, i) => ({
-            personas: p,
-            precio: precio + i * 6000,
-          }));
+          personas: p,
+          precio: precio + i * 6000,
+        }));
 
     // Insertar las porciones
     for (const p of porciones) {
@@ -334,5 +335,15 @@ exports.subirImagen = async (req, res) => {
   } catch (error) {
     console.error("Error subirImagen:", error);
     return res.status(500).json({ ok: false, message: "Error al subir imagen" });
+  }
+};
+
+exports.obtenerProductosPorStock = async (req, res) => {
+  try {
+    const stockNum = Number(req.params.stock);
+    const productos = await Producto.find({ stock: stockNum });
+    res.json(productos);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };

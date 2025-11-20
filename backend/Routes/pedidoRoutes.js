@@ -7,16 +7,8 @@ const sequelize = require("../config/db");
 // ✅ Crear un nuevo pedido (con productos del catálogo y personalizados)
 router.post("/crear", (req, res) => pedidoController.crearPedido(req, res));
 
-// ✅ Obtener todos los pedidos (solo si necesitas una vista administrativa)
-router.get("/", async (req, res) => {
-  try {
-    const [pedidos] = await sequelize.query("SELECT * FROM pedido");
-    res.json(pedidos);
-  } catch (error) {
-    console.error("❌ Error al obtener todos los pedidos:", error);
-    res.status(500).json({ message: "Error al obtener los pedidos." });
-  }
-});
+// ✅ Obtener todos los pedidos (vista administrativa, incluye nombre del cliente)
+router.get("/", (req, res) => pedidoController.obtenerTodosLosPedidos(req, res));
 
 // ✅ Obtener todos los pedidos de un usuario específico
 router.get("/usuario/:id_usuario", (req, res) =>
