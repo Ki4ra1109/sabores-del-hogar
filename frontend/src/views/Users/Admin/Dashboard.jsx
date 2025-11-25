@@ -29,54 +29,60 @@ export default function Dashboard() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedMonths, setSelectedMonths] = useState([]);
 
-  const fetchData = useCallback(async (range = "6") => {
-    try {
-      const base = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
+  const fetchData = useCallback(
+    async (range = "6") => {
+      try {
+        const base = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
 
-      let from = "";
-      if (range !== "all") {
-        const months = parseInt(range);
-        const date = new Date();
-        date.setMonth(date.getMonth() - months);
-        from = date.toISOString().split("T")[0];
+        let from = "";
+        if (range !== "all") {
+          const months = parseInt(range);
+          const date = new Date();
+          date.setMonth(date.getMonth() - months);
+          from = date.toISOString().split("T")[0];
+        }
+
+        const queryParams = new URLSearchParams();
+        if (from) queryParams.append("from", from);
+        if (selectedCategory) queryParams.append("categoria", selectedCategory);
+        const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
+
+        const [timeseriesRes, forecastRes] = await Promise.all([
+          fetch(`${base}/api/prediccion/timeseries-mensual${query}`),
+          fetch(`${base}/api/prediccion/forecast`),
+        ]);
+
+        const timeseriesJson = await timeseriesRes.json();
+        const forecastJson = await forecastRes.json();
+
+        const timeseries = timeseriesJson.data || [];
+        const forecast = forecastJson.forecast || [];
+
+        const totalVentas = timeseries.reduce(
+          (acc, e) => acc + (e.ventas || 0),
+          0
+        );
+        const promedioMensual = totalVentas / (timeseries.length || 1);
+        const pedidosCompletados = timeseries.reduce(
+          (acc, e) => acc + (e.ordenes || 0),
+          0
+        );
+
+        setData({
+          timeseries,
+          forecast,
+          ventasTotales: totalVentas,
+          promedioMensual,
+          pedidosCompletados,
+        });
+      } catch (error) {
+        console.error("Error cargando predicción:", error);
+      } finally {
+        setLoading(false);
       }
-
-      const queryParams = new URLSearchParams();
-      if (from) queryParams.append("from", from);
-      if (selectedCategory) queryParams.append("categoria", selectedCategory);
-      const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
-
-      const [timeseriesRes, forecastRes] = await Promise.all([
-        fetch(`${base}/api/prediccion/timeseries-mensual${query}`),
-        fetch(`${base}/api/prediccion/forecast`),
-      ]);
-
-      const timeseriesJson = await timeseriesRes.json();
-      const forecastJson = await forecastRes.json();
-
-      const timeseries = timeseriesJson.data || [];
-      const forecast = forecastJson.forecast || [];
-
-      const totalVentas = timeseries.reduce((acc, e) => acc + (e.ventas || 0), 0);
-      const promedioMensual = totalVentas / (timeseries.length || 1);
-      const pedidosCompletados = timeseries.reduce(
-        (acc, e) => acc + (e.ordenes || 0),
-        0
-      );
-
-      setData({
-        timeseries,
-        forecast,
-        ventasTotales: totalVentas,
-        promedioMensual,
-        pedidosCompletados,
-      });
-    } catch (error) {
-      console.error("Error cargando predicción:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedCategory]);
+    },
+    [selectedCategory]
+  );
 
   useEffect(() => {
     fetchData(selectedRange);
@@ -89,18 +95,54 @@ export default function Dashboard() {
         : [...prev, month]
     );
   };
+
   const fmtCurrency = (v) =>
     typeof v === "number" ? `$${v.toLocaleString("es-CL")}` : "—";
+
   const fmtDateLong = (v) =>
-    new Date(v).toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+    new Date(v).toLocaleDateString("es-ES", {
+      month: "long",
+      year: "numeric",
+    });
+
   const fmtMonthName = (v) =>
-    new Date(v).toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+    new Date(v).toLocaleDateString("es-ES", {
+      month: "long",
+      year: "numeric",
+    });
+
   const fmtMonthKey = (v) => {
     const d = new Date(v);
-    return d.toLocaleDateString("es-ES", { month: "short", year: "2-digit" });
+    return d.toLocaleDateString("es-ES", {
+      month: "short",
+      year: "numeric",
+    });
   };
 
-  const pieColors = ["#572420", "#8b5e3c", "#d7a97a", "#c79d77", "#b2845f"];
+  /* COLORES CONSISTENTES POR MES */
+  const dynamicColors = {
+    agosto: "#C0392B",
+    septiembre: "#27AE60",
+    octubre: "#F1C40F",
+    noviembre: "#2a6ebdff",
+    diciembre: "#8E44AD",
+    enero: "#FF6384",
+    febrero: "#36A2EB",
+    marzo: "#FFCE56",
+    abril: "#4BC0C0",
+    mayo: "#9966FF",
+    junio: "#FF9F40",
+    julio: "#C9CBCF",
+  };
+
+  const getColorFor = (categoria) => {
+    if (!categoria) return "#8b5e3c";
+    const lower = categoria.toLowerCase();
+    for (const key of Object.keys(dynamicColors)) {
+      if (lower.includes(key)) return dynamicColors[key];
+    }
+    return "#8b5e3c";
+  };
 
   const uniqueMonths = React.useMemo(() => {
     const ts = data?.timeseries || [];
@@ -115,31 +157,25 @@ export default function Dashboard() {
     );
   }, [data, selectedMonths]);
 
+  /* PIE DATA ARREGLADA */
   const pieData = React.useMemo(() => {
     const ts = filteredTimeseries;
-    const byCat = {};
-    let hasCat = false;
+    const list = {};
+
     for (const r of ts) {
-      if (r.categoria) {
-        hasCat = true;
-        byCat[r.categoria] = (byCat[r.categoria] || 0) + (r.ventas || 0);
-      }
+      const label = fmtMonthName(r.mes); // Ej: "septiembre de 2025"
+      list[label] = (list[label] || 0) + (r.ventas || 0);
     }
-    if (hasCat) {
-      return Object.entries(byCat).map(([categoria, ventas]) => ({ categoria, ventas }));
-    }
-    return ts.map((r) => ({
-      categoria: fmtMonthKey(r.mes),
-      mes: r.mes,
-      ventas: r.ventas || 0,
+
+    return Object.entries(list).map(([categoria, ventas]) => ({
+      categoria,
+      ventas,
+      color: getColorFor(categoria),
     }));
   }, [filteredTimeseries]);
 
-  const renderPieLabel = (entry) => {
-    const name = entry.categoria || (entry.mes && fmtMonthKey(entry.mes)) || "";
-    const value = fmtCurrency(entry.ventas);
-    return `${name}: ${value}`;
-  };
+  const renderPieLabel = (entry) =>
+    `${entry.categoria}: ${fmtCurrency(entry.ventas)}`;
 
   const ChartTooltip = ({ active, label, payload, title }) => {
     if (!active || !payload?.length) return null;
@@ -161,7 +197,9 @@ export default function Dashboard() {
                 {item.name || item.dataKey}
               </span>
               <span className="chart-tooltip__value">
-                {typeof item.value === "number" ? fmtCurrency(item.value) : item.value}
+                {typeof item.value === "number"
+                  ? fmtCurrency(item.value)
+                  : item.value}
               </span>
             </div>
           ))}
@@ -176,6 +214,7 @@ export default function Dashboard() {
     <div className="dashboard-container">
       <h2 className="dashboard-title">📊 Dashboard Interactivo</h2>
 
+      {/* FILTROS */}
       <div className="dashboard-filters">
         <label>
           Rango de meses:
@@ -213,22 +252,23 @@ export default function Dashboard() {
         </button>
       </div>
 
+      {/* KPIS */}
       <div className="dashboard-kpis">
         <div className="kpi-card">
           <h3>Ventas Totales</h3>
-          <p>${data?.ventasTotales?.toLocaleString("es-CL") || "—"}</p>
+          <p>${data?.ventasTotales?.toLocaleString("es-CL")}</p>
         </div>
         <div className="kpi-card">
           <h3>Promedio Mensual</h3>
-          <p>${data?.promedioMensual?.toLocaleString("es-CL") || "—"}</p>
+          <p>${data?.promedioMensual?.toLocaleString("es-CL")}</p>
         </div>
         <div className="kpi-card">
           <h3>Pedidos Completados</h3>
-          <p>{data?.pedidosCompletados ?? "—"}</p>
+          <p>{data?.pedidosCompletados}</p>
         </div>
       </div>
 
-      {/* Selector de meses interactivo */}
+      {/* SELECTOR DE MESES */}
       <div className="month-selector">
         {uniqueMonths.map((month) => {
           const isActive = selectedMonths.includes(month);
@@ -244,12 +284,18 @@ export default function Dashboard() {
         })}
       </div>
 
+      {/* AREA CHART */}
       <div className="dashboard-section">
         <h3>Evolución Mensual de Ventas</h3>
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart
             data={filteredTimeseries}
-            margin={{ top: 20, right: 50, left: 50, bottom: 20 }} // ← margen amplio
+            margin={{
+              top: 20,
+              right: 50,
+              left: 50,
+              bottom: 20,
+            }}
           >
             <defs>
               <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
@@ -273,12 +319,18 @@ export default function Dashboard() {
         </ResponsiveContainer>
       </div>
 
+      {/* FORECAST LINE */}
       <div className="dashboard-section">
         <h3>Predicción Próximos Meses</h3>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart
             data={data?.forecast || []}
-            margin={{ top: 20, right: 50, left: 50, bottom: 20 }} // ← margen amplio
+            margin={{
+              top: 20,
+              right: 50,
+              left: 50,
+              bottom: 20,
+            }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#e5d5cb" />
             <XAxis dataKey="mes" tickFormatter={fmtMonthName} />
@@ -297,21 +349,27 @@ export default function Dashboard() {
         </ResponsiveContainer>
       </div>
 
+      {/* PIE CHART (CORREGIDO) */}
       <div className="dashboard-section">
         <h3>Distribución de Ventas por Categoría</h3>
+
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Tooltip content={<ChartTooltip title="Ventas por categoría" />} />
+
             <Legend
-              formatter={(value, entry, index) => {
-                const item = pieData[index];
-                return item?.categoria || (item?.mes && fmtMonthKey(item.mes)) || value;
-              }}
+              payload={pieData.map((item) => ({
+                id: item.categoria,
+                value: item.categoria,
+                type: "square",
+                color: item.color,
+              }))}
             />
+
             <Pie
+              data={pieData}
               dataKey="ventas"
               nameKey="categoria"
-              data={pieData}
               cx="50%"
               cy="50%"
               outerRadius={110}
@@ -320,22 +378,25 @@ export default function Dashboard() {
               stroke="#fffdfb"
             >
               {pieData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={pieColors[index % pieColors.length]}
-                />
+                <Cell key={index} fill={entry.color} />
               ))}
             </Pie>
           </PieChart>
         </ResponsiveContainer>
       </div>
 
+      {/* BAR CHART */}
       <div className="dashboard-section">
         <h3>Comparativa de Ventas y Pedidos</h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart
             data={filteredTimeseries}
-            margin={{ top: 20, right: 50, left: 50, bottom: 20 }} // ← margen amplio
+            margin={{
+              top: 20,
+              right: 50,
+              left: 50,
+              bottom: 20,
+            }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#e5d5cb" />
             <XAxis dataKey="mes" tickFormatter={fmtMonthKey} />
@@ -348,15 +409,11 @@ export default function Dashboard() {
         </ResponsiveContainer>
       </div>
 
+      {/* RADAR CHART */}
       <div className="dashboard-section">
         <h3>Rendimiento por Tipo de Producto</h3>
         <ResponsiveContainer width="100%" height={300}>
-          <RadarChart
-            cx="50%"
-            cy="50%"
-            outerRadius="80%"
-            data={pieData}
-          >
+          <RadarChart cx="50%" cy="50%" outerRadius="80%" data={pieData}>
             <PolarGrid />
             <PolarAngleAxis dataKey="categoria" />
             <Tooltip content={<ChartTooltip title="Rendimiento por categoría" />} />
