@@ -28,6 +28,7 @@ export default function Dashboard() {
   const [selectedRange, setSelectedRange] = useState("6");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedMonths, setSelectedMonths] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(""); // <-- AÑADIDO
 
   const fetchData = useCallback(
     async (range = "6") => {
@@ -111,14 +112,6 @@ export default function Dashboard() {
       year: "numeric",
     });
 
-  const fmtMonthKey = (v) => {
-    const d = new Date(v);
-    return d.toLocaleDateString("es-ES", {
-      month: "short",
-      year: "numeric",
-    });
-  };
-
   /* COLORES CONSISTENTES POR MES */
   const dynamicColors = {
     agosto: "#C0392B",
@@ -145,17 +138,37 @@ export default function Dashboard() {
   };
 
   const uniqueMonths = React.useMemo(() => {
+    let ts = data?.timeseries || [];
+    // Filtra por rango de meses primero
+    if (selectedRange !== "all") {
+      const months = parseInt(selectedRange);
+      ts = ts.slice(-months);
+    }
+    // Luego filtra por año si corresponde
+    if (selectedYear) {
+      ts = ts.filter((r) => new Date(r.mes).getFullYear().toString() === selectedYear);
+    }
+    return [...new Set(ts.map((r) => fmtMonthName(r.mes)))];
+  }, [data, selectedYear, selectedRange]);
+
+  const uniqueYears = React.useMemo(() => {
     const ts = data?.timeseries || [];
-    const months = ts.map((r) => fmtMonthName(r.mes));
-    return [...new Set(months)];
+    const years = ts.map((r) => new Date(r.mes).getFullYear());
+    return [...new Set(years)];
   }, [data]);
 
   const filteredTimeseries = React.useMemo(() => {
-    if (selectedMonths.length === 0) return data?.timeseries || [];
-    return (data?.timeseries || []).filter((d) =>
-      selectedMonths.includes(fmtMonthName(d.mes))
-    );
-  }, [data, selectedMonths]);
+    let arr = data?.timeseries || [];
+    if (selectedMonths.length > 0) {
+      arr = arr.filter((d) => selectedMonths.includes(fmtMonthName(d.mes)));
+    }
+    if (selectedYear) {
+      arr = arr.filter(
+        (d) => new Date(d.mes).getFullYear().toString() === selectedYear
+      );
+    }
+    return arr;
+  }, [data, selectedMonths, selectedYear]);
 
   /* PIE DATA ARREGLADA */
   const pieData = React.useMemo(() => {
@@ -208,6 +221,10 @@ export default function Dashboard() {
     );
   };
 
+  useEffect(() => {
+    setSelectedMonths(uniqueMonths);
+  }, [uniqueMonths]);
+
   if (loading) return <p className="dashboard-loading">Cargando datos...</p>;
 
   return (
@@ -244,9 +261,28 @@ export default function Dashboard() {
           </select>
         </label>
 
+        <label>
+          Año:
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(e.target.value)}
+            className="dashboard-select"
+          >
+            <option value="">Todos</option>
+            {uniqueYears.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
+        </label>
+
         <button
           className="dashboard-refresh"
-          onClick={() => fetchData(selectedRange)}
+          onClick={() => {
+            fetchData(selectedRange);
+            setSelectedMonths(uniqueMonths);
+          }}
         >
           🔄 Actualizar
         </button>
@@ -263,7 +299,7 @@ export default function Dashboard() {
           <p>${data?.promedioMensual?.toLocaleString("es-CL")}</p>
         </div>
         <div className="kpi-card">
-          <h3>Pedidos Completados</h3>
+          <h3>Compras Realizadas</h3>
           <p>{data?.pedidosCompletados}</p>
         </div>
       </div>
@@ -351,7 +387,7 @@ export default function Dashboard() {
 
       {/* PIE CHART (CORREGIDO) */}
       <div className="dashboard-section">
-        <h3>Distribución de Ventas por Categoría</h3>
+        <h3>Distribución de Ventas por Mes</h3>
 
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
@@ -385,33 +421,11 @@ export default function Dashboard() {
         </ResponsiveContainer>
       </div>
 
-      {/* BAR CHART */}
-      <div className="dashboard-section">
-        <h3>Comparativa de Ventas y Pedidos</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart
-            data={filteredTimeseries}
-            margin={{
-              top: 20,
-              right: 50,
-              left: 50,
-              bottom: 20,
-            }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5d5cb" />
-            <XAxis dataKey="mes" tickFormatter={fmtMonthKey} />
-            <YAxis />
-            <Tooltip content={<ChartTooltip title="Comparativa mensual" />} />
-            <Legend />
-            <Bar dataKey="ventas" fill="#572420" name="Ventas" />
-            <Bar dataKey="ordenes" fill="#d7a97a" name="Pedidos" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+
 
       {/* RADAR CHART */}
       <div className="dashboard-section">
-        <h3>Rendimiento por Tipo de Producto</h3>
+        <h3>Rendimiento por Mes</h3>
         <ResponsiveContainer width="100%" height={300}>
           <RadarChart cx="50%" cy="50%" outerRadius="80%" data={pieData}>
             <PolarGrid />
@@ -428,6 +442,7 @@ export default function Dashboard() {
           </RadarChart>
         </ResponsiveContainer>
       </div>
+
     </div>
   );
 }

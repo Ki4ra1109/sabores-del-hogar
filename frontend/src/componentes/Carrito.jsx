@@ -162,9 +162,7 @@ export default function Carrito({ carrito, setCarrito, abrir, setAbrir }) {
       setAbrir(false);
 
       // Ir al resumen (que luego abre MercadoPago)
-      navigate("/resumen-compra", {
-        state: { id_pedido: data.id_pedido, carrito },
-      });
+      navigate("/resumen-compra", { state: { carrito } });
     } catch (error) {
       console.error("Error al crear pedido:", error);
       alert("Hubo un problema. Intenta nuevamente.");

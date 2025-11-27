@@ -7,6 +7,11 @@ import "./Perfil.css";
 export default function Perfil() {
   const navigate = useNavigate();
   const location = useLocation();
+  // Handler para eliminar pedido (debe implementarse la lógica de backend y frontend)
+  function handleEliminarPedido(id_pedido) {
+    // Aquí iría la lógica para eliminar el pedido, por ejemplo, llamada a API y actualización de estado
+    alert(`Eliminar pedido #${id_pedido} (implementar lógica)`);
+  }
 
   const storedUser = useMemo(() => {
     try {
@@ -21,7 +26,7 @@ export default function Perfil() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pedidos, setPedidos] = useState([]);
-  const [detallePedido, setDetallePedido] = useState(null);
+  // const [detallePedido, setDetallePedido] = useState(null);
 
   const [form, setForm] = useState({
     email: "",
@@ -104,20 +109,19 @@ export default function Perfil() {
 
   const handleChange = (k, v) => setForm((prev) => ({ ...prev, [k]: v }));
 
-  const handleReset = () => {
-    if (!user) return;
-    setForm({
-      email: user.email || "",
-      password: "",
-      nombre: user.nombre || "",
-      apellido: user.apellido || "",
-      rut: user.rut || "",
-      telefono: user.telefono || "",
-      fecha_nacimiento: user.fecha_nacimiento
-        ? formatForInput(user.fecha_nacimiento)
-        : "",
-      direccion: user.direccion || "",
-    });
+  const handleReset = async () => {
+    if (!user?.id) return;
+    setLoading(true);
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
+      const res = await fetch(`${baseUrl}/api/pedidos/usuario/${user.id}`);
+      const data = await res.json();
+      setPedidos(Array.isArray(data.pedidos) ? data.pedidos : []);
+    } catch (error) {
+      console.error("Error al cargar pedidos:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 🟢 Cargar pedidos del usuario con detalle incluido
@@ -126,9 +130,10 @@ export default function Perfil() {
     setLoading(true);
     try {
       const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
-      const res = await fetch(`${baseUrl}/api/pedidos/usuario/${user.id}`);
+      const res = await fetch(`${baseUrl}/api/pedidos/usuario/${user.id}/con-detalle`);
       const data = await res.json();
-      setPedidos(Array.isArray(data) ? data : []);
+      console.log("Respuesta pedidos:", data);
+      setPedidos(Array.isArray(data.pedidos) ? data.pedidos : []);
     } catch (error) {
       console.error("Error al cargar pedidos:", error);
     } finally {
@@ -138,6 +143,7 @@ export default function Perfil() {
 
   useEffect(() => {
     if (tab === "orders" && user?.id) {
+      console.log("ID usuario:", user.id);
       cargarPedidos();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -286,60 +292,37 @@ export default function Perfil() {
             </div>
           )}
           {tab === "orders" && (
-            <div className="perfil-card">
-              <h3>Historial de Órdenes</h3>
+            <div className="pedidos-card">
+              <h3 style={{marginBottom: '8px'}}>Historial de Órdenes</h3>
               {loading ? (
                 <p>Cargando órdenes...</p>
-              ) : pedidos?.length > 0 ? (
-                <div className="orders">
+              ) : pedidos.length > 0 ? (
+                <div className="pedidos-list">
                   {pedidos.map((pedido) => (
-                    <div key={pedido.id_pedido} className="order">
-                      <div className="order-info">
-                        <strong>#{pedido.id_pedido}</strong>
-                        <span>
-                          Fecha: {pedido.fecha_pedido ? new Date(pedido.fecha_pedido).toLocaleDateString() : "Sin fecha"}
-                        </span>
-                        <span>
-                          Estado:{" "}
-                          <span
-                            className={`estado ${
-                              pedido.estado === "completado"
-                                ? "estado-completado"
-                                : pedido.estado === "cancelado"
-                                ? "estado-cancelado"
-                                : "estado-pendiente"
-                            }`}
-                          >
-                            {pedido.estado}
+                    <div key={pedido.id_pedido} className="pedido-item">
+                      <div className="pedido-info">
+                        <h4>Pedido #{pedido.id_pedido}</h4>
+                        <p>Cliente: <strong>{pedido.nombre_cliente || pedido.cliente || 'Usuario'}</strong></p>
+                        <p>
+                          Estado: <span className={`status-chip ${
+                            pedido.estado === "completado" || pedido.estado === "entregado"
+                              ? "success"
+                              : pedido.estado === "cancelado"
+                              ? "danger"
+                              : "warning"
+                          }`}>
+                            {pedido.estado === "completado" ? "Entregado" : pedido.estado.charAt(0).toUpperCase() + pedido.estado.slice(1)}
                           </span>
-                        </span>
-                        <span>Total: ${pedido.total?.toLocaleString("es-CL")}</span>
-
-                        <div className="order-products">
-                          {pedido.detalle_productos?.length > 0 ? (
-                            pedido.detalle_productos.map((item, index) => (
-                              <div key={index} className="order-item">
-                                <span>
-                                  {item.nombre_producto} (x{item.cantidad})
-                                </span>
-                                <span>
-                                  ${(
-                                    item.precio_unitario * item.cantidad
-                                  ).toLocaleString("es-CL")}
-                                </span>
-                              </div>
-                            ))
-                          ) : (
-                            <em>Sin productos registrados</em>
-                          )}
-                        </div>
-
-                        <div className="order-actions">
-                          <button
-                            className="btn btn-detalle"
-                            onClick={() => setDetallePedido(pedido)}
-                          >
-                            Ver detalle
+                        </p>
+                        <p>Fecha: {pedido.fecha_pedido ? new Date(pedido.fecha_pedido).toLocaleDateString() : "Sin fecha"}</p>
+                        <p>Total: ${pedido.total?.toLocaleString("es-CL")}</p>
+                        {/* Botones funcionales para resumen de compra y acciones */}
+                        <div className="pedido-actions" style={{marginTop: '10px', display: 'flex', gap: '8px'}}>
+                          <button className="btn-resumen" onClick={() => navigate(`/resumen-compra/${pedido.id_pedido}`)}>
+                            Ver resumen
+                          </button>
+                          <button className="btn-eliminar" onClick={() => handleEliminarPedido(pedido.id_pedido)}>
+                            Eliminar
                           </button>
                         </div>
                       </div>
@@ -347,67 +330,18 @@ export default function Perfil() {
                   ))}
                 </div>
               ) : (
-                <p>No tienes órdenes registradas</p>
+                <p>No tienes órdenes registradas.</p>
               )}
             </div>
+          // ...existing code...
           )}
           {tab === "settings" && (
             <div className="perfil-card">
-              <h2>Configuración</h2>
-              <p>Aquí puedes personalizar tus preferencias.</p>
-              {/* Puedes agregar más opciones si lo deseas */}
-              <button className="btn ghost" onClick={logout}>
-                Cerrar sesión
-              </button>
+              {/* Botón de detalle eliminado porque la función y estados relacionados han sido removidos */}
             </div>
           )}
         </section>
       </div>
-      {/* MODAL DETALLE */}
-      {detallePedido && (
-        <div className="modal-overlay" onClick={() => setDetallePedido(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Detalle del Pedido #{detallePedido.id_pedido}</h3>
-            <p>
-              <b>Fecha:</b>{" "}
-              {detallePedido.fecha_pedido ? new Date(detallePedido.fecha_pedido).toLocaleDateString() : "Sin fecha"}
-            </p>
-            <p>
-              <b>Estado:</b>{" "}
-              <span
-                className={`estado ${
-                  detallePedido.estado === "completado"
-                    ? "estado-completado"
-                    : detallePedido.estado === "cancelado"
-                    ? "estado-cancelado"
-                    : "estado-pendiente"
-                }`}
-              >
-                {detallePedido.estado}
-              </span>
-            </p>
-            <hr />
-            <h4>Productos:</h4>
-            {detallePedido.detalle_productos?.length > 0 ? (
-              detallePedido.detalle_productos.map((p, i) => (
-                <div key={i} className="order-item">
-                  {p.nombre_producto} (x{p.cantidad}) - $
-                  {(p.precio_unitario * p.cantidad).toLocaleString("es-CL")}
-                </div>
-              ))
-            ) : (
-              <em>No hay productos en este pedido</em>
-            )}
-            <hr />
-            <h4>Total: ${detallePedido.total?.toLocaleString("es-CL")}</h4>
-            <div style={{ textAlign: "right" }}>
-              <button className="btn btn-detalle" onClick={() => setDetallePedido(null)}>
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       <Footer />
     </>
   );

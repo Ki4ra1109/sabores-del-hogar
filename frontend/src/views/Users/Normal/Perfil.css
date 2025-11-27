@@ -31,8 +31,8 @@ body {
   flex-direction: column;
 }
 
-.perfil-shell{
-  width: 100%;
+.perfil-shell {
+  width: 100vw;
   max-width: none;
   margin: 0;
   padding: 0;
@@ -142,7 +142,7 @@ body {
 }
 
 .perfil-shell{
-  max-width: 1200px;
+  width: 95%;
   margin: 24px auto 48px;
   padding: 0; /* Quita el padding izquierdo */
   display: grid;
