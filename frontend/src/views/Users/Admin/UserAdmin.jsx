@@ -90,9 +90,9 @@ const UserAdmin = () => {
   // Estado para KPIs en Inicio
   const [kpi, setKpi] = useState({
     pedidosPendientes: null,
+    pedidosCompletados: null,
     clientesNuevos: null,
     sinStock: null,
-    alertas: null,
   });
   const [kpiLoading, setKpiLoading] = useState(false);
 
@@ -141,8 +141,8 @@ const UserAdmin = () => {
     const fetchKPIs = async () => {
       setKpiLoading(true);
       try {
-        // Pedidos pendientes
-        const pedidosRes = await fetch("http://localhost:5000/api/pedidos?estado=pendiente");
+        // Trae todos los pedidos y filtra en frontend
+        const pedidosRes = await fetch("http://localhost:5000/api/pedidos");
         const pedidosData = await pedidosRes.json();
 
         // Clientes nuevos (últimos 7 días)
@@ -153,22 +153,30 @@ const UserAdmin = () => {
         const productosRes = await fetch("http://localhost:5000/api/productos/stock/0");
         const productosData = await productosRes.json();
 
-        // Alertas: ejemplo, suma de sin stock + pedidos pendientes con error
-        const alertas = productosData.length + pedidosData.filter(p => p.error).length;
+        // Filtrar pedidos por estado (acepta "completado" o "entregado" como completados)
+        const pendientes = pedidosData.filter(
+          p => (p.estado || "").toLowerCase() === "pendiente"
+        ).length;
+        const completados = pedidosData.filter(
+          p => {
+            const estado = (p.estado || "").toLowerCase();
+            return estado === "completado" || estado === "entregado";
+          }
+        ).length;
 
         setKpi({
-          pedidosPendientes: pedidosData.length,
+          pedidosPendientes: pendientes,
+          pedidosCompletados: completados,
           clientesNuevos: clientesData.length,
           sinStock: productosData.length,
-          alertas,
         });
       } catch (error) {
         console.error("Error al obtener KPIs:", error);
         setKpi({
           pedidosPendientes: "-",
+          pedidosCompletados: "-",
           clientesNuevos: "-",
           sinStock: "-",
-          alertas: "-",
         });
       } finally {
         setKpiLoading(false);
@@ -231,11 +239,14 @@ const UserAdmin = () => {
 
   const renderInicio = () => (
     <div className="card-stack">
-      {/* KPIs movidos al inicio */}
       <div className="card kpis">
         <div>
           <strong>{kpiLoading ? "..." : kpi.pedidosPendientes ?? 0}</strong>
           <span>Pedidos pendientes</span>
+        </div>
+        <div>
+          <strong>{kpiLoading ? "..." : kpi.pedidosCompletados ?? 0}</strong>
+          <span>Pedidos completados</span>
         </div>
         <div>
           <strong>{kpiLoading ? "..." : kpi.clientesNuevos ?? 0}</strong>
@@ -244,10 +255,6 @@ const UserAdmin = () => {
         <div>
           <strong>{kpiLoading ? "..." : kpi.sinStock ?? 0}</strong>
           <span>Sin stock</span>
-        </div>
-        <div>
-          <strong>{kpiLoading ? "..." : kpi.alertas ?? 0}</strong>
-          <span>Alertas</span>
         </div>
       </div>
 
