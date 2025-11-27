@@ -1,8 +1,6 @@
 const express = require("express");
-const router = express.Router();
+const router = express.Router(); // <-- esta línea debe ir primero
 const pedidoController = require("../controllers/pedidoController");
-// Añadir import de la conexión a la base de datos (Sequelize)
-const sequelize = require("../config/db");
 
 // ✅ Crear un nuevo pedido (con productos del catálogo y personalizados)
 router.post("/crear", (req, res) => pedidoController.crearPedido(req, res));
@@ -22,5 +20,10 @@ router.get("/detalle/:id_pedido", (req, res) =>
 
 // Obtener pedido por id (para checkout/polling)
 router.get("/:id_pedido", pedidoController.obtenerPedidoPorId);
+
+// Obtener pedidos de un usuario con detalle
+router.get("/usuario/:id_usuario/con-detalle", (req, res) =>
+  pedidoController.obtenerPedidosUsuarioConDetalle(req, res)
+);
 
 module.exports = router;

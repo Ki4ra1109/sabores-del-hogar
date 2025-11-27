@@ -1,3 +1,31 @@
+// Obtener pedidos de un usuario con productos incluidos
+exports.obtenerPedidosUsuarioConDetalle = async (req, res) => {
+  const { id_usuario } = req.params;
+  try {
+    // Obtiene todos los pedidos del usuario
+    const [pedidos] = await db.query(
+      `SELECT * FROM pedido WHERE id_usuario = ? ORDER BY fecha_pedido DESC`,
+      { replacements: [id_usuario] }
+    );
+
+    // Para cada pedido, obtiene los productos
+    for (const pedido of pedidos) {
+      const [productos] = await db.query(
+        `SELECT d.*, p.nombre 
+         FROM detalle_pedido d 
+         JOIN producto p ON p.sku = d.sku
+         WHERE d.id_pedido = ?`,
+        { replacements: [pedido.id_pedido] }
+      );
+      pedido.detalle_productos = productos;
+    }
+
+    res.json({ pedidos });
+  } catch (error) {
+    console.error("❌ Error al obtener pedidos con detalle:", error);
+    res.status(500).json({ message: "Error al obtener los pedidos con detalle." });
+  }
+};
 const db = require("../config/db");
 exports.crearPedido = async (req, res) => {
   const {
@@ -286,5 +314,34 @@ exports.obtenerPedidoPorId = async (req, res) => {
   } catch (error) {
     console.error("❌ Error al obtener pedido por ID:", error);
     res.status(500).json({ message: "Error al obtener el pedido." });
+  }
+};
+
+// Obtener pedidos de un usuario con productos incluidos
+exports.obtenerPedidosUsuarioConDetalle = async (req, res) => {
+  const { id_usuario } = req.params;
+  try {
+    // Obtiene todos los pedidos del usuario
+    const [pedidos] = await db.query(
+      `SELECT * FROM pedido WHERE id_usuario = ? ORDER BY fecha_pedido DESC`,
+      { replacements: [id_usuario] }
+    );
+
+    // Para cada pedido, obtiene los productos
+    for (const pedido of pedidos) {
+      const [productos] = await db.query(
+        `SELECT d.*, p.nombre 
+         FROM detalle_pedido d 
+         JOIN producto p ON p.sku = d.sku
+         WHERE d.id_pedido = ?`,
+        { replacements: [pedido.id_pedido] }
+      );
+      pedido.detalle_productos = productos;
+    }
+
+    res.json({ pedidos });
+  } catch (error) {
+    console.error("❌ Error al obtener pedidos con detalle:", error);
+    res.status(500).json({ message: "Error al obtener los pedidos con detalle." });
   }
 };

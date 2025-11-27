@@ -22,20 +22,26 @@ z-index: 500;
 background-color: #f8d7da;
 overflow: hidden;
 white-space: nowrap;
+width: 100vw;
+position: relative;
+left: 50%;
+transform: translateX(-50%);
 }
 
 .mensaje-banner p {
-display: inline-block;
-padding: 10px 0;
-font-weight: bold;
-font-size: 15px;
-color: #8b5e3c;
-animation: correr 10s linear infinite;
+  display: inline-block;
+  padding: 10px 0;
+  font-weight: bold;
+  font-size: 15px;
+  color: #8b5e3c;
+  min-width: 100vw;
+  animation: correr 120s linear infinite; /* <-- más lento */
+  white-space: nowrap;
 }
 
 @keyframes correr {
-0% { transform: translateX(100%); }
-100% { transform: translateX(-100%); }
+0% { transform: translateX(100vw); }
+100% { transform: translateX(-100vw); }
 }
 
 .Header-nav {
